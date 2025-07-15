@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.auth.mapper.UserMapper">
+
+    <insert id="createUser" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users
+        (login_id, password, name, nickname, email, phone_number, birth_date, gender,
+         role, suspension_status, login_type, is_banned_from_auction, kakao_id)
+        VALUES
+            (#{loginId}, #{password}, #{name}, #{nickname}, #{email}, #{phoneNumber}, #{birthDate}, #{gender},
+             #{role}, #{suspensionStatus}, #{loginType}, #{isBannedFromAuction}, #{kakaoId})
+    </insert>
+
+    <select id="existsByLoginId" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM users WHERE login_id = #{loginId})
+    </select>
+
+    <select id="existsByNickname" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM users WHERE nickname = #{nickname})
+    </select>
+
+    <select id="existsByEmail" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM users WHERE email = #{email})
+    </select>
+
+    <select id="existsByPhoneNumber" resultType="boolean">
+        SELECT EXISTS(SELECT 1 FROM users WHERE phone_number = #{phoneNumber})
+    </select>
+
+</mapper>
