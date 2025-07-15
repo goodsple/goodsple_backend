@@ -13,12 +13,12 @@ import org.springframework.web.client.RestTemplate;
 @EnableScheduling
 @OpenAPIDefinition( // <<-- 이 어노테이션과 그 내용을 추가합니다.
         info = @Info(
-                title = "MINUTE 프로젝트 API 명세서", // API 문서의 제목을 팀에서 정해주세요.
+                title = "GoodsPle API 명세서", // API 문서의 제목을 팀에서 정해주세요.
                 version = "v1.0.0",             // API의 초기 버전을 명시합니다. (예: "v0.1", "v1.0")
-                description = "MINUTE 프로젝트에서 제공하는 전체 API에 대한 상세 명세입니다. " +
+                description = "GoodsPle 프로젝트에서 제공하는 전체 API에 대한 상세 명세입니다. " +
                         "이 문서를 통해 백엔드 API 사용법을 확인하고 개발을 진행할 수 있습니다.", // API 문서에 대한 설명을 자유롭게 작성해주세요.
                 contact = @Contact( // 선택 사항: API 관련 문의처
-                        name = "개발팀 (또는 담당자 이름)",
+                        name = "GoodsPle Team",
                         email = "dev_team@example.com", // 팀 대표 이메일 또는 담당자 이메일
                         url = "https://project.example.com" // 프로젝트 관련 웹사이트 (선택)
                 )
