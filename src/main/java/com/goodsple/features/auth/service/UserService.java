@@ -3,6 +3,7 @@ package com.goodsple.features.auth.service;
 import com.goodsple.features.auth.dto.request.SignUpRequest;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.entity.User;
+import com.goodsple.features.auth.enums.CheckType;
 import com.goodsple.features.auth.enums.Role;
 import com.goodsple.features.auth.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -71,5 +72,15 @@ public class UserService {
             throw new IllegalArgumentException("이미 사용 중인 휴대폰 번호입니다.");
         }
     }
+
+    public boolean isAvailable(CheckType checkType, String value) {
+        return switch (checkType) {
+            case LOGIN_ID -> !userMapper.existsByLoginId(value);
+            case NICKNAME -> !userMapper.existsByNickname(value);
+            case EMAIL -> !userMapper.existsByEmail(value);
+            case PHONE_NUMBER -> !userMapper.existsByPhoneNumber(value);
+        };
+    }
+
 }
 
