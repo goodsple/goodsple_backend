@@ -5,32 +5,39 @@
 
 <mapper namespace="com.goodsple.features.auth.mapper.UserMapper">
 
-    <insert id="createUser" useGeneratedKeys="true" keyProperty="userId">
-        INSERT INTO users
-        (login_id, password, name, nickname, email, phone_number, birth_date, gender,
-         role, suspension_status, login_type, is_banned_from_auction, kakao_id)
-        VALUES
-            (#{loginId}, #{password}, #{name}, #{nickname}, #{email}, #{phoneNumber}, #{birthDate}, #{gender},
-             #{role}, #{suspensionStatus}, #{loginType}, #{isBannedFromAuction}, #{kakaoId})
+    <insert id="createUser" parameterType="com.goodsple.features.auth.entity.User">
+        INSERT INTO users (
+            login_id, password, name, nickname, email,
+            phone_number, birth_date, gender, role,
+            suspension_status, login_type, is_banned_from_auction, kakao_id
+        ) VALUES (
+                     #{loginId}, #{password}, #{name}, #{nickname}, #{email},
+                     #{phoneNumber}, #{birthDate},
+                     #{gender, jdbcType=OTHER},
+                     #{role, jdbcType=OTHER},
+                     #{suspensionStatus, jdbcType=OTHER},
+                     #{loginType, jdbcType=OTHER},
+                     #{isBannedFromAuction}, #{kakaoId}
+                 )
     </insert>
 
-    <select id="existsByLoginId" resultType="boolean">
+    <select id="existsByLoginId" parameterType="String" resultType="java.lang.Boolean">
         SELECT EXISTS(SELECT 1 FROM users WHERE login_id = #{loginId})
     </select>
 
-    <select id="existsByNickname" resultType="boolean">
+    <select id="existsByNickname" parameterType="String" resultType="java.lang.Boolean">
         SELECT EXISTS(SELECT 1 FROM users WHERE nickname = #{nickname})
     </select>
 
-    <select id="existsByEmail" resultType="boolean">
+    <select id="existsByEmail" parameterType="String" resultType="java.lang.Boolean">
         SELECT EXISTS(SELECT 1 FROM users WHERE email = #{email})
     </select>
 
-    <select id="existsByPhoneNumber" resultType="boolean">
+    <select id="existsByPhoneNumber" parameterType="String" resultType="java.lang.Boolean">
         SELECT EXISTS(SELECT 1 FROM users WHERE phone_number = #{phoneNumber})
     </select>
 
-    <select id="findByLoginId" resultType="com.goodsple.features.auth.entity.User">
+    <select id="findByLoginId" parameterType="String" resultType="com.goodsple.features.auth.entity.User">
         SELECT * FROM users WHERE login_id = #{loginId}
     </select>
 

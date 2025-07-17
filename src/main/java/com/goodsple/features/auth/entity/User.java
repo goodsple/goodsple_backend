@@ -9,6 +9,8 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+
 
 @Data
 @Builder
@@ -29,9 +31,9 @@ public class User {
 
     @Builder.Default
     private SuspensionStatus suspensionStatus = SuspensionStatus.ACTIVE;
-    private LocalDateTime suspendedUntil;
-    private LocalDateTime userCreatedAt;
-    private LocalDateTime userUpdatedAt;
+    private OffsetDateTime suspendedUntil;
+    private OffsetDateTime userCreatedAt;
+    private OffsetDateTime userUpdatedAt;
 
     @Builder.Default
     private LoginType loginType = LoginType.LOCAL;

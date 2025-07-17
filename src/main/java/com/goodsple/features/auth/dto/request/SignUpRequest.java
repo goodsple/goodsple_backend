@@ -31,10 +31,6 @@ public class SignUpRequest {
     @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*()_+=-]).{8,}$", message = "영문, 숫자, 특수문자를 포함해 8자 이상 입력해주세요.")
     private String password;
 
-    @Schema(hidden = true)
-    @JsonIgnore
-    private String passwordCheck; // 프론트에서 비밀번호 확인용
-
     @Schema(description = "닉네임", example = "둥둥이")
     @NotBlank(message = "닉네임을 입력해주세요.")
     @Pattern(regexp = "^[a-zA-Z0-9가-힣]{2,12}$", message = "닉네임은 2~12자 이내로 입력해주세요. 특수문자는 사용할 수 없습니다.")
