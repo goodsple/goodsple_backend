@@ -1,22 +1,32 @@
 package com.goodsple.config;
 
+import com.goodsple.security.JwtAuthenticationFilter;
+import com.goodsple.security.JwtTokenProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Configuration
 public class SecurityConfig {
 
+    private final JwtTokenProvider jwtProvider;
+
+    public SecurityConfig(JwtTokenProvider jwtProvider) {
+        this.jwtProvider = jwtProvider;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // 6.1 이상 방식
+                .csrf(csrf -> csrf.disable())                      // CSRF 비활성화
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:5173"));
@@ -25,22 +35,24 @@ public class SecurityConfig {
                     config.setAllowCredentials(true);
                     return config;
                 }))
-                .formLogin(form ->form.disable()) // 폼 로그인 비활성화
-                .httpBasic(httpBasic ->httpBasic.disable()) // HTTP Basic 비활성화
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers(
-//                                "/api/auth/**",         // 회원가입, 로그인 등
-//                                "/swagger-ui/**",       // Swagger UI
-//                                "/v3/api-docs/**",      // Swagger JSON Docs
-//                                "/swagger-resources/**",// Swagger 리소스
-//                                "/webjars/**"           // Swagger 웹자원
-//                        ).permitAll()
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 세션 사용 안 함
+                )
+                .formLogin(form -> form.disable())                    // 폼 로그인 비활성화
+                .httpBasic(basic -> basic.disable())                 // HTTP Basic 비활성화
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()                      // 그 외 요청은 인증 필요
+                )
+                // JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 앞에 삽입
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtProvider),
+                        UsernamePasswordAuthenticationFilter.class
                 );
+
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder(){

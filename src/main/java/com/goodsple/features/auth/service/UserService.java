@@ -1,21 +1,28 @@
 package com.goodsple.features.auth.service;
 
+import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.SignUpRequest;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
+import com.goodsple.features.auth.dto.response.TokenResponse;
 import com.goodsple.features.auth.entity.User;
 import com.goodsple.features.auth.enums.CheckType;
 import com.goodsple.features.auth.enums.Role;
 import com.goodsple.features.auth.mapper.UserMapper;
+import com.goodsple.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @Service
 public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtProvider;
 
+    // 회원가입 응답
     public SignUpResponse signUp(SignUpRequest signUpRequest) {
         validateDuplicate(signUpRequest);
 
@@ -51,7 +58,7 @@ public class UserService {
                 .build();
     }
 
-
+    // 중복체크
     private void validateDuplicate(SignUpRequest signUpRequest) {
         if (userMapper.existsByLoginId(signUpRequest.getLoginId())) {
             throw new IllegalArgumentException("이미 사용 중인 로그인 아이디입니다.");
@@ -67,6 +74,7 @@ public class UserService {
         }
     }
 
+    // checkType과 useMapper 맞추기위해서
     public boolean isAvailable(CheckType checkType, String value) {
         return switch (checkType) {
             case LOGIN_ID -> !userMapper.existsByLoginId(value);
@@ -74,6 +82,27 @@ public class UserService {
             case EMAIL -> !userMapper.existsByEmail(value);
             case PHONE_NUMBER -> !userMapper.existsByPhoneNumber(value);
         };
+    }
+
+    public TokenResponse login(LoginRequest loginRequest) {
+        // 사용자 조회
+        User user = userMapper.findByLoginId(loginRequest.getLoginId());
+        // 비밀번호 검증
+        if(user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new ResponseStatusException(
+                    HttpStatus.UNAUTHORIZED,
+                    "아이디 또는 비밀번호가 올바르지 않습니다."
+            );
+        }
+        // 토근 발급
+        String at = jwtProvider.createAccessToken(user.getUserId(), user.getRole().name());
+        String rt = jwtProvider.createRefreshToken(user.getUserId(), user.getRole().name());
+
+        // 응답 dto 빌드
+        return TokenResponse.builder()
+                .accessToken(at)
+                .refreshToken(rt)
+                .build();
     }
 
 }

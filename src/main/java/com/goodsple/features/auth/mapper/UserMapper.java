@@ -20,4 +20,6 @@ public interface UserMapper {
     // user 객체 안에 userId 값이 바로 들어오지 않기에
     // DB에 다시 조회해서 userId, role, gender 등 전체 정보까지 포함해서 가져오는 방식
     // createUser → DB에 INSERT → 다시 findByLoginId로 SELECT 구조
+
+    User findByKakaoId(String kakaoId);
 }
