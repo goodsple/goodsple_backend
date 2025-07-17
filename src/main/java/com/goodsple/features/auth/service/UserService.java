@@ -18,7 +18,6 @@ public class UserService {
 
     public SignUpResponse signUp(SignUpRequest signUpRequest) {
         validateDuplicate(signUpRequest);
-        validatePasswordCheck(signUpRequest);
 
         // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(signUpRequest.getPassword());
@@ -52,11 +51,6 @@ public class UserService {
                 .build();
     }
 
-    private void validatePasswordCheck(SignUpRequest signUpRequest) {
-        if (!signUpRequest.getPassword().equals(signUpRequest.getPasswordCheck())) {
-            throw new IllegalArgumentException("비밀번호와 비밀번호 확인이 일치하지 않습니다.");
-        }
-    }
 
     private void validateDuplicate(SignUpRequest signUpRequest) {
         if (userMapper.existsByLoginId(signUpRequest.getLoginId())) {
