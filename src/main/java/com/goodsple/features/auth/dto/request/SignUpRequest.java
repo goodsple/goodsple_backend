@@ -1,5 +1,7 @@
 package com.goodsple.features.auth.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.goodsple.features.auth.enums.Gender;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -30,6 +32,7 @@ public class SignUpRequest {
     private String password;
 
     @Schema(hidden = true)
+    @JsonIgnore
     private String passwordCheck; // 프론트에서 비밀번호 확인용
 
     @Schema(description = "닉네임", example = "둥둥이")
@@ -53,6 +56,7 @@ public class SignUpRequest {
     private String phoneNumber;
 
     @Schema(description = "생년월일", example = "1990-01-01")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @NotNull(message = "생년월일을 선택해주세요.")
     private LocalDate birthDate;
 
@@ -60,9 +64,4 @@ public class SignUpRequest {
     @NotNull(message = "성별을 선택해주세요.")
     private Gender gender;
 
-    public void setGenderFromString(String genderStr) {
-        if (genderStr != null) {
-            this.gender = Gender.valueOf(genderStr.toUpperCase());
-        }
-    }
 }
