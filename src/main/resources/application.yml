@@ -34,5 +34,5 @@ logging:
     org.mybatis: DEBUG
 
 kakao:
-  client-id: YOUR_KAKAO_REST_API_KEY
+  client-id: 0f69a9009a695e1a7a933e9cc124cf76
   redirect-uri: http://localhost:8080/api/auth/kakao/callback
