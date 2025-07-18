@@ -12,6 +12,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @Schema(description = "인증 토큰 응답")
 public class TokenResponse {
+
+    @Schema(description = "엑세스 토큰")
     private String accessToken;
+
+    @Schema(description = "리프레시 토큰")
     private String refreshToken;
 }
