@@ -29,25 +29,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())                      // CSRF 비활성화
+                .csrf(csrf -> csrf.disable())  // CSRF 보안 기능 끄기 (API 서버라서)
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:5173"));
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE","OPTIONS"));
+                    config.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트 도메인 허용
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 세션 사용 안 함
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // JWT 사용 → 세션 안 씀
                 )
-                .formLogin(form -> form.disable())                    // 폼 로그인 비활성화
-                .httpBasic(basic -> basic.disable())                 // HTTP Basic 비활성화
+                .formLogin(form -> form.disable()) // 폼 로그인 사용 안 함
+                .httpBasic(basic -> basic.disable()) // 기본 인증창 안 띄움
+                // 인증/권한 에러 발생 시 JSON 응답 주기 위한 설정
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(authenticationEntryPoint()) // 로그인 안 했을 때 401 처리
+                        .accessDeniedHandler(accessDeniedHandler())           // 권한 없을 때 403 처리
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .anyRequest().authenticated()                      // 그 외 요청은 인증 필요
+                        .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // 로그인 없이 접근 허용
+                        .anyRequest().authenticated() // 나머지는 인증 필요
                 )
-                // JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 앞에 삽입
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
                         UsernamePasswordAuthenticationFilter.class
@@ -56,25 +60,27 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // 로그인 안 했을 때 에러 처리 (401)
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, authException) -> {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"message\": \"아이디 또는 비밀번호가 일치하지 않습니다.\"}");
+            response.getWriter().write("{\"message\": \"❗아이디 또는 비밀번호가 일치하지 않습니다.\"}");
         };
     }
 
+    // 권한 없을 때 에러 처리 (403)
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
         return (request, response, accessDeniedException) -> {
             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"message\": \"접근 권한이 없습니다.\"}");
+            response.getWriter().write("{\"message\": \"❗접근 권한이 없습니다.\"}");
         };
     }
 
-
+    // 비밀번호 암호화 (회원가입, 로그인에 사용)
     @Bean
     public PasswordEncoder passwordEncoder(){
         // 비밀번호 암호화 (Spring Security에서 제공)
