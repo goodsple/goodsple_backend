@@ -31,9 +31,9 @@ public class KakaoAuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtProvider;
 
-    @Value("${kakao.client-id}")
+    @Value("0f69a9009a695e1a7a933e9cc124cf76")
     private String clientId;
-    @Value("${kakao.redirect-uri}")
+    @Value("http://localhost:5173/auth/kakao/callback")
     private String redirectUri;
 
 
