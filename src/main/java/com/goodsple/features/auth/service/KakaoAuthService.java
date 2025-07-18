@@ -31,9 +31,10 @@ public class KakaoAuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtProvider;
 
-    @Value("0f69a9009a695e1a7a933e9cc124cf76")
+    @Value("${kakao.client-id}")
     private String clientId;
-    @Value("http://localhost:5173/auth/kakao/callback")
+
+    @Value("${kakao.redirect-uri}")
     private String redirectUri;
 
 
@@ -55,6 +56,10 @@ public class KakaoAuthService {
      * 신규/기존 유저를 판별하여 응답을 반환하는 핵심 메서드
      */
     public KakaoLoginResponse loginWithKakao(String code) {
+        System.out.println("받은 code = " + code);
+        System.out.println("clientId = " + clientId);
+        System.out.println("redirectUri = " + redirectUri);
+
         HttpHeaders tokenHeaders = new HttpHeaders();
         tokenHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         MultiValueMap<String, String> tokenRequest = new LinkedMultiValueMap<>();
