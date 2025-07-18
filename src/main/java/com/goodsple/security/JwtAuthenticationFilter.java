@@ -20,6 +20,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtProvider = jwtProvider;
     }
 
+    /**
+     * true 를 리턴하는 요청은 doFilterInternal 자체를 스킵합니다.
+     */
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        // ContextPath 제외한 순수 URI
+        String servletPath = request.getServletPath(); // e.g. "/api/auth/kakao/callback"
+        return servletPath.startsWith("/api/auth/");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -33,14 +43,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-        // 1) HTTP 헤더에서 Authorization 토큰을 가져옵니다.
+        // 여긴 JWT 검증 로직만!
         String bearer = request.getHeader("Authorization");
-
-        // 2) "Bearer " 접두사가 있는지 확인하고, 유효한 토큰인지 검사합니다.
         if (bearer != null && bearer.startsWith("Bearer ")) {
             String token = bearer.substring(7);
             if (jwtProvider.validateToken(token)) {
-                // 3) 토큰이 유효하면 Authentication 객체를 생성하여 시큐리티 컨텍스트에 설정
                 Authentication auth = jwtProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
