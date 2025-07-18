@@ -2,6 +2,7 @@ package com.goodsple.features.auth.controller;
 
 import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.RefreshRequest;
+import com.goodsple.features.auth.dto.response.KakaoLoginResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
 import com.goodsple.features.auth.service.KakaoAuthService;
 import com.goodsple.features.auth.service.UserService;
@@ -79,17 +80,15 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("url", url));
     }
 
-    @Operation(summary = "카카오 로그인", description = "카카오 콜백 코드로 로그인 처리 후 JWT를 반환합니다.")
+    @Operation(summary = "카카오 로그인", description = "카카오 콜백 코드로 로그인 처리 후 JWT 또는 신규 가입 여부를 반환합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "카카오 로그인 성공"),
+            @ApiResponse(responseCode = "200", description = "카카오 로그인 성공 또는 신규 가입 필요"),
             @ApiResponse(responseCode = "401", description = "카카오 인증 실패"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @GetMapping("/kakao/callback")
-    public ResponseEntity<TokenResponse> kakaoLogin(@RequestParam("code") String code) {
-        TokenResponse tokens = kakaoAuthService.loginWithKakao(code);
-        return ResponseEntity.ok(tokens);
+    public ResponseEntity<KakaoLoginResponse> kakaoLogin(@RequestParam("code") String code) {
+        KakaoLoginResponse response = kakaoAuthService.loginWithKakao(code);
+        return ResponseEntity.ok(response);
     }
-
-
 }
