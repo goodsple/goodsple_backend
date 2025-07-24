@@ -4,6 +4,7 @@ import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.SignUpRequest;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
+import com.goodsple.features.auth.dto.response.UserProfile;
 import com.goodsple.features.auth.entity.User;
 import com.goodsple.features.auth.enums.CheckType;
 import com.goodsple.features.auth.enums.Role;
@@ -105,5 +106,19 @@ public class UserService {
                 .build();
     }
 
+    /** 현재 로그인된 사용자 프로필 정보 조회 */
+    public UserProfile getProfile(Long userId) {
+        User u = userMapper.findById(userId);
+        return UserProfile.builder()
+                .loginId(u.getLoginId())
+                .nickname(u.getNickname())
+                .name(u.getName())
+                .email(u.getEmail())
+                .phoneNumber(u.getPhoneNumber())
+                .birthDate(u.getBirthDate())
+                .gender(u.getGender())
+                .profileImageUrl(u.getProfileImage())  // 로컬 가입 시 저장된 URL 또는 카카오 프로필 URL
+                .build();
+    }
 }
 

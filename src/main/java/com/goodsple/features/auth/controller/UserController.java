@@ -1,6 +1,5 @@
 package com.goodsple.features.auth.controller;
 
-import com.goodsple.features.auth.dto.request.CheckDuplicateRequest;
 import com.goodsple.features.auth.dto.request.SignUpRequest;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.enums.CheckType;
@@ -20,7 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@Tag(name = "Signup", description = "회원가입 및 인증 관련 API")
+@Tag(name = "Signup", description = "로컬 회원가입 및 인증 관련 API")
 public class UserController {
 
     private final UserService userService;

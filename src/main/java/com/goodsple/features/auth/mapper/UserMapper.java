@@ -22,4 +22,7 @@ public interface UserMapper {
     // createUser → DB에 INSERT → 다시 findByLoginId로 SELECT 구조
 
     User findByKakaoId(String kakaoId);
+
+    /** 유저 ID로 사용자 정보를 조회합니다. */
+    User findById(Long userId);
 }

@@ -25,9 +25,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // ContextPath 제외한 순수 URI
+        // 1) ContextPath 를 제외한 순수 URI 가져오기
         String servletPath = request.getServletPath(); // e.g. "/api/auth/kakao/callback"
-        return servletPath.startsWith("/api/auth/");
+
+        // 2) 스킵 여부 판단
+        boolean skip = servletPath.startsWith("/api/auth/");
+
+        // 3) (선택) 스킵할 때 로그 찍기
+        if (skip) {
+            System.out.println("[JwtFilter] SKIP 인증 필터 for path: " + servletPath);
+        }
+
+        // 4) 한 번만 리턴!
+        return skip;
     }
 
     @Override
