@@ -2,6 +2,10 @@ package com.goodsple.features.auth.mapper;
 
 import com.goodsple.features.auth.entity.User;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 // MyBatis에서 Mapper 인터페이스 = SQL 쿼리를 호출하는 Java 메서드와 DB 매핑을 연결하는 역할
 @Mapper
@@ -25,4 +29,30 @@ public interface UserMapper {
 
     /** 유저 ID로 사용자 정보를 조회합니다. */
     User findById(Long userId);
+
+    // 아이디 찾기용 인증번호 저장
+    void insertFindIdCode(@Param("email") String email,
+                          @Param("code") String code,
+                          @Param("expiresAt") LocalDateTime expiresAt);
+
+    // 비밀번호 재설정용 인증번호 저장
+    void insertResetPasswordCode(@Param("email") String email,
+                                 @Param("code") String code,
+                                 @Param("expiresAt") LocalDateTime expiresAt);
+
+    // 아이디 찾기 인증번호 검증
+    Optional<String> selectFindIdCode(@Param("email") String email,
+                                      @Param("code") String code,
+                                      @Param("now") LocalDateTime now);
+
+    // 비밀번호 재설정 인증번호 검증
+    Optional<String> selectResetPasswordCode(@Param("email") String email,
+                                             @Param("code") String code,
+                                             @Param("now") LocalDateTime now);
+
+    // 아이디 찾기: 이메일로 로그인 아이디 조회
+    Optional<String> selectLoginIdByNameAndEmail(@Param("name") String name,
+                                                 @Param("email") String email);
+
+
 }

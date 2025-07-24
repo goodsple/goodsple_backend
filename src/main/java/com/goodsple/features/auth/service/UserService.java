@@ -11,10 +11,15 @@ import com.goodsple.features.auth.enums.Role;
 import com.goodsple.features.auth.mapper.UserMapper;
 import com.goodsple.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.coyote.BadRequestException;
+import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Service
@@ -89,7 +94,7 @@ public class UserService {
         // 사용자 조회
         User user = userMapper.findByLoginId(loginRequest.getLoginId());
         // 비밀번호 검증
-        if(user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+        if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(
                     HttpStatus.UNAUTHORIZED,
                     "아이디 또는 비밀번호가 올바르지 않습니다."
@@ -106,7 +111,9 @@ public class UserService {
                 .build();
     }
 
-    /** 현재 로그인된 사용자 프로필 정보 조회 */
+    /**
+     * 현재 로그인된 사용자 프로필 정보 조회
+     */
     public UserProfile getProfile(Long userId) {
         User u = userMapper.findById(userId);
         return UserProfile.builder()
@@ -120,5 +127,45 @@ public class UserService {
                 .profileImageUrl(u.getProfileImage())  // 로컬 가입 시 저장된 URL 또는 카카오 프로필 URL
                 .build();
     }
+
+    // 아이디 찾기 인증번호 발급
+    public void requestFindIdCode(String email) {
+        String code = RandomStringUtils.randomNumeric(6); // 6자리 숫자 인증코드 생성
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(3); // 3분 뒤 만료 설정
+
+        // 인증번호 DB에 저장
+        userMapper.insertFindIdCode(email, code, expiresAt);
+
+        // 이메일 전송 로직 (생략)
+        // 예: 인증번호를 이메일로 전송하는 부분 구현
+    }
+
+    // 아이디 찾기 인증번호 검증
+    public boolean validateFindIdCode(String email, String code) {
+        LocalDateTime now = LocalDateTime.now();
+        return userMapper.selectFindIdCode(email, code, now).isPresent();
+    }
+
+    // 아이디 찾기: 이메일로 로그인 아이디 조회
+    public String findLoginId(String name, String email, String code) {
+        // 인증번호 검증
+        boolean valid = validateFindIdCode(email, code);
+        if (!valid) {
+            // ResponseStatusException을 사용하여 BAD_REQUEST 상태 코드와 메시지를 반환
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "유효하지 않은 인증번호입니다."
+            );
+        }
+
+        // 아이디 조회
+        String loginId = userMapper.selectLoginIdByNameAndEmail(name, email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "일치하는 회원이 없습니다."
+                ));
+
+        // 아이디를 암호화하여 반환
+        return passwordEncoder.encode(loginId); // 암호화된 아이디 반환
+    }
 }
+
 

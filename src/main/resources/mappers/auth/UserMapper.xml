@@ -58,4 +58,39 @@
         FROM users
         WHERE user_id = #{userId}
     </select>
+
+<!-- 아이디 찾기   -->
+    <insert id="insertFindIdCode">
+        INSERT INTO find_id_code(email, code, expires_at)
+        VALUES(#{email}, #{code}, #{expiresAt})
+    </insert>
+
+    <insert id="insertResetPasswordCode">
+        INSERT INTO reset_password_code(email, code, expires_at)
+        VALUES(#{email}, #{code}, #{expiresAt})
+    </insert>
+
+    <select id="selectFindIdCode" resultType="string">
+        SELECT code
+        FROM find_id_code
+        WHERE email = #{email}
+          AND code  = #{code}
+          AND expires_at &gt; #{now}
+    </select>
+
+    <select id="selectResetPasswordCode" resultType="string">
+        SELECT code
+        FROM reset_password_code
+        WHERE email = #{email}
+          AND code  = #{code}
+          AND expires_at &gt; #{now}
+    </select>
+
+    <select id="selectLoginIdByNameAndEmail" resultType="string">
+        SELECT login_id
+        FROM users
+        WHERE name = #{name}
+          AND email = #{email}
+    </select>
+
 </mapper>
