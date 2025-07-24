@@ -45,4 +45,17 @@
         SELECT * FROM users WHERE kakao_id = #{kakaoId}
     </select>
 
+    <!-- userId로 사용자 정보를 조회 -->
+    <select id="findById" parameterType="long" resultType="com.goodsple.features.auth.entity.User">
+        SELECT
+            user_id   AS userId, login_id  AS loginId, password,name,nickname,email,
+            phone_number  AS phoneNumber, birth_date    AS birthDate,
+            gender,role,profile_image  AS profileImage,
+            suspension_status  AS suspensionStatus,suspended_until  AS suspendedUntil,
+            user_created_at  AS userCreatedAt,user_updated_at  AS userUpdatedAt,
+            login_type  AS loginType,kakao_id  AS kakaoId,
+            is_banned_from_auction  AS isBannedFromAuction
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
 </mapper>
