@@ -1,7 +1,6 @@
 package com.goodsple.features.auth.controller;
 
-import com.goodsple.features.auth.dto.request.FindIdCodeRequest;
-import com.goodsple.features.auth.dto.request.FindIdRequest;
+import com.goodsple.features.auth.dto.request.*;
 import com.goodsple.features.auth.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -49,5 +48,44 @@ public class FindController {
         String loginId = userService.findLoginId(
                 findIdRequest.getName(), findIdRequest.getEmail(), findIdRequest.getCode());
         return ResponseEntity.ok("loginId: " + loginId);
+    }
+
+    // 비밀번호 찾기 - 인증번호 요청
+    @Operation(summary = "비밀번호 재설정 인증번호 발급", description = "사용자가 아이디와 이메일을 입력하면 인증번호를 이메일로 전송합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증번호 전송 성공"),
+            @ApiResponse(responseCode = "404", description = "일치하는 회원 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @PostMapping("/find-password/request")
+    public ResponseEntity<String> requestResetPasswordCode(@RequestBody @Valid ResetPasswordRequest request) {
+        userService.requestResetPasswordCode(request.getLoginId(), request.getEmail());
+        return ResponseEntity.ok("인증번호가 이메일로 전송되었습니다.");
+    }
+
+    // 비밀번호 찾기 - 인증번호 검증
+    @Operation(summary = "비밀번호 재설정 인증번호 검증", description = "사용자가 입력한 인증번호를 검증합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "인증번호 일치"),
+            @ApiResponse(responseCode = "400", description = "인증번호 불일치 또는 시간 초과"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @PostMapping("/find-password/verify")
+    public ResponseEntity<String> verifyResetPasswordCode(@RequestBody @Valid VerifyCode request) {
+        userService.verifyResetPasswordCode(request.getEmail(), request.getCode());
+        return ResponseEntity.ok("인증번호 검증 성공");
+    }
+
+    // 비밀번호 재설정
+    @Operation(summary = "비밀번호 재설정", description = "인증 완료된 사용자가 새 비밀번호를 설정합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비밀번호 변경 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자 없음"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @PostMapping("/find-password/reset")
+    public ResponseEntity<String> resetPassword(@RequestBody @Valid ResetPw request) {
+        userService.resetPassword(request.getLoginId(), request.getNewPassword());
+        return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
     }
 }

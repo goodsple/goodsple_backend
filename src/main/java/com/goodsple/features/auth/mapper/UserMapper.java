@@ -51,5 +51,12 @@ public interface UserMapper {
                                              @Param("code") String code,
                                              @Param("now") LocalDateTime now);
 
+    // 아이디 + 이메일로 유저 조회
+    Optional<User> selectByLoginIdAndEmail(@Param("loginId") String loginId,
+                                           @Param("email") String email);
+
+    // 유저 ID로 비밀번호 업데이트
+    void updatePassword(@Param("userId") Long userId,
+                        @Param("password") String password);
 
 }

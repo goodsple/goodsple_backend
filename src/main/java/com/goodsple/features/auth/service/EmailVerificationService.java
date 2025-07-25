@@ -1,7 +1,9 @@
 package com.goodsple.features.auth.service;
 
 import com.goodsple.features.auth.dto.response.EmailVerificationResponse;
+import com.goodsple.features.auth.entity.EmailVerification;
 import com.goodsple.features.auth.mapper.EmailVerificationMapper;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -34,5 +36,20 @@ public class EmailVerificationService {
         emailVerificationMapper.updateUsed(email, code);  // 사용 처리
 
         return verification;  // 인증이 완료되면, 이메일 인증 정보를 반환
+    }
+
+    public String createAndSaveCode(String email) {
+        String code = RandomStringUtils.randomNumeric(6);
+        LocalDateTime now = LocalDateTime.now();
+
+        emailVerificationMapper.insert(EmailVerification.builder()
+                .email(email)
+                .code(code)
+                .createdAt(now)
+                .expiresAt(now.plusMinutes(3))
+                .used(false)
+                .build());
+
+        return code;
     }
 }

@@ -65,22 +65,9 @@
         VALUES(#{email}, #{code}, #{expiresAt})
     </insert>
 
-    <insert id="insertResetPasswordCode">
-        INSERT INTO reset_password_code(email, code, expires_at)
-        VALUES(#{email}, #{code}, #{expiresAt})
-    </insert>
-
     <select id="selectFindIdCode" resultType="string">
         SELECT code
         FROM find_id_code
-        WHERE email = #{email}
-          AND code  = #{code}
-          AND expires_at &gt; #{now}
-    </select>
-
-    <select id="selectResetPasswordCode" resultType="string">
-        SELECT code
-        FROM reset_password_code
         WHERE email = #{email}
           AND code  = #{code}
           AND expires_at &gt; #{now}
@@ -93,4 +80,32 @@
           AND email = #{email}
     </select>
 
+<!-- 비밀번호 찾기 -->
+    <!-- 1. 아이디 + 이메일로 사용자 조회 -->
+    <select id="selectByLoginIdAndEmail" resultType="com.goodsple.features.auth.entity.User">
+        SELECT *
+        FROM users
+        WHERE login_id = #{loginId}
+          AND email = #{email}
+    </select>
+
+    <!-- 2. 비밀번호 업데이트 -->
+    <update id="updatePassword">
+        UPDATE users
+        SET password = #{password}
+        WHERE user_id = #{userId}
+    </update>
+
+    <insert id="insertResetPasswordCode">
+        INSERT INTO reset_password_code(email, code, expires_at)
+        VALUES(#{email}, #{code}, #{expiresAt})
+    </insert>
+
+    <select id="selectResetPasswordCode" resultType="string">
+        SELECT code
+        FROM reset_password_code
+        WHERE email = #{email}
+          AND code  = #{code}
+          AND expires_at &gt; #{now}
+    </select>
 </mapper>
