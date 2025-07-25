@@ -156,7 +156,7 @@ public class UserService {
         emailVerificationMapper.insert(record);
 
         // 메일 발송
-        emailService.sendVerificationEmail(email, code); // fromAddress 자동 사용
+        emailService.sendVerificationEmail(email, code,"find-id"); // fromAddress 자동 사용
     }
 
     // 2) 인증번호 검증 & 사용 처리
@@ -190,7 +190,7 @@ public class UserService {
         String code = emailVerificationService.createAndSaveCode(email);
 
         // 이메일 발송
-        emailService.sendVerificationEmail(email, code);
+        emailService.sendVerificationEmail(email, code,"reset-password");
     }
 
     // 비밀번호 찾기 - 인증번호 검증

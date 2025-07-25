@@ -11,8 +11,13 @@
         안녕하세요, <strong style="color: #997BEB;">Goodsple</strong>입니다. 👋
     </div>
 
-    <div style="font-size: 16px; color: #333; margin-bottom: 24px;">
-        아이디 찾기를 위한 <strong style="color: #997BEB;">인증번호</strong>를 아래에 안내드립니다.
+    <div style="font-size: 16px; color: #444; margin-bottom: 24px;">
+        <span th:if="${purpose == 'find-id'}">
+            아이디 찾기를 위한 <strong style="color: #997BEB;">인증번호</strong>를 아래에 안내드립니다.
+        </span>
+        <span th:if="${purpose == 'reset-password'}">
+            비밀번호 재설정을 위한 <strong style="color: #997BEB;">인증번호</strong>를 아래에 안내드립니다.
+        </span>
     </div>
 
     <div style="
