@@ -60,6 +60,17 @@
     </select>
 
 <!-- 아이디 찾기   -->
+    <select id="existsByNameAndEmail"
+            parameterType="map"
+            resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM users
+            WHERE name  = #{name}
+              AND email = #{email}
+        )
+    </select>
+
     <insert id="insertFindIdCode">
         INSERT INTO find_id_code(email, code, expires_at)
         VALUES(#{email}, #{code}, #{expiresAt})
