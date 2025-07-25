@@ -65,12 +65,6 @@
         VALUES(#{email}, #{code}, #{expiresAt})
     </insert>
 
-    <select id="existsByNameAndEmail" resultType="boolean">
-        SELECT COUNT(*) > 0
-        FROM users
-        WHERE name = #{name} AND email = #{email}
-    </select>
-
     <select id="selectFindIdCode" resultType="string">
         SELECT code
         FROM find_id_code

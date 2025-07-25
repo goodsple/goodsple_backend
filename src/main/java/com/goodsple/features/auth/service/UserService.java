@@ -2,7 +2,6 @@ package com.goodsple.features.auth.service;
 
 import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.SignUpRequest;
-import com.goodsple.features.auth.dto.response.EmailVerificationResponse;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
 import com.goodsple.features.auth.dto.response.UserProfile;
@@ -15,8 +14,6 @@ import com.goodsple.features.auth.mapper.UserMapper;
 import com.goodsple.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.apache.coyote.BadRequestException;
-import org.apache.ibatis.javassist.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -32,6 +29,7 @@ public class UserService {
     private final JwtTokenProvider jwtProvider;
     private final EmailService emailService;
     private final EmailVerificationMapper emailVerificationMapper;
+    private final EmailVerificationService emailVerificationService;
 
     // 회원가입 응답
     public SignUpResponse signUp(SignUpRequest signUpRequest) {
@@ -159,7 +157,7 @@ public class UserService {
         emailVerificationMapper.insert(record);
 
         // 메일 발송
-        emailService.sendVerificationEmail(email, code); // fromAddress 자동 사용
+        emailService.sendVerificationEmail(email, code,"find-id"); // fromAddress 자동 사용
     }
 
     // 2) 인증번호 검증 & 사용 처리
@@ -181,6 +179,44 @@ public class UserService {
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "일치하는 회원이 없습니다."
                 ));
+    }
+
+    // 비밀번호 찾기 - 인증번호 전송
+    public void requestResetPasswordCode(String loginId, String email) {
+        // 아이디와 이메일이 일치하는 회원 확인
+        User user = userMapper.selectByLoginIdAndEmail(loginId, email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "일치하는 회원이 없습니다."));
+
+        // 인증번호 생성 및 저장
+        String code = emailVerificationService.createAndSaveCode(email);
+
+        // 이메일 발송
+        emailService.sendVerificationEmail(email, code,"reset-password");
+    }
+
+    // 비밀번호 찾기 - 인증번호 검증
+    public void verifyResetPasswordCode(String email, String code) {
+        emailVerificationService.verifyCode(email, code);
+    }
+
+    // 비밀번호 찾기 - 새 비밀번호 설정
+    public void resetPassword(String loginId, String newPassword) {
+        // 1. 사용자 존재 여부 확인
+        User user = userMapper.findByLoginId(loginId);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다.");
+        }
+
+        // 2. 기존 비밀번호와 동일한지 확인
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "기존 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.");
+        }
+
+        // 3. 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(newPassword);
+
+        // 4. DB 업데이트
+        userMapper.updatePassword(user.getUserId(), encodedPassword);
     }
 }
 

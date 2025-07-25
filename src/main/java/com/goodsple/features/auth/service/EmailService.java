@@ -22,11 +22,12 @@ public class EmailService {
     private String fromAddress;
 
     // 인증 이메일 전송 메서드
-    public void sendVerificationEmail(String toEmail, String verificationCode) {
+    public void sendVerificationEmail(String toEmail, String verificationCode,String purpose) {
         try {
         // 1) Thymeleaf 컨텍스트 세팅
         Context ctx = new Context();
-        ctx.setVariable("code", verificationCode);
+        ctx.setVariable("code", verificationCode);   // 인증번호
+            ctx.setVariable("purpose", purpose);    // find-id 또는 reset-password
 
         // 2) HTML 렌더링
         String htmlContent = templateEngine.process("verification-email", ctx);
