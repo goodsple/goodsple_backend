@@ -35,24 +35,21 @@ public interface UserMapper {
                           @Param("code") String code,
                           @Param("expiresAt") LocalDateTime expiresAt);
 
+    // 아이디 찾기: 이메일로 로그인 아이디 조회
+    Optional<String> selectLoginIdByNameAndEmail(@Param("name") String name,
+                                                 @Param("email") String email);
+
+
     // 비밀번호 재설정용 인증번호 저장
     void insertResetPasswordCode(@Param("email") String email,
                                  @Param("code") String code,
                                  @Param("expiresAt") LocalDateTime expiresAt);
 
-    // 아이디 찾기 인증번호 검증
-    Optional<String> selectFindIdCode(@Param("email") String email,
-                                      @Param("code") String code,
-                                      @Param("now") LocalDateTime now);
 
     // 비밀번호 재설정 인증번호 검증
     Optional<String> selectResetPasswordCode(@Param("email") String email,
                                              @Param("code") String code,
                                              @Param("now") LocalDateTime now);
-
-    // 아이디 찾기: 이메일로 로그인 아이디 조회
-    Optional<String> selectLoginIdByNameAndEmail(@Param("name") String name,
-                                                 @Param("email") String email);
 
 
 }

@@ -46,7 +46,8 @@ public class FindController {
     })
     @PostMapping("/find-id")
     public ResponseEntity<String> findLoginId(@RequestBody @Valid FindIdRequest findIdRequest) {
-        String encryptedLoginId = userService.findLoginId(findIdRequest.getName(), findIdRequest.getEmail(), findIdRequest.getCode());
-        return ResponseEntity.ok("회원님의 아이디는: " + encryptedLoginId);
+        String loginId = userService.findLoginId(
+                findIdRequest.getName(), findIdRequest.getEmail(), findIdRequest.getCode());
+        return ResponseEntity.ok("loginId: " + loginId);
     }
 }

@@ -25,19 +25,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 1) ContextPath 를 제외한 순수 URI 가져오기
-        String servletPath = request.getServletPath(); // e.g. "/api/auth/kakao/callback"
+        String path = request.getServletPath();
+        System.out.println("▶ servletPath: " + path + ", requestURI: " + request.getRequestURI());
 
-        // 2) 스킵 여부 판단
-        boolean skip = servletPath.startsWith("/api/auth/");
+        // 로그인 없이 열어둘 API만 true 리턴
+        boolean skip =
+                path.equals("/api/auth/find-id/request")
+                        || path.equals("/api/auth/find-id")
+                        || path.equals("/api/auth/login")
+                        || path.equals("/api/auth/signup")
+                        || path.startsWith("/swagger-ui/")
+                        || path.startsWith("/v3/api-docs/");
 
-        // 3) (선택) 스킵할 때 로그 찍기
         if (skip) {
-            System.out.println("[JwtFilter] SKIP 인증 필터 for path: " + servletPath);
+            System.out.println("[JwtFilter] SKIP 인증 필터 for path: " + path);
         }
-
-        // 4) 한 번만 리턴!
         return skip;
+
     }
 
     @Override
@@ -46,24 +50,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-
-        String path = request.getRequestURI();
-
-        if (path.startsWith("/api/auth")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-        // 여긴 JWT 검증 로직만!
+        // 1) 토큰 파싱
         String bearer = request.getHeader("Authorization");
         if (bearer != null && bearer.startsWith("Bearer ")) {
             String token = bearer.substring(7);
+            // 2) 토큰 유효성 검사
             if (jwtProvider.validateToken(token)) {
                 Authentication auth = jwtProvider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
 
-        // 4) 필터 체인의 다음 필터로 요청을 전달
+        // 3) 필터 체인 계속 진행
         filterChain.doFilter(request, response);
     }
 }

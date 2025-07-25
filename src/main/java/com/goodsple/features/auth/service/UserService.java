@@ -2,12 +2,15 @@ package com.goodsple.features.auth.service;
 
 import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.SignUpRequest;
+import com.goodsple.features.auth.dto.response.EmailVerificationResponse;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
 import com.goodsple.features.auth.dto.response.UserProfile;
+import com.goodsple.features.auth.entity.EmailVerification;
 import com.goodsple.features.auth.entity.User;
 import com.goodsple.features.auth.enums.CheckType;
 import com.goodsple.features.auth.enums.Role;
+import com.goodsple.features.auth.mapper.EmailVerificationMapper;
 import com.goodsple.features.auth.mapper.UserMapper;
 import com.goodsple.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,8 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtProvider;
+    private final EmailService emailService;
+    private final EmailVerificationMapper emailVerificationMapper;
 
     // 회원가입 응답
     public SignUpResponse signUp(SignUpRequest signUpRequest) {
@@ -129,42 +134,52 @@ public class UserService {
     }
 
     // 아이디 찾기 인증번호 발급
+    // 1) 인증번호 요청
     public void requestFindIdCode(String email) {
-        String code = RandomStringUtils.randomNumeric(6); // 6자리 숫자 인증코드 생성
-        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(3); // 3분 뒤 만료 설정
-
-        // 인증번호 DB에 저장
-        userMapper.insertFindIdCode(email, code, expiresAt);
-
-        // 이메일 전송 로직 (생략)
-        // 예: 인증번호를 이메일로 전송하는 부분 구현
-    }
-
-    // 아이디 찾기 인증번호 검증
-    public boolean validateFindIdCode(String email, String code) {
-        LocalDateTime now = LocalDateTime.now();
-        return userMapper.selectFindIdCode(email, code, now).isPresent();
-    }
-
-    // 아이디 찾기: 이메일로 로그인 아이디 조회
-    public String findLoginId(String name, String email, String code) {
-        // 인증번호 검증
-        boolean valid = validateFindIdCode(email, code);
-        if (!valid) {
-            // ResponseStatusException을 사용하여 BAD_REQUEST 상태 코드와 메시지를 반환
+        // 1. 이메일이 가입된 회원 이메일인지 확인
+        if (!userMapper.existsByEmail(email)) {
             throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST, "유효하지 않은 인증번호입니다."
+                    HttpStatus.BAD_REQUEST,
+                    "가입되지 않은 이메일입니다."
             );
         }
+        // 2. 코드 생성, DB 저장, 메일 전송
+        String code = RandomStringUtils.randomNumeric(6); // 6자리 숫자 인증코드 생성
+        LocalDateTime now = LocalDateTime.now();
 
-        // 아이디 조회
-        String loginId = userMapper.selectLoginIdByNameAndEmail(name, email)
+        // DB 저장
+        EmailVerification record = EmailVerification.builder()
+                .email(email)
+                .code(code)
+                .createdAt(now)
+                .expiresAt(now.plusMinutes(3))
+                .used(false)
+                .build();
+        emailVerificationMapper.insert(record);
+
+        // 메일 발송
+        emailService.sendVerificationEmail(email, code); // fromAddress 자동 사용
+    }
+
+    // 2) 인증번호 검증 & 사용 처리
+    private void verifyCode(String email, String code) {
+        emailVerificationMapper.findByEmailAndCode(email, code)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST, "❗인증번호가 일치하지 않거나 만료되었습니다."
+                ));
+        emailVerificationMapper.updateUsed(email, code);
+    }
+
+    // 3) 아이디 찾기
+    public String findLoginId(String name, String email, String code) {
+        // 코드 검증 후
+        verifyCode(email, code);
+
+        // 검증 통과하면 로그인 아이디를 꺼내서 리턴
+        return userMapper.selectLoginIdByNameAndEmail(name, email)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "일치하는 회원이 없습니다."
                 ));
-
-        // 아이디를 암호화하여 반환
-        return passwordEncoder.encode(loginId); // 암호화된 아이디 반환
     }
 }
 
