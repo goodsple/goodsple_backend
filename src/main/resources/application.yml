@@ -10,6 +10,19 @@ spring:
       max-file-size: 10MB
       max-request-size: 20MB
 
+  mail:
+    host: smtp.gmail.com  # SMTP 서버 (예: Gmail)
+    port: 587             # 포트 587 (TLS 연결)
+    username: goodsple2@gmail.com
+    password: qmwwojbswgeesxop   # ← 16자리 앱 비밀번호, 공백 없이
+    properties:
+      mail:
+        smtp:
+          auth: true       # SMTP 인증 필요
+          starttls:
+            enable: true   # TLS 사용
+            required: true
+
 server:
   port: 8080
 
@@ -30,8 +43,18 @@ mybatis:
 logging:
   level:
     org.mybatis: DEBUG
+    org.springframework.security: DEBUG
 
 kakao:
   client-id:     0f69a9009a695e1a7a933e9cc124cf76
   client-secret: rZH2IkMkykHp0m3mFlF3bnBOHWslBv2N
   redirect-uri:  http://localhost:8080/api/auth/kakao/callback
+
+
+# 이메일 인증 관련 설정
+email:
+  verification:
+    expiration-time: 3   # 인증번호 만료 시간 (3분)
+    subject: "이메일 인증 코드"   # 이메일 제목
+    from-address: goodsple2@gmail.com  # 실제 발신 이메일 주소
+    body-template: "이메일 인증 코드: {code}"  # 이메일 본문 템플릿

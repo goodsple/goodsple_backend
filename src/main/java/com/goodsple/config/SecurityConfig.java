@@ -13,7 +13,6 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -49,8 +48,11 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler())           // 권한 없을 때 403 처리
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll() // 로그인 없이 접근 허용
-                        .anyRequest().authenticated() // 나머지는 인증 필요
+                        // 로그인 전에도 열어둘 경로
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // 나머지는 인증 필요
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
