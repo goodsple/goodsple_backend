@@ -30,6 +30,9 @@ public interface UserMapper {
     /** 유저 ID로 사용자 정보를 조회합니다. */
     User findById(Long userId);
 
+    // 이름,이메일 맞는 유저 조회
+    boolean existsByNameAndEmail(@Param("name") String name, @Param("email") String email);
+
     // 아이디 찾기용 인증번호 저장
     void insertFindIdCode(@Param("email") String email,
                           @Param("code") String code,

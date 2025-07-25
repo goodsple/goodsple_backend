@@ -32,7 +32,7 @@ public class FindController {
     })
     @PostMapping("/find-id/request")
     public ResponseEntity<String> requestFindIdCode(@RequestBody @Valid FindIdCodeRequest findIdCode) {
-        userService.requestFindIdCode(findIdCode.getEmail());
+        userService.requestFindIdCode(findIdCode.getName(), findIdCode.getEmail());
         return ResponseEntity.ok("인증번호가 이메일로 전송되었습니다.");
     }
 

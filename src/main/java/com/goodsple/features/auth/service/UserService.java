@@ -135,12 +135,13 @@ public class UserService {
 
     // 아이디 찾기 인증번호 발급
     // 1) 인증번호 요청
-    public void requestFindIdCode(String email) {
+    public void requestFindIdCode(String name, String email) {
         // 1. 이메일이 가입된 회원 이메일인지 확인
-        if (!userMapper.existsByEmail(email)) {
+        boolean exists = userMapper.existsByNameAndEmail(name, email);
+        if (!exists) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "가입되지 않은 이메일입니다."
+                    "일치하는 회원이 없습니다."
             );
         }
         // 2. 코드 생성, DB 저장, 메일 전송
