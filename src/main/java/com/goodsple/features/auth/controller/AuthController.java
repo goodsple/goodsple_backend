@@ -3,11 +3,9 @@ package com.goodsple.features.auth.controller;
 import com.goodsple.features.auth.dto.request.KakaoSignUpRequest;
 import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.RefreshRequest;
-import com.goodsple.features.auth.dto.request.SignUpRequest;
 import com.goodsple.features.auth.dto.response.KakaoLoginResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
 import com.goodsple.features.auth.dto.response.UserProfile;
-import com.goodsple.features.auth.enums.Gender;
 import com.goodsple.features.auth.service.KakaoAuthService;
 import com.goodsple.features.auth.service.UserService;
 import com.goodsple.security.JwtTokenProvider;
@@ -15,21 +13,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.time.LocalDate;
 import java.util.Map;
 
 @Tag(name = "Auth", description = "카카오 로그인 및 토큰 재발급 API")
