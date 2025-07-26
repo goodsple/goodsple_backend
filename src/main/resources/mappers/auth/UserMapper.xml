@@ -119,4 +119,58 @@
           AND code  = #{code}
           AND expires_at &gt; #{now}
     </select>
+
+    <!-- 1) 내 프로필 조회 -->
+    <select id="selectMyProfile"
+            parameterType="long"
+            resultType="com.goodsple.features.auth.entity.User">
+        SELECT
+            user_id           AS userId,
+            profile_image     AS profileImage,
+            name,
+            nickname,
+            email,
+            phone_number      AS phoneNumber,
+            birth_date        AS birthDate,
+            gender            AS gender,
+            login_type        AS loginType
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 2) 내 프로필 수정: 모든 사용자 업데이트 가능, 단 이메일은 LOCAL 로그인만 -->
+    <update id="updateMyProfile"
+            parameterType="com.goodsple.features.auth.entity.User">
+        UPDATE users
+        <set>
+            <if test="profileImage != null">
+                profile_image = #{profileImage},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname},
+            </if>
+            <if test="phoneNumber != null">
+                phone_number = #{phoneNumber},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <!-- 이메일은 LOCAL 로그인한 사용자만 업데이트 -->
+            <if test="loginType == 'LOCAL' and email != null">
+                email = #{email},
+            </if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 3) 내 계정 삭제(탈퇴) -->
+    <delete id="deleteMyProfile"
+            parameterType="long">
+        DELETE FROM users
+        WHERE user_id = #{userId}
+          AND login_type = 'LOCAL'
+    </delete>
 </mapper>

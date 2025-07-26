@@ -62,4 +62,14 @@ public interface UserMapper {
     void updatePassword(@Param("userId") Long userId,
                         @Param("password") String password);
 
+
+    /** 내 프로필 조회 */
+    User selectMyProfile(@Param("userId") Long userId);
+
+    /** 내 프로필 수정 */
+    void updateMyProfile(User user);
+
+    /** 내 계정 삭제(탈퇴) */
+    void deleteMyProfile(@Param("userId") Long userId);
+
 }
