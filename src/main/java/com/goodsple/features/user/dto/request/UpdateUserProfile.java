@@ -35,7 +35,9 @@ public class UpdateUserProfile {
     @Schema(description = "이메일 (LOCAL 로그인만 변경 가능)", example = "test@example.com")
     private String email;             // LOCAL 로그인인 경우에만 반영
 
+    private String currentPassword; // 비밀번호 변경 시 필수
+
     @Schema(description = "비밀번호 (선택 변경)", example = "새비밀번호123!")
-    private String password;          // 빈 문자열이거나 null이면 변경 안 함
+    private String newPassword;
 
 }
