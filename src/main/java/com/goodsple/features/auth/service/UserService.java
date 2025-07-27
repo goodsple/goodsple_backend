@@ -243,12 +243,24 @@ public class UserService {
     @Transactional
     public void updateMyProfile(Long userId, UpdateUserProfile upreq) {
         User u = userMapper.selectMyProfile(userId);
-        if (upreq.getProfileImageUrl() != null) u.setProfileImage(upreq.getProfileImageUrl());
+
+        if (upreq.getProfileImageUrl() != null)
+            u.setProfileImage(upreq.getProfileImageUrl());
         if (upreq.getName() != null) u.setName(upreq.getName());
         if (upreq.getNickname() != null) u.setNickname(upreq.getNickname());
         if (upreq.getPhoneNumber() != null) u.setPhoneNumber(upreq.getPhoneNumber());
-        if (upreq.getPassword() != null && !upreq.getPassword().isEmpty()) u.setPassword(upreq.getPassword());
-        if ("LOCAL".equals(u.getLoginType().name()) && upreq.getEmail() != null) u.setEmail(upreq.getEmail());
+        // 비밀번호 변경: currentPassword + newPassword 모두 있어야 변경
+        if (upreq.getCurrentPassword() != null && upreq.getNewPassword() != null) {
+            if (!passwordEncoder.matches(upreq.getCurrentPassword(), u.getPassword())) {
+                throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+            }
+            u.setPassword(passwordEncoder.encode(upreq.getNewPassword()));
+        }
+        // 이메일은 LOCAL 유저만 수정 가능
+        if ("LOCAL".equals(u.getLoginType().name()) && upreq.getEmail() != null) {
+            u.setEmail(upreq.getEmail());
+        }
+
         userMapper.updateMyProfile(u);
     }
 
