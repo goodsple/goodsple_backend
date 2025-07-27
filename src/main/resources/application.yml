@@ -34,16 +34,24 @@ jwt:
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   mapper-locations: classpath:/mappers/**/*.xml
   type-aliases-package:
     - com.goodsple.features.auth.dto
     - com.goodsple.features.auth.entity
-  type-handlers-package: com.goodsple.features.auth.enums.handler
+  type-handlers-package: com.goodsple.typehandler
+
 
 logging:
   level:
-    org.mybatis: DEBUG
+#    org.mybatis: DEBUG
     org.springframework.security: DEBUG
+    # MyBatis core
+    org.apache.ibatis: DEBUG
+    # MyBatis-Spring 연동부
+    org.mybatis.spring: DEBUG
+    # (필요하면) 사용 중인 패키지
+    com.goodsple.typehandler: DEBUG
 
 kakao:
   client-id:     0f69a9009a695e1a7a933e9cc124cf76

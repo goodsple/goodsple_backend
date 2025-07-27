@@ -3,9 +3,11 @@ package com.goodsple.features.auth.controller;
 import com.goodsple.features.auth.dto.request.KakaoSignUpRequest;
 import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.RefreshRequest;
+import com.goodsple.features.auth.dto.request.SignUpRequest;
 import com.goodsple.features.auth.dto.response.KakaoLoginResponse;
+import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
-import com.goodsple.features.auth.dto.response.UserProfile;
+import com.goodsple.features.auth.enums.CheckType;
 import com.goodsple.features.auth.service.KakaoAuthService;
 import com.goodsple.features.auth.service.UserService;
 import com.goodsple.security.JwtTokenProvider;
@@ -13,7 +15,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,22 +25,58 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Map;
 
-@Tag(name = "Auth", description = "카카오 로그인 및 토큰 재발급 API")
+@Tag(
+        name = "Auth",
+        description = "로컬/카카오 로그인·회원가입·토큰 재발급 API"
+)
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
+    // 프론트 주소
+    private static final String FRONT_BASE = "http://localhost:5173";
+
     private final UserService userService;
     private final JwtTokenProvider jwtProvider;
     private final KakaoAuthService kakaoAuthService;
 
-    // 프론트 주소
-    private static final String FRONT_BASE = "http://localhost:5173";
+    // ====================================================================================
+    // 1. 로컬 회원가입 & 로그인
+    // ====================================================================================
 
-    @Operation(summary = "로그인", description = "사용자 로그인 후 액세스 토큰과 리프레시 토큰을 반환합니다.")
+    @Operation(summary = "로컬 회원가입", description = "로컬 회원가입 요청을 처리합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "회원가입 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @PostMapping("/signup")
+    public ResponseEntity<SignUpResponse> signUp(@Valid @RequestBody SignUpRequest signUpRequest) {
+        SignUpResponse response = userService.signUp(signUpRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "중복 확인", description = "아이디, 닉네임, 이메일, 휴대폰 번호 중복 여부를 확인합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "중복 여부 조회 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "500", description = "서버 오류")
+    })
+    @GetMapping("/check")
+    public  ResponseEntity<Map<String,Boolean>>checkDuplicate(
+            @RequestParam("type") CheckType checkType,
+            @RequestParam("value") String value) {
+        boolean available = userService.isAvailable(checkType, value);
+        Map<String, Boolean> result = new HashMap<>();
+        result.put("available", available);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "로컬 로그인", description = "사용자 로그인 후 액세스 토큰과 리프레시 토큰을 반환합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
@@ -52,6 +89,10 @@ public class AuthController {
         TokenResponse tokens = userService.login(loginRequest);
         return ResponseEntity.ok(tokens);
     }
+
+    // ====================================================================================
+    // 2. 토큰 재발급
+    // ====================================================================================
 
     @Operation(summary = "토큰 재발급", description = "유효한 리프레시 토큰으로 새로운 액세스 토큰을 발급합니다.")
     @ApiResponses(value = {
@@ -78,6 +119,11 @@ public class AuthController {
                         .build()
         );
     }
+
+    // ====================================================================================
+    // 3. 카카오 OAuth2 로그인 & 회원가입
+    // ====================================================================================
+
     @Operation(summary = "카카오 로그인 URL 반환", description = "카카오 OAuth2 인증용 URL을 반환합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL 반환 성공"),
@@ -139,35 +185,5 @@ public class AuthController {
             @Valid @RequestBody KakaoSignUpRequest req) {
         TokenResponse tokens = kakaoAuthService.signUpWithKakao(req);
         return ResponseEntity.ok(tokens);
-    }
-
-    /**
-     * 현재 로그인된 사용자 프로필 정보 조회
-     */
-    @Operation(summary = "내 프로필 조회", description = "로그인된 유저의 프로필(이미지 URL 등)을 반환합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "프로필 조회 성공"),
-            @ApiResponse(responseCode = "401", description = "로그인 필요"),
-    })
-    @GetMapping("/me")
-    public ResponseEntity<UserProfile> getMyProfile(HttpServletRequest req) {
-        // 1) Authorization 헤더에서 Bearer 토큰 꺼내기
-        String bearer = req.getHeader("Authorization");
-        if (bearer == null || !bearer.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String token = bearer.substring(7);
-
-        // 2) 토큰 유효성 검사
-        if (!jwtProvider.validateToken(token)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        // 3) 토큰에서 userId 추출
-        Long userId = jwtProvider.getUserId(token);
-
-        // 4) 프로필 조회
-        UserProfile profile = userService.getProfile(userId);
-        return ResponseEntity.ok(profile);
     }
 }

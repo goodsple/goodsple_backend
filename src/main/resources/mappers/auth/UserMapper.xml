@@ -37,29 +37,109 @@
         SELECT EXISTS(SELECT 1 FROM users WHERE phone_number = #{phoneNumber})
     </select>
 
-    <select id="findByLoginId" parameterType="String" resultType="com.goodsple.features.auth.entity.User">
-        SELECT * FROM users WHERE login_id = #{loginId}
+    <select id="findByLoginId"
+            parameterType="String"
+            resultMap="UserResultMap">
+        SELECT
+            user_id,
+            login_id,
+            password,
+            name,
+            nickname,
+            email,
+            phone_number,
+            birth_date::date   AS birth_date,
+            gender,
+            role,
+            profile_image,
+            suspension_status,
+            suspended_until,
+            user_created_at,
+            user_updated_at,
+            login_type,
+            kakao_id,
+            is_banned_from_auction
+        FROM users
+        WHERE login_id = #{loginId}
     </select>
 
-    <select id="findByKakaoId" parameterType="String" resultType="com.goodsple.features.auth.entity.User">
-        SELECT * FROM users WHERE kakao_id = #{kakaoId}
+    <select id="findByKakaoId" resultMap="UserResultMap" parameterType="String">
+        SELECT
+            user_id,
+            login_id,
+            password,
+            name,
+            nickname,
+            email,
+            phone_number,
+            birth_date::date  AS birth_date,
+                gender,
+            role,
+            profile_image,
+            suspension_status,
+            suspended_until,
+            user_created_at,
+            user_updated_at,
+            login_type,
+            kakao_id,
+            is_banned_from_auction
+        FROM users
+        WHERE kakao_id = #{kakaoId}
     </select>
 
     <!-- userId로 사용자 정보를 조회 -->
-    <select id="findById" parameterType="long" resultType="com.goodsple.features.auth.entity.User">
+    <select id="findById" parameterType="long" resultMap="UserResultMap">
         SELECT
-            user_id   AS userId, login_id  AS loginId, password,name,nickname,email,
-            phone_number  AS phoneNumber, birth_date    AS birthDate,
-            gender,role,profile_image  AS profileImage,
-            suspension_status  AS suspensionStatus,suspended_until  AS suspendedUntil,
-            user_created_at  AS userCreatedAt,user_updated_at  AS userUpdatedAt,
-            login_type  AS loginType,kakao_id  AS kakaoId,
-            is_banned_from_auction  AS isBannedFromAuction
+            user_id,
+            login_id,
+            password,
+            name,
+            nickname,
+            email,
+            phone_number,
+            birth_date::date  AS birth_date,
+            gender,
+            role,
+            profile_image,
+            suspension_status,
+            suspended_until,
+            user_created_at,
+            user_updated_at,
+            login_type,
+            kakao_id,
+            is_banned_from_auction
         FROM users
         WHERE user_id = #{userId}
     </select>
 
-<!-- 아이디 찾기   -->
+    <!-- 이메일로 유저 조회 -->
+    <select id="findByEmail"
+            parameterType="string"
+            resultMap="UserResultMap">
+        SELECT
+            user_id,
+            login_id,
+            password,
+            name,
+            nickname,
+            email,
+            phone_number,
+            birth_date::date    AS birth_date,
+                gender,
+            role,
+            profile_image,
+            suspension_status,
+            suspended_until,
+            user_created_at,
+            user_updated_at,
+            login_type,
+            kakao_id,
+            is_banned_from_auction
+        FROM users
+        WHERE email = #{email}
+    </select>
+
+    <!-- 아이디 찾기   -->
     <select id="existsByNameAndEmail"
             parameterType="map"
             resultType="boolean">
@@ -119,4 +199,120 @@
           AND code  = #{code}
           AND expires_at &gt; #{now}
     </select>
+
+    <!-- 0) 명시적 resultMap 추가 -->
+    <resultMap id="UserResultMap" type="com.goodsple.features.auth.entity.User">
+        <id     property="userId"              column="user_id" />
+        <result property="loginId"             column="login_id" />
+        <result property="password"            column="password" />
+        <result property="name"                column="name" />
+        <result property="nickname"            column="nickname" />
+        <result property="email"               column="email" />
+        <result property="phoneNumber"         column="phone_number" />
+        <result property="birthDate"
+                column="birth_date"
+                javaType="java.time.LocalDate"
+                jdbcType="DATE"
+                typeHandler="com.goodsple.typehandler.LocalDateDomainTypeHandler"/>
+        <result property="gender"              column="gender"
+                typeHandler="com.goodsple.typehandler.GenderTypeHandler"/>
+        <result property="role"                column="role"
+                typeHandler="com.goodsple.typehandler.RoleTypeHandler"/>
+        <result property="profileImage"        column="profile_image" />
+        <result property="suspensionStatus"    column="suspension_status"
+                typeHandler="com.goodsple.typehandler.SuspensionStatusTypeHandler"/>
+        <result property="suspendedUntil"
+                column="suspended_until"
+                javaType="java.time.OffsetDateTime"
+                jdbcType="OTHER"/>
+        <result property="userCreatedAt"
+                column="user_created_at"
+                javaType="java.time.OffsetDateTime"
+                jdbcType="OTHER"/>
+        <result property="userUpdatedAt"
+                column="user_updated_at"
+                javaType="java.time.OffsetDateTime"
+                jdbcType="OTHER"/>
+        <result property="loginType"           column="login_type"
+                typeHandler="com.goodsple.typehandler.LoginTypeTypeHandler"/>
+        <result property="kakaoId"             column="kakao_id" />
+        <result property="isBannedFromAuction" column="is_banned_from_auction" />
+    </resultMap>
+
+    <resultMap id="ProfileResultMap" type="com.goodsple.features.auth.entity.User">
+        <id     column="user_id"       property="userId"/>
+        <result column="login_id"      property="loginId"/>
+        <result column="profile_image" property="profileImage"/>
+        <result column="name"          property="name"/>
+        <result column="nickname"      property="nickname"/>
+        <result column="email"         property="email"/>
+        <result column="phone_number"  property="phoneNumber"/>
+        <result column="birth_date"    property="birthDate"
+                javaType="java.time.LocalDate"
+                jdbcType="DATE"
+                typeHandler="com.goodsple.typehandler.LocalDateDomainTypeHandler"/>
+        <result column="gender"        property="gender"
+                javaType="com.goodsple.features.auth.enums.Gender"
+                jdbcType="OTHER"
+                typeHandler="com.goodsple.typehandler.GenderTypeHandler"/>
+        <result column="login_type"    property="loginType"
+                javaType="com.goodsple.features.auth.enums.LoginType"
+                jdbcType="OTHER"
+                typeHandler="com.goodsple.typehandler.LoginTypeTypeHandler"/>
+    </resultMap>
+
+    <!-- 1) 내 프로필 조회 -->
+    <select id="selectMyProfile"
+            parameterType="long"
+            resultMap="ProfileResultMap">
+        SELECT
+            user_id,
+            login_id,
+            profile_image,
+            name,
+            nickname,
+            email,
+            phone_number,
+            birth_date::date  AS birth_date,
+            gender::text        AS gender,
+            login_type
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 2) 내 프로필 수정: 모든 사용자 업데이트 가능, 단 이메일은 LOCAL 로그인만 -->
+    <update id="updateMyProfile"
+            parameterType="com.goodsple.features.auth.entity.User">
+        UPDATE users
+        <set>
+            <if test="profileImage != null">
+                profile_image = #{profileImage},
+            </if>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname},
+            </if>
+            <if test="phoneNumber != null">
+                phone_number = #{phoneNumber},
+            </if>
+            <if test="password != null and password != ''">
+                password = #{password},
+            </if>
+            <!-- 이메일은 LOCAL 로그인한 사용자만 업데이트 -->
+            <if test="loginType == @com.goodsple.features.auth.enums.LoginType@LOCAL and email != null">
+                email = #{email},
+            </if>
+        </set>
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 3) 내 계정 삭제(탈퇴) -->
+    <delete id="deleteMyProfile"
+            parameterType="long">
+        DELETE FROM users
+        WHERE user_id = #{userId}
+          AND login_type = 'LOCAL'
+    </delete>
 </mapper>

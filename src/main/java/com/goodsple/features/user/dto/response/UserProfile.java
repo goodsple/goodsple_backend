@@ -1,4 +1,4 @@
-package com.goodsple.features.auth.dto.response;
+package com.goodsple.features.user.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.goodsple.features.auth.enums.Gender;
@@ -16,6 +16,9 @@ import java.time.LocalDate;
 @Builder
 @Schema(description = "로그인된 사용자 프로필 정보")
 public class UserProfile {
+
+    @Schema(description = "유저 ID", example = "123")
+    private Long userId;
 
     @Schema(description = "로그인 아이디", example = "testuser123")
     private String loginId;
@@ -41,4 +44,7 @@ public class UserProfile {
 
     @Schema(description = "프로필 이미지 URL (선택)", example = "https://…/profile.jpg")
     private String profileImageUrl;
+
+    @Schema(description = "로그인 타입", example = "LOCAL")
+    private String  loginType;    // LOCAL or KAKAO
 }

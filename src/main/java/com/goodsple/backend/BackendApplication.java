@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate;
                         "이 문서를 통해 백엔드 API 사용법을 확인하고 개발을 진행할 수 있습니다.", // API 문서에 대한 설명을 자유롭게 작성해주세요.
                 contact = @Contact( // 선택 사항: API 관련 문의처
                         name = "GoodsPle Team",
-                        email = "dev_team@example.com", // 팀 대표 이메일 또는 담당자 이메일
+                        email = "goodsple2@example.com", // 팀 대표 이메일 또는 담당자 이메일
                         url = "https://project.example.com" // 프로젝트 관련 웹사이트 (선택)
                 )
 //                license = @License( // 선택 사항: API 라이선스 정보

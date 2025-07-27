@@ -2,9 +2,10 @@ package com.goodsple.features.auth.service;
 
 import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.SignUpRequest;
+import com.goodsple.features.user.dto.request.UpdateUserProfile;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
-import com.goodsple.features.auth.dto.response.UserProfile;
+import com.goodsple.features.user.dto.response.UserProfile;
 import com.goodsple.features.auth.entity.EmailVerification;
 import com.goodsple.features.auth.entity.User;
 import com.goodsple.features.auth.enums.CheckType;
@@ -13,16 +14,19 @@ import com.goodsple.features.auth.mapper.EmailVerificationMapper;
 import com.goodsple.features.auth.mapper.UserMapper;
 import com.goodsple.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
@@ -96,6 +100,16 @@ public class UserService {
     public TokenResponse login(LoginRequest loginRequest) {
         // 사용자 조회
         User user = userMapper.findByLoginId(loginRequest.getLoginId());
+
+        if (user == null) {
+            log.warn("사용자 없음: {}", loginRequest.getLoginId());
+        } else {
+            log.debug("사용자 존재: loginId={}, rawPwd={}, encodedPwd={}, matches={}",
+                    user.getLoginId(),
+                    loginRequest.getPassword(),
+                    user.getPassword(),
+                    passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()));
+        }
         // 비밀번호 검증
         if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(
@@ -114,22 +128,6 @@ public class UserService {
                 .build();
     }
 
-    /**
-     * 현재 로그인된 사용자 프로필 정보 조회
-     */
-    public UserProfile getProfile(Long userId) {
-        User u = userMapper.findById(userId);
-        return UserProfile.builder()
-                .loginId(u.getLoginId())
-                .nickname(u.getNickname())
-                .name(u.getName())
-                .email(u.getEmail())
-                .phoneNumber(u.getPhoneNumber())
-                .birthDate(u.getBirthDate())
-                .gender(u.getGender())
-                .profileImageUrl(u.getProfileImage())  // 로컬 가입 시 저장된 URL 또는 카카오 프로필 URL
-                .build();
-    }
 
     // 아이디 찾기 인증번호 발급
     // 1) 인증번호 요청
@@ -218,6 +216,50 @@ public class UserService {
         // 4. DB 업데이트
         userMapper.updatePassword(user.getUserId(), encodedPassword);
     }
+
+    /**
+     * 현재 로그인된 사용자 프로필 정보 조회
+     */
+    @Transactional(readOnly = true)
+    public UserProfile getProfile(Long userId) {
+        User u = userMapper.selectMyProfile(userId);
+        return UserProfile.builder()
+                .userId(u.getUserId())
+                .loginId(u.getLoginId())
+                .nickname(u.getNickname())
+                .name(u.getName())
+                .email(u.getEmail())
+                .phoneNumber(u.getPhoneNumber())
+                .birthDate(u.getBirthDate())
+                .gender(u.getGender())
+                .profileImageUrl(u.getProfileImage())
+                .loginType(u.getLoginType().name())
+                .build();
+    }
+
+    /**
+     * 내 프로필 수정
+     */
+    @Transactional
+    public void updateMyProfile(Long userId, UpdateUserProfile upreq) {
+        User u = userMapper.selectMyProfile(userId);
+        if (upreq.getProfileImageUrl() != null) u.setProfileImage(upreq.getProfileImageUrl());
+        if (upreq.getName() != null) u.setName(upreq.getName());
+        if (upreq.getNickname() != null) u.setNickname(upreq.getNickname());
+        if (upreq.getPhoneNumber() != null) u.setPhoneNumber(upreq.getPhoneNumber());
+        if (upreq.getPassword() != null && !upreq.getPassword().isEmpty()) u.setPassword(upreq.getPassword());
+        if ("LOCAL".equals(u.getLoginType().name()) && upreq.getEmail() != null) u.setEmail(upreq.getEmail());
+        userMapper.updateMyProfile(u);
+    }
+
+    /**
+     * 내 계정 삭제(탈퇴)
+     */
+    @Transactional
+    public void deleteMyProfile(Long userId) {
+        userMapper.deleteMyProfile(userId);
+    }
+
 }
 
 

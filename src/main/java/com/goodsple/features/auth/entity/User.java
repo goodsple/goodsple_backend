@@ -6,13 +6,14 @@ import com.goodsple.features.auth.enums.Role;
 import com.goodsple.features.auth.enums.SuspensionStatus;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 
 @Data
-@Builder
+@NoArgsConstructor
 public class User {
     private Long userId;
     private String loginId;
@@ -24,19 +25,56 @@ public class User {
     private LocalDate birthDate;
     private Gender gender;
 
-    @Builder.Default
     private Role role = Role.USER;
     private String profileImage;
 
-    @Builder.Default
     private SuspensionStatus suspensionStatus = SuspensionStatus.ACTIVE;
     private OffsetDateTime suspendedUntil;
     private OffsetDateTime userCreatedAt;
     private OffsetDateTime userUpdatedAt;
 
-    @Builder.Default
     private LoginType loginType = LoginType.LOCAL;
     private String kakaoId;
-    @Builder.Default
     private Boolean isBannedFromAuction = false;
+
+    @Builder
+    private User(
+            Long userId,
+            String loginId,
+            String password,
+            String name,
+            String nickname,
+            String email,
+            String phoneNumber,
+            LocalDate birthDate,
+            Gender gender,
+            Role role,
+            String profileImage,
+            SuspensionStatus suspensionStatus,
+            OffsetDateTime suspendedUntil,
+            OffsetDateTime userCreatedAt,
+            OffsetDateTime userUpdatedAt,
+            LoginType loginType,
+            String kakaoId,
+            Boolean isBannedFromAuction
+    ) {
+        this.userId = userId;
+        this.loginId = loginId;
+        this.password = password;
+        this.name = name;
+        this.nickname = nickname;
+        this.email = email;
+        this.phoneNumber = phoneNumber;
+        this.birthDate = birthDate;
+        this.gender = gender;
+        this.role                = role                != null ? role                : Role.USER;
+        this.profileImage        = profileImage;
+        this.suspensionStatus    = suspensionStatus    != null ? suspensionStatus    : SuspensionStatus.ACTIVE;
+        this.suspendedUntil      = suspendedUntil;
+        this.userCreatedAt       = userCreatedAt;
+        this.userUpdatedAt       = userUpdatedAt;
+        this.loginType           = loginType           != null ? loginType           : LoginType.LOCAL;
+        this.kakaoId             = kakaoId;
+        this.isBannedFromAuction = isBannedFromAuction != null ? isBannedFromAuction : Boolean.FALSE;
+    }
 }

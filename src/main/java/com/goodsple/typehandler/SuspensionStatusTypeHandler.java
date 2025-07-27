@@ -1,7 +1,5 @@
-package com.goodsple.features.auth.enums.handler;
+package com.goodsple.typehandler;
 
-import com.goodsple.features.auth.enums.LoginType;
-import com.goodsple.features.auth.enums.Role;
 import com.goodsple.features.auth.enums.SuspensionStatus;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;

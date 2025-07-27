@@ -1,4 +1,4 @@
-package com.goodsple.features.auth.enums.handler;
+package com.goodsple.typehandler;
 
 import com.goodsple.features.auth.enums.Gender;
 import org.apache.ibatis.type.BaseTypeHandler;
