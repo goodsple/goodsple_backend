@@ -13,6 +13,9 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
+import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 import java.util.List;
 
@@ -56,7 +59,8 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
-                        UsernamePasswordAuthenticationFilter.class
+//                        UsernamePasswordAuthenticationFilter.class
+                        SecurityContextPersistenceFilter.class
                 );
 
         return http.build();

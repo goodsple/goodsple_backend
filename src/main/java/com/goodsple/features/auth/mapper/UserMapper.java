@@ -25,9 +25,12 @@ public interface UserMapper {
     // DB에 다시 조회해서 userId, role, gender 등 전체 정보까지 포함해서 가져오는 방식
     // createUser → DB에 INSERT → 다시 findByLoginId로 SELECT 구조
 
+    // 이메일로 유저 조회
+    User findByEmail(@Param("email") String email);
+
     User findByKakaoId(String kakaoId);
 
-    /** 유저 ID로 사용자 정보를 조회합니다. */
+    // 카카오 ID로 조회
     User findById(Long userId);
 
     // 이름,이메일 맞는 유저 조회

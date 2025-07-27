@@ -3,6 +3,7 @@ package com.goodsple.features.user.controller;
 import com.goodsple.features.user.dto.request.UpdateUserProfile;
 import com.goodsple.features.user.dto.response.UserProfile;
 import com.goodsple.features.auth.service.UserService;
+import com.goodsple.security.CustomUserDetails;
 import com.goodsple.security.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -11,7 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    private final JwtTokenProvider jwtProvider;
 
 
     @Operation(summary = "내 프로필 조회", description = "로그인된 유저의 프로필 정보를 반환합니다.")
@@ -30,10 +30,11 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "로그인 필요"),
     })
     @GetMapping("/me")
-    public ResponseEntity<UserProfile> getMyProfile(
-            @AuthenticationPrincipal(expression = "userId") Long userId
-    ) {
-        // Service 호출: DB에서 사용자 프로필 조회 후 DTO 변환
+    public ResponseEntity<UserProfile> getMyProfile(Authentication authentication) {
+        // Authentication에서 principal(Object) 꺼내기
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        Long userId = user.getUserId();
+
         UserProfile profile = userService.getProfile(userId);
         return ResponseEntity.ok(profile);
     }
@@ -46,11 +47,11 @@ public class UserController {
     })
     @PutMapping("/me")
     public ResponseEntity<Void> updateMyProfile(
-            @AuthenticationPrincipal(expression = "userId") Long userId,
+            Authentication authentication,
             @Valid @RequestBody UpdateUserProfile req
     ) {
-        // Service 호출: 변경 요청이 있는 필드만 업데이트
-        userService.updateMyProfile(userId, req);
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        userService.updateMyProfile(user.getUserId(), req);
         return ResponseEntity.ok().build();
     }
 
@@ -60,11 +61,9 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "로그인 필요")
     })
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteMyProfile(
-            @AuthenticationPrincipal(expression = "userId") Long userId
-    ) {
-        // Service 호출: DB에서 사용자 레코드 삭제
-        userService.deleteMyProfile(userId);
+    public ResponseEntity<Void> deleteMyProfile(Authentication authentication) {
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+        userService.deleteMyProfile(user.getUserId());
         return ResponseEntity.noContent().build();
     }
 }

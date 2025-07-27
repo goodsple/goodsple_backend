@@ -1,7 +1,8 @@
-package com.goodsple.features.auth.enums.handler;
+package com.goodsple.typehandler;
 
 
 import com.goodsple.features.auth.enums.LoginType;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;

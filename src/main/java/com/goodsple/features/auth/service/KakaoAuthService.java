@@ -12,14 +12,13 @@ import com.goodsple.features.auth.mapper.UserMapper;
 import com.goodsple.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 
@@ -171,8 +170,23 @@ public class KakaoAuthService {
      * @return 생성된 사용자로 발급된 JWT 토큰
      */
 
+    @Transactional
     public TokenResponse signUpWithKakao(KakaoSignUpRequest req) {
-        // 1) User 엔티티 생성 및 저장
+        // 1) 이메일로 기존 사용자 조회
+        User existing = userMapper.findByEmail(req.getEmail());
+
+        if (existing != null) {
+            // — 이미 로컬 가입된 계정이 있다면 → 카카오 ID와 loginType만 업데이트
+            existing.setKakaoId(req.getKakaoId());
+            existing.setLoginType(LoginType.KAKAO);
+            userMapper.updateMyProfile(existing);  // UPDATE 쿼리
+            Long userId = existing.getUserId();
+
+            // JWT 발급 후 리턴
+            return buildTokenResponse(userId);
+        }
+
+        // 2) 이메일 중복도, 카카오 ID 중복도 없다면 → 신규 INSERT
         User user = User.builder()
                 .loginId(req.getKakaoId())
                 .nickname(req.getNickname())
@@ -188,8 +202,12 @@ public class KakaoAuthService {
         userMapper.createUser(user);
         Long userId = userMapper.findByKakaoId(req.getKakaoId()).getUserId();
 
-        // 2) JWT 토큰 발급
-        String accessToken  = jwtProvider.createAccessToken(userId, Role.USER.name());
+        return buildTokenResponse(userId);
+
+    }
+    // JWT 토큰 발급
+    private TokenResponse buildTokenResponse(Long userId){
+        String accessToken = jwtProvider.createAccessToken(userId, Role.USER.name());
         String refreshToken = jwtProvider.createRefreshToken(userId, Role.USER.name());
         return TokenResponse.builder()
                 .accessToken(accessToken)

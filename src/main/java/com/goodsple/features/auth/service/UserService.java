@@ -14,6 +14,7 @@ import com.goodsple.features.auth.mapper.EmailVerificationMapper;
 import com.goodsple.features.auth.mapper.UserMapper;
 import com.goodsple.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
@@ -98,6 +100,16 @@ public class UserService {
     public TokenResponse login(LoginRequest loginRequest) {
         // 사용자 조회
         User user = userMapper.findByLoginId(loginRequest.getLoginId());
+
+        if (user == null) {
+            log.warn("사용자 없음: {}", loginRequest.getLoginId());
+        } else {
+            log.debug("사용자 존재: loginId={}, rawPwd={}, encodedPwd={}, matches={}",
+                    user.getLoginId(),
+                    loginRequest.getPassword(),
+                    user.getPassword(),
+                    passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()));
+        }
         // 비밀번호 검증
         if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new ResponseStatusException(

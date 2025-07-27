@@ -1,5 +1,7 @@
 package com.goodsple.security;
 
+import com.goodsple.features.auth.entity.User;
+import com.goodsple.features.auth.mapper.UserMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -7,19 +9,25 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.List;
 
 @Component
+@RequiredArgsConstructor
 public class JwtTokenProvider {
-
+    /**
+     * JWT 토큰 생성 및 검증, Authentication 변환을 담당하는 컴포넌트
+     */
 
     @Value("${jwt.secret}")
     private String secretKey;                  // application.yml에서 주입받은 Base64 인코딩된 비밀키
@@ -31,6 +39,8 @@ public class JwtTokenProvider {
     private long refreshTokenValidityMs;       // 리프레시 토큰(긴 기간) 유효시간 (밀리초 단위)
 
     private Key key;                           // 서명(Signature)용 Key 객체
+
+    private final UserMapper userMapper;
 
     /**
      * 빈 초기화 단계에서 호출
@@ -94,38 +104,33 @@ public class JwtTokenProvider {
         }
     }
 
+
     /**
-     * 토큰으로부터 스프링 시큐리티 Authentication 객체 생성
-     * @param token 검증된 JWT
-     * @return 인증 정보(Authentication) – SecurityContext에 저장
+     * 토큰으로부터 Authentication 객체 생성
+     * principal에 CustomUserDetails 세팅하여 컨트롤러에서 바로 사용 가능
      */
     public Authentication getAuthentication(String token) {
-        // 1) Claims(내용) 파싱
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        // 2) subject에서 userId 꺼내기
+        Claims claims = parseClaims(token);
         Long userId = Long.valueOf(claims.getSubject());
-        // 3) "role" 클레임에서 권한 정보 꺼내기
+        User u = userMapper.findById(userId);
         String role = claims.get("role", String.class);
 
-        // 4) Spring Security용 UserDetails 객체 생성
-        //    - username엔 userId를, password는 이미 인증됐으니 빈 문자열
-        UserDetails principal = User.withUsername(userId.toString())
-                .password("")
-                .roles(role)
-                .build();
+        // 권한 리스트 생성 (ROLE_ 접두사 포함)
+        List<GrantedAuthority> auths = List.of(
+                new SimpleGrantedAuthority("ROLE_" + role)
+        );
 
-        // 5) UsernamePasswordAuthenticationToken으로 래핑해 반환
+        // CustomUserDetails에 User 엔티티와 권한 목록 래핑
+        CustomUserDetails principal = new CustomUserDetails(u, auths);
+
+        // Authentication 토큰 생성 (credentials 자리에 raw token 보관 가능)
         return new UsernamePasswordAuthenticationToken(
                 principal,
                 token,
                 principal.getAuthorities()
         );
     }
+
     /**
      * 토큰에서 subject(userId)를 꺼내는 유틸
      */
