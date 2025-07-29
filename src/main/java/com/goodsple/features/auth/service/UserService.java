@@ -5,6 +5,7 @@ import com.goodsple.features.auth.dto.request.SignUpRequest;
 import com.goodsple.features.user.dto.request.UpdateUserProfile;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
+import com.goodsple.features.user.dto.request.UserInfo;
 import com.goodsple.features.user.dto.response.UserProfile;
 import com.goodsple.features.auth.entity.EmailVerification;
 import com.goodsple.features.auth.entity.User;
@@ -252,7 +253,14 @@ public class UserService {
         // 비밀번호 변경: currentPassword + newPassword 모두 있어야 변경
         if (upreq.getCurrentPassword() != null && upreq.getNewPassword() != null) {
             if (!passwordEncoder.matches(upreq.getCurrentPassword(), u.getPassword())) {
-                throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
+                // 400 Bad Request 로 클라이언트에 메시지 전송
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "현재 비밀번호가 일치하지 않습니다."
+                );
+            }
+            if (passwordEncoder.matches(upreq.getNewPassword(), u.getPassword())) {
+                throw new IllegalArgumentException("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
             }
             u.setPassword(passwordEncoder.encode(upreq.getNewPassword()));
         }
@@ -270,6 +278,18 @@ public class UserService {
     @Transactional
     public void deleteMyProfile(Long userId) {
         userMapper.deleteMyProfile(userId);
+    }
+
+    /**
+     * 마이페이지용 닉네임 + 프로필 이미지 조회
+     */
+    @Transactional(readOnly = true)
+    public UserInfo getUserInfo(Long userId) {
+        UserInfo info = userMapper.selectUserInfo(userId);
+        if (info == null) {
+            throw new IllegalArgumentException("해당 사용자를 찾을 수 없습니다. id=" + userId);
+        }
+        return info;
     }
 
 }

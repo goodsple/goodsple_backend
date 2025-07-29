@@ -1,6 +1,7 @@
 package com.goodsple.features.user.controller;
 
 import com.goodsple.features.user.dto.request.UpdateUserProfile;
+import com.goodsple.features.user.dto.request.UserInfo;
 import com.goodsple.features.user.dto.response.UserProfile;
 import com.goodsple.features.auth.service.UserService;
 import com.goodsple.security.CustomUserDetails;
@@ -23,13 +24,24 @@ public class UserController {
 
     private final UserService userService;
 
-
-    @Operation(summary = "내 프로필 조회", description = "로그인된 유저의 프로필 정보를 반환합니다.")
+    @Operation(summary = "내 기본 정보 조회", description = "마이페이지 헤더 등에서 사용할 닉네임·이미지 URL만 반환")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "프로필 조회 성공"),
             @ApiResponse(responseCode = "401", description = "로그인 필요"),
     })
     @GetMapping("/me")
+    public ResponseEntity<UserInfo> getMyInfo(Authentication authentication) {
+        Long userId = ((CustomUserDetails) authentication.getPrincipal()).getUserId();
+        UserInfo info = userService.getUserInfo(userId);
+        return ResponseEntity.ok(info);
+    }
+
+    @Operation(summary = "내 상세 프로필 조회", description = "이름, 이메일 등 전체 프로필 정보를 반환")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "프로필 조회 성공"),
+            @ApiResponse(responseCode = "401", description = "로그인 필요"),
+    })
+    @GetMapping("/me/profile")
     public ResponseEntity<UserProfile> getMyProfile(Authentication authentication) {
         // Authentication에서 principal(Object) 꺼내기
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
@@ -39,7 +51,7 @@ public class UserController {
         return ResponseEntity.ok(profile);
     }
 
-    @Operation(summary = "내 프로필 수정", description = "로그인된 유저의 프로필 정보를 수정합니다.")
+    @Operation(summary = "내 프로필 수정", description = "로그인된 유저의 프로필 정보를 수정")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "프로필 수정 성공"),
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),

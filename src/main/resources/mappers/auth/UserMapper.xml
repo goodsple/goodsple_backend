@@ -242,6 +242,7 @@
     <resultMap id="ProfileResultMap" type="com.goodsple.features.auth.entity.User">
         <id     column="user_id"       property="userId"/>
         <result column="login_id"      property="loginId"/>
+        <result column="password"      property="password"/>
         <result column="profile_image" property="profileImage"/>
         <result column="name"          property="name"/>
         <result column="nickname"      property="nickname"/>
@@ -268,6 +269,7 @@
         SELECT
             user_id,
             login_id,
+            password,
             profile_image,
             name,
             nickname,
@@ -301,7 +303,7 @@
                 password = #{password},
             </if>
             <!-- 이메일은 LOCAL 로그인한 사용자만 업데이트 -->
-            <if test="loginType == @com.goodsple.features.auth.enums.LoginType@LOCAL and email != null">
+            <if test="@com.goodsple.features.auth.enums.LoginType@LOCAL.equals(loginType) and email != null">
                 email = #{email},
             </if>
         </set>
@@ -313,6 +315,6 @@
             parameterType="long">
         DELETE FROM users
         WHERE user_id = #{userId}
-          AND login_type = 'LOCAL'
+          AND login_type = 'local'
     </delete>
 </mapper>
