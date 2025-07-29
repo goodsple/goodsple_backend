@@ -5,6 +5,7 @@ import com.goodsple.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -12,15 +13,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+    // 보안(인증/인가) 설정 (Spring Security)
 
     private final JwtTokenProvider jwtProvider;
 
@@ -36,6 +35,8 @@ public class SecurityConfig {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트 도메인 허용
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    // 여기에 Authorization, Content-Type 등 구체적으로 명시
+//                    config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
@@ -51,15 +52,19 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler())           // 권한 없을 때 403 처리
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // 로그인 전에도 열어둘 경로
+                        // 1) CORS preflight(OPTIONS)를 인증 없이 허용
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+
+                        // 2) 로그인 전 허용 경로
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        // 나머지는 인증 필요
+
+                        // 3) 그 외 모든 요청은 JWT 인증 필요
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
-//                        UsernamePasswordAuthenticationFilter.class
                         SecurityContextPersistenceFilter.class
                 );
 

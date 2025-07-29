@@ -41,7 +41,7 @@ mybatis:
     - com.goodsple.features.auth.entity
   type-handlers-package: com.goodsple.typehandler
 
-
+# 디버그 로그
 logging:
   level:
 #    org.mybatis: DEBUG
@@ -53,11 +53,11 @@ logging:
     # (필요하면) 사용 중인 패키지
     com.goodsple.typehandler: DEBUG
 
+# 카카오 연결
 kakao:
   client-id:     0f69a9009a695e1a7a933e9cc124cf76
   client-secret: rZH2IkMkykHp0m3mFlF3bnBOHWslBv2N
   redirect-uri:  http://localhost:8080/api/auth/kakao/callback
-
 
 # 이메일 인증 관련 설정
 email:
@@ -66,3 +66,8 @@ email:
     subject: "이메일 인증 코드"   # 이메일 제목
     from-address: goodsple2@gmail.com  # 실제 발신 이메일 주소
     body-template: "이메일 인증 코드: {code}"  # 이메일 본문 템플릿
+
+# 이미지 업로드
+file:
+#  upload-dir: ${FILE_UPLOAD_DIR}   # 환경변수 or OS별 프로퍼티로 주입
+  upload-dir: /Users/yein/uploads

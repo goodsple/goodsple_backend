@@ -15,7 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -112,7 +112,15 @@ public class JwtTokenProvider {
     public Authentication getAuthentication(String token) {
         Claims claims = parseClaims(token);
         Long userId = Long.valueOf(claims.getSubject());
+
+        // 1) 유저 조회
         User u = userMapper.findById(userId);
+        if (u == null) {
+            // 토큰상 userId가 DB에 없으면 인증 실패 처리
+            throw new UsernameNotFoundException("No user found with id: " + userId);
+            // 또는 return null; 하고, 필터에서 null 체크 후 SecurityContext에 세팅하지 않도록 해도 됩니다.
+        }
+
         String role = claims.get("role", String.class);
 
         // 권한 리스트 생성 (ROLE_ 접두사 포함)

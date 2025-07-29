@@ -1,8 +1,8 @@
 package com.goodsple.features.auth.mapper;
 
 import com.goodsple.features.auth.entity.User;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import com.goodsple.features.user.dto.request.UserInfo;
+import org.apache.ibatis.annotations.*;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -74,5 +74,15 @@ public interface UserMapper {
 
     /** 내 계정 삭제(탈퇴) */
     void deleteMyProfile(@Param("userId") Long userId);
+
+   /** 마이페이지 조회*/
+   @Select("""
+        SELECT
+          nickname,
+          profile_image AS profileImageUrl
+        FROM users
+        WHERE user_id = #{userId}
+    """)
+   UserInfo selectUserInfo(@Param("userId") Long userId);
 
 }

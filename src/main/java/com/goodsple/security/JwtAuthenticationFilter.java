@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -59,8 +60,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 2) 유효성 검사 및 SecurityContext 설정
         if (token != null && jwtProvider.validateToken(token)) {
-            Authentication auth = jwtProvider.getAuthentication(token);
-            SecurityContextHolder.getContext().setAuthentication(auth);
+            try {
+                Authentication auth = jwtProvider.getAuthentication(token);
+                if (auth != null) {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            } catch (UsernameNotFoundException ex) {
+                // 토큰은 통과했지만 유저가 DB에 없으면 인증 무효 처리
+                SecurityContextHolder.clearContext();
+            }
         }
 
         // 3) 필터 체인 계속 진행

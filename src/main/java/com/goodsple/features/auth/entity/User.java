@@ -34,6 +34,12 @@ public class User {
     private OffsetDateTime userUpdatedAt;
 
     private LoginType loginType = LoginType.LOCAL;
+
+    /** MyBatis 매퍼에서 이 값을 사용하도록 추가 */
+    public String getLoginTypeLower() {
+        return loginType.name().toLowerCase();  // "LOCAL" → "local"
+    }
+
     private String kakaoId;
     private Boolean isBannedFromAuction = false;
 
