@@ -68,6 +68,19 @@ email:
     body-template: "이메일 인증 코드: {code}"  # 이메일 본문 템플릿
 
 # 이미지 업로드
+
+# 1) macOS/Linux용 기본 경로
+
 file:
 #  upload-dir: ${FILE_UPLOAD_DIR}   # 환경변수 or OS별 프로퍼티로 주입
   upload-dir: /Users/yein/uploads
+
+---
+# 2) Windows에서만 활성화
+#spring:
+#  config:
+#    activate:
+#      on-operating-system: Windows
+#
+#file:
+#  upload-dir: C:/Users/uploads
