@@ -7,16 +7,13 @@ import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
 import com.goodsple.features.user.dto.request.UserInfo;
 import com.goodsple.features.user.dto.response.UserProfile;
-import com.goodsple.features.auth.entity.EmailVerification;
 import com.goodsple.features.auth.entity.User;
 import com.goodsple.features.auth.enums.CheckType;
 import com.goodsple.features.auth.enums.Role;
-import com.goodsple.features.auth.mapper.EmailVerificationMapper;
 import com.goodsple.features.auth.mapper.UserMapper;
 import com.goodsple.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,7 +30,6 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtProvider;
     private final EmailService emailService;
-    private final EmailVerificationMapper emailVerificationMapper;
     private final EmailVerificationService emailVerificationService;
 
     // 회원가입 응답
@@ -133,89 +129,71 @@ public class UserService {
     // 아이디 찾기 인증번호 발급
     // 1) 인증번호 요청
     public void requestFindIdCode(String name, String email) {
-        // 1. 이메일이 가입된 회원 이메일인지 확인
-        boolean exists = userMapper.existsByNameAndEmail(name, email);
-        if (!exists) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "일치하는 회원이 없습니다."
-            );
+        if (!userMapper.existsByNameAndEmail(name, email)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "일치하는 회원이 없습니다.");
         }
-        // 2. 코드 생성, DB 저장, 메일 전송
-        String code = RandomStringUtils.randomNumeric(6); // 6자리 숫자 인증코드 생성
-        LocalDateTime now = LocalDateTime.now();
-
-        // DB 저장
-        EmailVerification record = EmailVerification.builder()
-                .email(email)
-                .code(code)
-                .createdAt(now)
-                .expiresAt(now.plusMinutes(3))
-                .used(false)
-                .build();
-        emailVerificationMapper.insert(record);
-
-        // 메일 발송
-        emailService.sendVerificationEmail(email, code,"find-id"); // fromAddress 자동 사용
+        String code = emailVerificationService.createAndSaveCode(email,"find-id" );
+        emailService.sendVerificationEmail(email, code, "find-id");
     }
 
-    // 2) 인증번호 검증 & 사용 처리
-    private void verifyCode(String email, String code) {
-        emailVerificationMapper.findByEmailAndCode(email, code)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST, "❗인증번호가 일치하지 않거나 만료되었습니다."
-                ));
-        emailVerificationMapper.updateUsed(email, code);
-    }
 
-    // 3) 아이디 찾기
+    // 아이디 찾기 - 인증번호 검증 후 아이디 조회
+    /**
+     * 1) purpose="find-id" 로 검증
+     * 2) 검증 통과 시 아이디 조회 후 반환
+     */
     public String findLoginId(String name, String email, String code) {
-        // 코드 검증 후
-        verifyCode(email, code);
+        // 검증은 여기서 딱 한 번만
+        emailVerificationService.verifyCode(email, code, "find-id");
 
-        // 검증 통과하면 로그인 아이디를 꺼내서 리턴
-        return userMapper.selectLoginIdByNameAndEmail(name, email)
+        return userMapper
+                .selectLoginIdByNameAndEmail(name, email)
                 .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND, "일치하는 회원이 없습니다."
+                        HttpStatus.NOT_FOUND,
+                        "일치하는 회원이 없습니다."
                 ));
     }
 
-    // 비밀번호 찾기 - 인증번호 전송
+
+    // 비밀번호 찾기 - 인증번호 발급
     public void requestResetPasswordCode(String loginId, String email) {
-        // 아이디와 이메일이 일치하는 회원 확인
-        User user = userMapper.selectByLoginIdAndEmail(loginId, email)
+        userMapper.selectByLoginIdAndEmail(loginId, email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "일치하는 회원이 없습니다."));
-
-        // 인증번호 생성 및 저장
-        String code = emailVerificationService.createAndSaveCode(email);
-
-        // 이메일 발송
-        emailService.sendVerificationEmail(email, code,"reset-password");
+        String code = emailVerificationService.createAndSaveCode(email, "reset-password");
+        emailService.sendVerificationEmail(email, code, "reset-password");
     }
 
     // 비밀번호 찾기 - 인증번호 검증
     public void verifyResetPasswordCode(String email, String code) {
-        emailVerificationService.verifyCode(email, code);
+        emailVerificationService.verifyCode(email, code, "reset-password");
     }
 
     // 비밀번호 찾기 - 새 비밀번호 설정
     public void resetPassword(String loginId, String newPassword) {
-        // 1. 사용자 존재 여부 확인
         User user = userMapper.findByLoginId(loginId);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다.");
         }
-
-        // 2. 기존 비밀번호와 동일한지 확인
         if (passwordEncoder.matches(newPassword, user.getPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "기존 비밀번호와 동일한 비밀번호는 사용할 수 없습니다.");
         }
+        userMapper.updatePassword(user.getUserId(), passwordEncoder.encode(newPassword));
+    }
 
-        // 3. 비밀번호 암호화
-        String encodedPassword = passwordEncoder.encode(newPassword);
+    /**
+     * 이름+이메일로 회원 존재 여부 확인
+     */
+    public boolean existsByNameAndEmail(String name, String email) {
+        return userMapper.existsByNameAndEmail(name, email);
+    }
 
-        // 4. DB 업데이트
-        userMapper.updatePassword(user.getUserId(), encodedPassword);
+    /**
+     * 로그인ID+이메일로 회원 존재 여부 확인
+     */
+    public boolean existsByLoginIdAndEmail(String loginId, String email) {
+        return userMapper
+                .selectByLoginIdAndEmail(loginId, email)
+                .isPresent();
     }
 
     /**

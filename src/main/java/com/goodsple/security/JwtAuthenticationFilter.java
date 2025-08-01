@@ -30,23 +30,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        System.out.println("▶ servletPath: " + path + ", requestURI: " + request.getRequestURI());
-
-        // 로그인 없이 열어둘 API만 true 리턴
-        boolean skip =
-                path.equals("/api/auth/find-id/request")
-                        || path.equals("/api/auth/find-id")
-                        || path.equals("/api/auth/login")
-                        || path.equals("/api/auth/signup")
-                        || path.startsWith("/swagger-ui/")
-                        || path.startsWith("/v3/api-docs/");
-
-        if (skip) {
-            System.out.println("[JwtFilter] SKIP 인증 필터 for path: " + path);
+        // 로그인/회원가입/토큰 재발급/Kakao 콜백 등 인증이 _아직_ 불필요한 엔드포인트만 열어둡니다.
+        if (path.equals("/api/auth/login")
+                || path.equals("/api/auth/signup")
+                || path.equals("/api/auth/refresh")
+                || path.startsWith("/api/auth/kakao/")) {
+            return true;
         }
-        return skip;
-
+        // Swagger, API Docs
+        if (path.startsWith("/swagger-ui/")
+                || path.startsWith("/v3/api-docs/")) {
+            return true;
+        }
+        // 그 외 모든 /api/auth/** 요청에 대해서는 필터를 적용하여
+        // Authorization 헤더의 JWT를 꺼내고, SecurityContext에 인증 정보를 채웁니다.
+        return false;
     }
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,

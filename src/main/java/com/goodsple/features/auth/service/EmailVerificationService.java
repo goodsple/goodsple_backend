@@ -5,51 +5,46 @@ import com.goodsple.features.auth.entity.EmailVerification;
 import com.goodsple.features.auth.mapper.EmailVerificationMapper;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 // 인증 코드 발송
 @Service
 public class EmailVerificationService {
 
+
+    private final StringRedisTemplate redis;
+    private final long expirationSeconds;
+
     @Autowired
-    private EmailVerificationMapper emailVerificationMapper;
-
-    // 인증 코드 검증 메서드
-    public EmailVerificationResponse verifyCode(String email, String code) {
-        // 이메일과 인증 코드로 인증 정보를 조회
-        EmailVerificationResponse verification = emailVerificationMapper.findByEmailAndCode(email, code)
-                .orElseThrow(() -> new IllegalArgumentException("인증 코드가 유효하지 않거나 존재하지 않습니다."));
-
-        // 인증 코드가 만료되었는지 체크
-        if (verification.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("인증 코드의 유효 기간이 만료되었습니다.");
-        }
-
-        // 인증 코드 사용 처리 (이미 사용된 코드라면, 재사용 불가)
-        if (verification.isUsed()) {
-            throw new IllegalArgumentException("이미 사용된 인증 코드입니다.");
-        }
-
-        // 인증 코드 사용 처리 (중복 사용 방지)
-        emailVerificationMapper.updateUsed(email, code);  // 사용 처리
-
-        return verification;  // 인증이 완료되면, 이메일 인증 정보를 반환
+    public EmailVerificationService(StringRedisTemplate redis,
+                                    @Value("${email.verification.expiration-time}") long minutes) {
+        this.redis = redis;
+        this.expirationSeconds = minutes * 60;
     }
 
-    public String createAndSaveCode(String email) {
+    // purpose 분리된 키로 코드 생성·저장
+    public String createAndSaveCode(String email, String purpose) {
         String code = RandomStringUtils.randomNumeric(6);
-        LocalDateTime now = LocalDateTime.now();
-
-        emailVerificationMapper.insert(EmailVerification.builder()
-                .email(email)
-                .code(code)
-                .createdAt(now)
-                .expiresAt(now.plusMinutes(3))
-                .used(false)
-                .build());
-
+        String key  = "email:verification:" + purpose + ":" + email;
+        redis.opsForValue().set(key, code, expirationSeconds, TimeUnit.SECONDS);
         return code;
+    }
+
+    // purpose 분리된 키로 코드 검증·삭제
+    public void verifyCode(String email, String code, String purpose) {
+        String key   = "email:verification:" + purpose + ":" + email;
+        String saved = redis.opsForValue().get(key);
+        if (saved == null) {
+            throw new IllegalArgumentException("인증 코드가 없거나 만료되었습니다.");
+        }
+        if (!saved.equals(code)) {
+            throw new IllegalArgumentException("인증 코드가 올바르지 않습니다.");
+        }
+        redis.delete(key);
     }
 }

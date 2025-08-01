@@ -30,32 +30,37 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())  // CSRF 보안 기능 끄기 (API 서버라서)
+                // 1. CSRF 비활성화 (API 전용이라 세션 기반 공격 위험 낮음)
+                .csrf(csrf -> csrf.disable())
+
+                // 2. CORS 설정
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트 도메인 허용
                     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    // 여기에 Authorization, Content-Type 등 구체적으로 명시
-//                    config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept"));
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
                     return config;
                 }))
+                // 3. 세션 사용 안 함 (Stateless JWT)
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // JWT 사용 → 세션 안 씀
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                // 4. 기본 제공 폼 로그인, HTTP Basic 비활성화
                 .formLogin(form -> form.disable()) // 폼 로그인 사용 안 함
                 .httpBasic(basic -> basic.disable()) // 기본 인증창 안 띄움
+
                 // 인증/권한 에러 발생 시 JSON 응답 주기 위한 설정
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint()) // 로그인 안 했을 때 401 처리
                         .accessDeniedHandler(accessDeniedHandler())           // 권한 없을 때 403 처리
                 )
+                // 6. 요청별 인가 정책
                 .authorizeHttpRequests(auth -> auth
-                        // 1) CORS preflight(OPTIONS)를 인증 없이 허용
+                        // CORS preflight(OPTIONS)를 인증 없이 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
 
-                        // 2) 로그인 전 허용 경로
+                        // 인증·인가 없이 접근 허용할 URI
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
@@ -64,9 +69,10 @@ public class SecurityConfig {
                         // 신고 등록은 로그인 필요
                         .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
 
-                        // 3) 그 외 모든 요청은 JWT 인증 필요
+                        // 그 외 모든 요청은 JWT 인증 필요
                         .anyRequest().authenticated()
                 )
+                // 7. JWT 필터 등록 (인가 설정 후 실행되도록)
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
                         SecurityContextPersistenceFilter.class

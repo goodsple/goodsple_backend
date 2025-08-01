@@ -23,6 +23,13 @@ spring:
             enable: true   # TLS 사용
             required: true
 
+  # 여기서부터 Redis 설정 추가
+  data:
+    redis:
+      host: localhost   # Redis 서버 주소
+      port: 6379        # Redis 기본 포트
+      timeout: 2000ms   # (선택) 연결 타임아웃
+
 server:
   port: 8080
 
