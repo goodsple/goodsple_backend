@@ -5,11 +5,13 @@ import com.goodsple.features.auth.dto.request.LoginRequest;
 import com.goodsple.features.auth.dto.request.RefreshRequest;
 import com.goodsple.features.auth.dto.request.SignUpRequest;
 import com.goodsple.features.auth.dto.response.KakaoLoginResponse;
+import com.goodsple.features.auth.dto.response.LoginResponse;
 import com.goodsple.features.auth.dto.response.SignUpResponse;
 import com.goodsple.features.auth.dto.response.TokenResponse;
 import com.goodsple.features.auth.enums.CheckType;
 import com.goodsple.features.auth.service.KakaoAuthService;
 import com.goodsple.features.auth.service.UserService;
+import com.goodsple.features.user.dto.response.UserProfile;
 import com.goodsple.security.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -84,11 +86,26 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest loginRequest) {
-        // 아이디+비밀번호 검증 및 토큰 생성 로직을 UserService에서 처리
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
+        // 1) 토큰 발급
         TokenResponse tokens = userService.login(loginRequest);
-        return ResponseEntity.ok(tokens);
+
+        // 2) 토큰에서 userId 추출
+        Long userId = jwtProvider.getUserId(tokens.getAccessToken());
+
+        // 3) 프로필 조회
+        UserProfile profile = userService.getProfile(userId);
+
+        // 4) LoginResponse 빌드
+        LoginResponse response = new LoginResponse(
+                tokens.getAccessToken(),
+                tokens.getRefreshToken(),
+                profile
+        );
+
+        return ResponseEntity.ok(response);
     }
+    
 
     // ====================================================================================
     // 2. 토큰 재발급
