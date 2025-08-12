@@ -65,9 +65,11 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reports/reasons").permitAll()
+//                    .requestMatchers("/api/notices").permitAll()
 
                         // 신고 등록은 로그인 필요
                         .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
+
 
                         // 그 외 모든 요청은 JWT 인증 필요
                         .anyRequest().authenticated()

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.notice.mapper.NoticeMapper">
+
+    <insert id="createNotice" parameterType="com.goodsple.features.notice.dto.NoticeDto" useGeneratedKeys="true" keyProperty="noticeId">
+        INSERT INTO notice (user_id, notice_title, notice_content, notice_created_at, is_popup)
+        VALUES (#{userId}, #{noticeTitle}, #{noticeContent}, #{noticeCreatedAt}, #{isPopup})
+    </insert>
+
+    <insert id="insertNoticeAttachment" parameterType="com.goodsple.features.notice.dto.NoticeAttachmentDto">
+        INSERT INTO notice_attachment
+            (attachment_id, notice_id, notice_file_url, notice_file_type, notice_sort_order, notice_file_created_at)
+        VALUES
+            (#{attachmentId}, #{noticeId}, #{noticeFileUrl}, #{noticeFileType}, #{noticeSortOrder}, #{noticeFileCreatedAt})
+    </insert>
+
+</mapper>
+
