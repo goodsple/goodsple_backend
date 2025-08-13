@@ -6,7 +6,7 @@ package com.goodsple.features.auction.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Schema(description = "관리자용 경매 상세 조회 응답 DTO")
@@ -16,8 +16,8 @@ public class AuctionAdminDetailResponse {
     public String description;
     public BigDecimal startPrice;
     public BigDecimal minBidUnit;
-    public LocalDateTime startTime;
-    public LocalDateTime endTime;
+    public OffsetDateTime startTime;
+    public OffsetDateTime endTime;
     public List<String> imageUrls;
     public String status;
 }

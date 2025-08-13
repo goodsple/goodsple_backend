@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Schema(description = "신규 경매 생성 요청 DTO")
@@ -33,11 +33,11 @@ public class AuctionCreateRequest {
 
     @Schema(description = "경매 시작 시간 (ISO 8601 형식)", requiredMode = Schema.RequiredMode.REQUIRED, example = "2025-08-20T21:00:00")
     @NotNull @Future
-    public LocalDateTime startTime;
+    public OffsetDateTime startTime;
 
     @Schema(description = "경매 종료 시간 (ISO 8601 형식)", requiredMode = Schema.RequiredMode.REQUIRED, example = "2025-08-20T22:00:00")
     @NotNull @Future
-    public LocalDateTime endTime;
+    public OffsetDateTime endTime;
 
     @Schema(description = "상품 이미지 URL 목록", requiredMode = Schema.RequiredMode.REQUIRED)
     public List<String> imageUrls;

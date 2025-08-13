@@ -80,4 +80,69 @@
           AND auction_status != 'cancelled'::auction_status_enum
     </select>
 
+    <!-- 경매 상세 정보 조회를 위한 ResultMap -->
+    <resultMap id="AuctionAdminDetailResultMap" type="com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse">
+        <id property="id" column="auction_id"/>
+        <result property="productName" column="auction_title"/>
+        <result property="description" column="auction_description"/>
+        <result property="startPrice" column="auction_start_price"/>
+        <result property="minBidUnit" column="auction_min_bid_unit"/>
+        <result property="startTime" column="auction_start_time"/>
+        <result property="endTime" column="auction_end_time"/>
+        <result property="status" column="auction_status"/>
+        <collection property="imageUrls" ofType="java.lang.String">
+            <result column="auction_image_url"/>
+        </collection>
+    </resultMap>
+
+    <!-- 특정 경매의 상세 정보와 이미지 목록을 조회하는 쿼리 -->
+    <select id="findAuctionDetailById" resultMap="AuctionAdminDetailResultMap">
+        SELECT
+            a.auction_id,
+            a.auction_title,
+            a.auction_description,
+            a.auction_start_price,
+            a.auction_min_bid_unit,
+            a.auction_start_time,
+            a.auction_end_time,
+            a.auction_status::text as auction_status,
+                ai.auction_image_url
+        FROM
+            auctions a
+                LEFT JOIN
+            auction_images ai ON a.auction_id = ai.auction_id
+        WHERE
+            a.auction_id = #{auctionId}
+    </select>
+
+    <!-- 수정을 위해 경매 엔티티 하나를 조회하는 쿼리 -->
+    <select id="findAuctionForUpdate" resultType="com.goodsple.features.auction.entity.Auction">
+        SELECT
+            auction_id as auctionId,
+            auction_status::text as auctionStatus
+        FROM auctions
+        WHERE auction_id = #{auctionId}
+    </select>
+
+    <!-- 경매 정보를 수정하는 쿼리 (동적 SQL 사용) -->
+    <update id="updateAuction" parameterType="com.goodsple.features.auction.entity.Auction">
+        UPDATE auctions
+        <set>
+            <if test="auctionTitle != null">auction_title = #{auctionTitle},</if>
+            <if test="auctionDescription != null">auction_description = #{auctionDescription},</if>
+            <if test="auctionStartPrice != null">auction_start_price = #{auctionStartPrice},</if>
+            <if test="auctionMinBidUnit != null">auction_min_bid_unit = #{auctionMinBidUnit},</if>
+            <if test="auctionStartTime != null">auction_start_time = #{auctionStartTime},</if>
+            <if test="auctionEndTime != null">auction_end_time = #{auctionEndTime},</if>
+            auction_updated_at = now()
+        </set>
+        WHERE auction_id = #{auctionId}
+    </update>
+
+    <!-- 특정 경매의 이미지들을 모두 삭제하는 쿼리 -->
+    <delete id="deleteAuctionImages">
+        DELETE FROM auction_images WHERE auction_id = #{auctionId}
+    </delete>
+
+
 </mapper>

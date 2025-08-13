@@ -102,25 +102,69 @@ public class AdminAuctionService {
         return newAuctionId;
     }
 
+//    @Transactional(readOnly = true)
+//    public AuctionAdminDetailResponse getAuctionDetail(Long auctionId) {
+//        // return auctionMapper.findAuctionDetailById(auctionId)
+//        //        .orElseThrow(() -> new IllegalArgumentException("Auction not found with id: " + auctionId));
+//
+//        System.out.println("경매 상세 조회 로직 호출됨: ID " + auctionId);
+//        return new AuctionAdminDetailResponse(); // 임시 반환
+//    }
+
     @Transactional(readOnly = true)
     public AuctionAdminDetailResponse getAuctionDetail(Long auctionId) {
-        // return auctionMapper.findAuctionDetailById(auctionId)
-        //        .orElseThrow(() -> new IllegalArgumentException("Auction not found with id: " + auctionId));
-
-        System.out.println("경매 상세 조회 로직 호출됨: ID " + auctionId);
-        return new AuctionAdminDetailResponse(); // 임시 반환
+        return auctionMapper.findAuctionDetailById(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 경매를 찾을 수 없습니다. ID: " + auctionId));
     }
+
+//    @Transactional
+//    public void updateAuction(Long auctionId, AuctionUpdateRequest request) {
+//        // TODO: 수정하려는 경매가 존재하는지, 상태가 '예정'인지 확인
+//        // TODO: 시간 유효성 및 중복 검증
+//        // Auction auction = convertToEntity(request);
+//        // auction.setId(auctionId);
+//        // auctionMapper.updateAuction(auction);
+//        // ... 이미지 업데이트 로직 ...
+//
+//        System.out.println("경매 수정 로직 호출됨: ID " + auctionId);
+//    }
 
     @Transactional
     public void updateAuction(Long auctionId, AuctionUpdateRequest request) {
-        // TODO: 수정하려는 경매가 존재하는지, 상태가 '예정'인지 확인
-        // TODO: 시간 유효성 및 중복 검증
-        // Auction auction = convertToEntity(request);
-        // auction.setId(auctionId);
-        // auctionMapper.updateAuction(auction);
-        // ... 이미지 업데이트 로직 ...
+        // 1. 수정할 경매가 존재하는지, 수정 가능한 상태인지 확인
+        Auction existingAuction = auctionMapper.findAuctionForUpdate(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 경매를 찾을 수 없습니다. ID: " + auctionId));
 
-        System.out.println("경매 수정 로직 호출됨: ID " + auctionId);
+        if (!"scheduled".equalsIgnoreCase(existingAuction.getAuctionStatus())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "예정 상태의 경매만 수정할 수 있습니다.");
+        }
+
+        // 2. 시간 유효성 및 중복 검증 (생성 로직과 동일)
+        if (request.startTime.isAfter(request.endTime) || request.startTime.isEqual(request.endTime)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "경매 종료 시간은 시작 시간보다 이후여야 합니다.");
+        }
+        // TODO: 시간 중복 검사 시 자기 자신은 제외하는 로직 추가 필요
+
+        // 3. DTO를 Auction 엔티티로 변환하여 정보 업데이트
+        Auction auctionToUpdate = Auction.builder()
+                .auctionTitle(request.productName)
+                .auctionDescription(request.description)
+                .auctionStartPrice(request.startPrice)
+                .auctionMinBidUnit(request.minBidUnit)
+                .auctionStartTime(request.startTime)
+                .auctionEndTime(request.endTime)
+                .build();
+        auctionToUpdate.setAuctionId(auctionId); // WHERE 절에 사용할 ID 설정
+
+        auctionMapper.updateAuction(auctionToUpdate);
+
+        // 4. 이미지 정보 업데이트 (기존 이미지 모두 삭제 후 새로 추가)
+        auctionMapper.deleteAuctionImages(auctionId);
+        if (request.imageUrls != null && !request.imageUrls.isEmpty()) {
+            for (String url : request.imageUrls) {
+                auctionMapper.insertAuctionImage(auctionId, url);
+            }
+        }
     }
 
     @Transactional

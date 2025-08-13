@@ -6,13 +6,15 @@ package com.goodsple.features.auction.entity;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter // MyBatis가 결과를 매핑할 때 Setter를 사용할 수 있습니다.
+@NoArgsConstructor
 public class Auction {
 
     private Long auctionId;
@@ -21,13 +23,13 @@ public class Auction {
     private String auctionDescription;
     private BigDecimal auctionStartPrice;
     private BigDecimal auctionMinBidUnit;
-    private LocalDateTime auctionStartTime;
-    private LocalDateTime auctionEndTime;
+    private OffsetDateTime auctionStartTime;
+    private OffsetDateTime auctionEndTime;
     private String auctionStatus;
 
     // 생성자나 빌더를 통해 객체를 생성할 수 있습니다.
     @Builder
-    public Auction(Long userId, String auctionTitle, String auctionDescription, BigDecimal auctionStartPrice, BigDecimal auctionMinBidUnit, LocalDateTime auctionStartTime, LocalDateTime auctionEndTime, String auctionStatus) {
+    public Auction(Long userId, String auctionTitle, String auctionDescription, BigDecimal auctionStartPrice, BigDecimal auctionMinBidUnit, OffsetDateTime auctionStartTime, OffsetDateTime auctionEndTime, String auctionStatus) {
         this.userId = userId;
         this.auctionTitle = auctionTitle;
         this.auctionDescription = auctionDescription;
