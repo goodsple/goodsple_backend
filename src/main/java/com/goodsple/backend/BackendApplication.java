@@ -14,7 +14,9 @@ import org.springframework.web.client.RestTemplate;
 @MapperScan(basePackages = {
         "com.goodsple.features.auth.mapper",
         "com.goodsple.features.report.mapper",
-        "com.goodsple.features.admin.user.mapper"
+        "com.goodsple.features.admin.user.mapper",
+        "com.goodsple.features.notice.mapper"
+
 })
 @EnableScheduling
 @OpenAPIDefinition( // <<-- 이 어노테이션과 그 내용을 추가합니다.
