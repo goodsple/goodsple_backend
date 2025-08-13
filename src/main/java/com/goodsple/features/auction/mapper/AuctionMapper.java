@@ -6,7 +6,11 @@ package com.goodsple.features.auction.mapper;
 
 import com.goodsple.features.auction.dto.request.AuctionSearchRequest;
 import com.goodsple.features.auction.dto.response.AuctionAdminListResponse;
+import com.goodsple.features.auction.entity.Auction;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +34,9 @@ public interface AuctionMapper {
     // TODO: 아래 메소드들에 대한 실제 구현 필요
     // void insertAuction(Auction auction);
     // void insertAuctionImage(@Param("auctionId") Long auctionId, @Param("imageUrl") String imageUrl);
+    void insertAuction(Auction auction);
+    void insertAuctionImage(@Param("auctionId") Long auctionId, @Param("imageUrl") String imageUrl);
+    int checkOverlappingAuction(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
     // Optional<AuctionAdminDetailResponse> findAuctionDetailById(Long auctionId);
     // void updateAuction(Auction auction);
     // void updateAuctionStatus(@Param("auctionId") Long auctionId, @Param("status") String status);

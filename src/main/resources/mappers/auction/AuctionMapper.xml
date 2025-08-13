@@ -53,4 +53,31 @@
         <include refid="searchCondition"/>
     </select>
 
+    <!-- 새로운 경매를 생성하는 쿼리 -->
+    <insert id="insertAuction" parameterType="com.goodsple.features.auction.entity.Auction"
+            useGeneratedKeys="true" keyProperty="auctionId">
+        INSERT INTO auctions (
+            user_id, auction_title, auction_description, auction_start_price,
+            auction_min_bid_unit, auction_start_time, auction_end_time, auction_status
+        ) VALUES (
+                     #{userId}, #{auctionTitle}, #{auctionDescription}, #{auctionStartPrice},
+                     #{auctionMinBidUnit}, #{auctionStartTime}, #{auctionEndTime}, #{auctionStatus}::auction_status_enum
+                 )
+    </insert>
+
+    <!-- 경매 이미지를 추가하는 쿼리 -->
+    <insert id="insertAuctionImage">
+        INSERT INTO auction_images (auction_id, auction_image_url)
+        VALUES (#{auctionId}, #{imageUrl})
+    </insert>
+
+    <!-- 시간 중복 경매를 확인하는 쿼리 -->
+    <select id="checkOverlappingAuction" resultType="int">
+        SELECT COUNT(*)
+        FROM auctions
+        WHERE
+            (auction_start_time, auction_end_time) OVERLAPS (#{startTime}, #{endTime})
+          AND auction_status != 'cancelled'::auction_status_enum
+    </select>
+
 </mapper>

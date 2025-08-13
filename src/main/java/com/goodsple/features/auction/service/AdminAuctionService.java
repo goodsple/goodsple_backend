@@ -9,11 +9,17 @@ import com.goodsple.features.auction.dto.request.AuctionSearchRequest;
 import com.goodsple.features.auction.dto.request.AuctionUpdateRequest;
 import com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse;
 import com.goodsple.features.auction.dto.response.AuctionAdminListResponse;
+import com.goodsple.features.auction.entity.Auction;
 import com.goodsple.features.auction.mapper.AuctionMapper;
 import com.goodsple.common.dto.PagedResponse;
+import com.goodsple.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
 @Service
@@ -35,22 +41,65 @@ public class AdminAuctionService {
         return new PagedResponse<>(auctions, searchRequest.getPage(), totalPages, totalElements);
     }
 
+//    @Transactional
+//    public Long createAuction(AuctionCreateRequest request) {
+//        // TODO: 시간 유효성 검증 (endTime > startTime)
+//        // TODO: 다른 경매와 시간 겹치는지 검증 (REQ-SYS-002)
+//
+//        // DTO를 Auction 엔티티(DB 테이블 매핑용 객체)로 변환하는 로직 필요
+//        // Auction auction = convertToEntity(request);
+//        // auctionMapper.insertAuction(auction);
+//        // Long auctionId = auction.getId();
+//        // for (String url : request.imageUrls) {
+//        //     auctionMapper.insertAuctionImage(auctionId, url);
+//        // }
+//        // return auctionId;
+//
+//        System.out.println("경매 생성 로직 호출됨: " + request.productName);
+//        return 1L; // 임시 반환
+//    }
+
     @Transactional
     public Long createAuction(AuctionCreateRequest request) {
-        // TODO: 시간 유효성 검증 (endTime > startTime)
-        // TODO: 다른 경매와 시간 겹치는지 검증 (REQ-SYS-002)
+        // 1. 시간 유효성 검증
+        if (request.startTime.isAfter(request.endTime) || request.startTime.isEqual(request.endTime)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "경매 종료 시간은 시작 시간보다 이후여야 합니다.");
+        }
 
-        // DTO를 Auction 엔티티(DB 테이블 매핑용 객체)로 변환하는 로직 필요
-        // Auction auction = convertToEntity(request);
-        // auctionMapper.insertAuction(auction);
-        // Long auctionId = auction.getId();
-        // for (String url : request.imageUrls) {
-        //     auctionMapper.insertAuctionImage(auctionId, url);
-        // }
-        // return auctionId;
+        // 2. 다른 경매와 시간 겹치는지 검증 (REQ-SYS-002)
+        int overlappingCount = auctionMapper.checkOverlappingAuction(request.startTime, request.endTime);
+        if (overlappingCount > 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "해당 시간에 이미 다른 경매가 예정되어 있습니다.");
+        }
 
-        System.out.println("경매 생성 로직 호출됨: " + request.productName);
-        return 1L; // 임시 반환
+        // 3. 현재 로그인한 관리자 ID 가져오기
+        CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Long adminUserId = userDetails.getUserId();
+
+        // 4. DTO를 Auction 엔티티로 변환
+        Auction auction = Auction.builder()
+                .userId(adminUserId)
+                .auctionTitle(request.productName)
+                .auctionDescription(request.description)
+                .auctionStartPrice(request.startPrice)
+                .auctionMinBidUnit(request.minBidUnit)
+                .auctionStartTime(request.startTime)
+                .auctionEndTime(request.endTime)
+                .auctionStatus("scheduled") // 생성 시 기본 상태는 '예정'
+                .build();
+
+        // 5. 경매 정보 저장 (useGeneratedKeys에 의해 auction 객체에 auctionId가 채워짐)
+        auctionMapper.insertAuction(auction);
+        Long newAuctionId = auction.getAuctionId();
+
+        // 6. 이미지 URL들 저장
+        if (request.imageUrls != null && !request.imageUrls.isEmpty()) {
+            for (String url : request.imageUrls) {
+                auctionMapper.insertAuctionImage(newAuctionId, url);
+            }
+        }
+
+        return newAuctionId;
     }
 
     @Transactional(readOnly = true)
