@@ -11,6 +11,7 @@ import com.goodsple.features.auction.dto.request.AuctionStatusUpdateRequest;
 import com.goodsple.features.auction.dto.request.AuctionUpdateRequest;
 import com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse;
 import com.goodsple.features.auction.dto.response.AuctionAdminListResponse;
+import com.goodsple.features.auction.dto.response.AuctionAdminResultResponse;
 import com.goodsple.features.auction.service.AdminAuctionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -107,5 +108,18 @@ public class AdminAuctionController {
             @Valid @RequestBody AuctionStatusUpdateRequest statusRequest) {
         adminAuctionService.updateAuctionStatus(auctionId, statusRequest.getStatus());
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "경매 결과 상세 조회", description = "종료된 경매의 최종 결과(낙찰자, 입찰 내역 등)를 조회합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "404", description = "해당 경매 결과를 찾을 수 없음")
+    })
+    @GetMapping("/{auctionId}/result")
+    public ResponseEntity<AuctionAdminResultResponse> getAuctionResult(
+            @Parameter(name = "auctionId", description = "결과를 조회할 경매의 ID", required = true, in = ParameterIn.PATH)
+            @PathVariable Long auctionId) {
+        AuctionAdminResultResponse response = adminAuctionService.getAuctionResult(auctionId);
+        return ResponseEntity.ok(response);
     }
 }

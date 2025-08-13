@@ -9,6 +9,7 @@ import com.goodsple.features.auction.dto.request.AuctionSearchRequest;
 import com.goodsple.features.auction.dto.request.AuctionUpdateRequest;
 import com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse;
 import com.goodsple.features.auction.dto.response.AuctionAdminListResponse;
+import com.goodsple.features.auction.dto.response.AuctionAdminResultResponse;
 import com.goodsple.features.auction.entity.Auction;
 import com.goodsple.features.auction.mapper.AuctionMapper;
 import com.goodsple.common.dto.PagedResponse;
@@ -174,5 +175,11 @@ public class AdminAuctionService {
         // TODO: 상태 변경에 따른 후속 조치 (예: WebSocket으로 참여자에게 알림)
 
         System.out.println("경매 상태 변경 로직 호출됨: ID " + auctionId + ", 상태 " + status);
+    }
+
+    @Transactional(readOnly = true)
+    public AuctionAdminResultResponse getAuctionResult(Long auctionId) {
+        return auctionMapper.findAuctionResultById(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 경매 결과를 찾을 수 없습니다. ID: " + auctionId));
     }
 }

@@ -144,5 +144,87 @@
         DELETE FROM auction_images WHERE auction_id = #{auctionId}
     </delete>
 
+    <!-- 경매 결과 조회를 위한 복합 ResultMap (수정) -->
+    <resultMap id="AuctionAdminResultMap" type="com.goodsple.features.auction.dto.response.AuctionAdminResultResponse">
+        <!-- 기본 정보 -->
+        <result property="productName" column="auction_title"/>
+        <result property="imageUrl" column="auction_image_url"/>
+        <result property="startPrice" column="auction_start_price"/>
+        <result property="startTime" column="auction_start_time"/>
+        <result property="endTime" column="auction_end_time"/>
+        <result property="finalPrice" column="auction_final_price"/>
+        <result property="status" column="auction_status"/>
+        <result property="paymentStatus" column="order_status"/>
 
+        <!-- 낙찰자 정보 -->
+        <association property="winnerInfo" javaType="com.goodsple.features.auction.dto.response.WinnerInfo">
+            <result property="userId" column="winner_user_id"/>
+            <result property="nickname" column="winner_nickname"/>
+            <result property="phone" column="winner_phone"/>
+        </association>
+
+        <!-- 배송 정보 -->
+        <association property="shippingInfo" javaType="com.goodsple.features.auction.dto.response.ShippingInfo">
+            <result property="name" column="shipping_recipient_name"/>
+            <result property="phone" column="shipping_recipient_phone"/>
+            <result property="address" column="shipping_address"/>
+            <result property="message" column="shipping_memo"/>
+        </association>
+
+        <!-- 입찰 기록 (수정된 부분) -->
+        <!-- select 속성을 이용해 별도의 쿼리를 호출하여 채웁니다. -->
+        <!-- column="auction_id"는 메인 쿼리 결과의 auction_id 값을 서브 쿼리의 파라미터로 넘기라는 의미입니다. -->
+        <collection property="bidHistory"
+                    select="findBidHistoryByAuctionId"
+                    column="auction_id"
+                    ofType="com.goodsple.features.auction.dto.response.BidHistoryInfo"/>
+    </resultMap>
+
+    <!-- 경매 결과 상세 정보 조회 쿼리 (수정) -->
+    <!-- bids 테이블과의 JOIN을 제거하여 더 단순하고 명확하게 만듭니다. -->
+    <select id="findAuctionResultById" resultMap="AuctionAdminResultMap">
+        SELECT
+            a.auction_id, -- collection의 column 속성으로 넘겨주기 위해 추가
+            a.auction_title,
+            (SELECT auction_image_url FROM auction_images WHERE auction_id = a.auction_id LIMIT 1) AS auction_image_url,
+            a.auction_start_price,
+            a.auction_start_time,
+            a.auction_end_time,
+            a.auction_final_price,
+            a.auction_status::text AS auction_status,
+            o.order_status::text AS order_status,
+            winner.user_id AS winner_user_id,
+            winner.nickname AS winner_nickname,
+            winner.phone_number AS winner_phone,
+            si.shipping_recipient_name,
+            si.shipping_recipient_phone,
+            CONCAT(si.shipping_address1, ' ', si.shipping_address2) AS shipping_address,
+            si.shipping_memo
+        FROM
+            auctions a
+            LEFT JOIN
+            users winner ON a.auction_winning_user_id = winner.user_id
+            LEFT JOIN
+            orders o ON a.auction_id = o.auction_id
+            LEFT JOIN
+            shipping_info si ON o.order_id = si.order_id
+        WHERE
+            a.auction_id = #{auctionId}
+    </select>
+
+    <!-- 입찰 기록만 조회하는 새로운 서브 쿼리 (추가) -->
+    <select id="findBidHistoryByAuctionId" resultType="com.goodsple.features.auction.dto.response.BidHistoryInfo">
+        SELECT
+            b.bid_created_at AS time,
+            u.nickname AS bidder,
+            b.bid_amount AS price
+        FROM
+            bids b
+            JOIN
+            users u ON b.user_id = u.user_id
+        WHERE
+            b.auction_id = #{auctionId}
+        ORDER BY
+            b.bid_created_at DESC
+    </select>
 </mapper>

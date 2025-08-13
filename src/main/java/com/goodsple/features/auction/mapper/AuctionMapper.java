@@ -7,6 +7,8 @@ package com.goodsple.features.auction.mapper;
 import com.goodsple.features.auction.dto.request.AuctionSearchRequest;
 import com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse;
 import com.goodsple.features.auction.dto.response.AuctionAdminListResponse;
+import com.goodsple.features.auction.dto.response.AuctionAdminResultResponse;
+import com.goodsple.features.auction.dto.response.BidHistoryInfo;
 import com.goodsple.features.auction.entity.Auction;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -66,4 +68,18 @@ public interface AuctionMapper {
      * @param auctionId 경매 ID
      */
     void deleteAuctionImages(Long auctionId);
+
+    /**
+     * 관리자용 경매 결과 상세 페이지에 필요한 모든 정보를 조회합니다.
+     * @param auctionId 조회할 경매 ID
+     * @return 경매 결과 정보 DTO
+     */
+    Optional<AuctionAdminResultResponse> findAuctionResultById(Long auctionId);
+
+    /**
+     * 특정 경매의 전체 입찰 기록을 조회합니다. (서브 쿼리용)
+     * @param auctionId 조회할 경매 ID
+     * @return 입찰 기록 리스트
+     */
+    List<BidHistoryInfo> findBidHistoryByAuctionId(Long auctionId);
 }
