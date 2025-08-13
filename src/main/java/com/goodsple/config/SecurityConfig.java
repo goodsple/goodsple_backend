@@ -62,7 +62,7 @@ public class SecurityConfig {
 
                         // 인증·인가 없이 접근 허용할 URI
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/category/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/admin/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reports/reasons").permitAll()
@@ -71,7 +71,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
 
                         // 그 외 모든 요청은 JWT 인증 필요
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 // 7. JWT 필터 등록 (인가 설정 후 실행되도록)
                 .addFilterBefore(

@@ -30,7 +30,7 @@ public class SecondCateController {
     })
     @PostMapping
     public ResponseEntity<Void> createSecondCate(
-            @RequestParam SecondCate SecondCate)
+            @RequestBody SecondCate SecondCate)
     {
         secondCateService.createSecondCate(SecondCate);
         return ResponseEntity.status(HttpStatus.CREATED).build();

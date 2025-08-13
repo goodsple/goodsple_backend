@@ -17,7 +17,7 @@ public interface SecondCateMapper {
     @Select("SELECT * FROM second_cate")
     List<SecondCate> getAllSecondCate();
 
-    @Insert("INSERT INTO second_cate (cate_name) VALUES (#{cateName})")
+    @Insert("INSERT INTO second_cate (cate_name, first_cate_id) VALUES (#{cateName}, #{firstCateId})")
     @Options(useGeneratedKeys = true, keyProperty = "secondCateId")
     void insertCate(SecondCate secondCate);
 
