@@ -62,6 +62,7 @@ public class SecurityConfig {
 
                         // 인증·인가 없이 접근 허용할 URI
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/category/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reports/reasons").permitAll()

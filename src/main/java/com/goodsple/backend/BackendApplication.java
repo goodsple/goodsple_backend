@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication(scanBasePackages = "com.goodsple")
 @MapperScan("com.goodsple.features.auth.mapper")
 @MapperScan("com.goodsple.features.report.mapper")
+@MapperScan("com.goodsple.features.category.mapper")
 @EnableScheduling
 @OpenAPIDefinition( // <<-- 이 어노테이션과 그 내용을 추가합니다.
         info = @Info(
@@ -48,7 +49,7 @@ public class BackendApplication {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
 }
 
 //http://localhost:8080/swagger-ui.html 스웨거 확인 주소.
+//http://localhost:8080/swagger-ui/index.html
