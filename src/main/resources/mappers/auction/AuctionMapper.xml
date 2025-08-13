@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+ * 파일 경로: src/main/resources/mappers/AuctionMapper.xml
+ * 설명: 경매 관련 SQL 쿼리를 정의하는 MyBatis 매퍼 XML 파일입니다.
+-->
+<mapper namespace="com.goodsple.features.auction.mapper.AuctionMapper">
+
+    <!-- 공통 검색 조건을 위한 SQL 조각 -->
+    <sql id="searchCondition">
+        <where>
+            <if test="productName != null and productName != ''">
+                AND a.auction_title LIKE CONCAT('%', #{productName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                AND a.auction_status = #{status}::auction_status_enum
+            </if>
+            <if test="startDate != null">
+                AND a.auction_start_time &gt;= #{startDate}
+            </if>
+            <!-- 종료일은 해당 날짜의 끝(23:59:59)까지 포함하도록 조회 -->
+            <if test="endDate != null">
+                AND a.auction_start_time &lt; (#{endDate} + INTERVAL '1 day')
+            </if>
+        </where>
+    </sql>
+
+    <!-- 관리자용 경매 목록 조회 쿼리 -->
+    <select id="findAuctions" resultType="com.goodsple.features.auction.dto.response.AuctionAdminListResponse">
+        SELECT
+        a.auction_id AS id,
+        a.auction_title AS productName,
+        a.auction_start_time AS startTime,
+        a.auction_end_time AS endTime,
+        -- 최종가가 있으면 최종가, 없으면 현재 최고 입찰가를 현재가로 표시
+        COALESCE(a.auction_final_price, (SELECT MAX(bid_amount) FROM bids WHERE auction_id = a.auction_id), a.auction_start_price) AS currentPrice,
+        a.auction_status::text AS status,
+        o.order_status::text AS paymentStatus
+        FROM
+        auctions a
+        LEFT JOIN
+        orders o ON a.auction_id = o.auction_id
+        <include refid="searchCondition"/>
+        ORDER BY
+        a.auction_id DESC
+        LIMIT #{size} OFFSET #{page} * #{size}
+    </select>
+
+    <!-- 관리자용 경매 목록 전체 개수 조회 쿼리 -->
+    <select id="countAuctions" resultType="long">
+        SELECT count(*)
+        FROM auctions a
+        <include refid="searchCondition"/>
+    </select>
+
+</mapper>
