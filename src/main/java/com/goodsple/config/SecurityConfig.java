@@ -2,6 +2,7 @@ package com.goodsple.config;
 
 import com.goodsple.security.JwtAuthenticationFilter;
 import com.goodsple.security.JwtTokenProvider;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 import java.util.List;
@@ -37,9 +39,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트 도메인 허용
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                    config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+                    // AllowedHeaders는 한 번만 설정 (필요 시 * 로)
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
+                    config.setMaxAge(3600L);
                     return config;
                 }))
                 // 3. 세션 사용 안 함 (Stateless JWT)
@@ -59,6 +63,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // CORS preflight(OPTIONS)를 인증 없이 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
+                        .requestMatchers("/error").permitAll()
 
                         // 인증·인가 없이 접근 허용할 URI
                         .requestMatchers("/api/auth/**").permitAll()
@@ -66,7 +72,8 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reports/reasons").permitAll()
 
-                        // 신고 등록은 로그인 필요
+                        // 로그인 필요
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
 
                         // 그 외 모든 요청은 JWT 인증 필요
@@ -75,7 +82,8 @@ public class SecurityConfig {
                 // 7. JWT 필터 등록 (인가 설정 후 실행되도록)
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
-                        SecurityContextPersistenceFilter.class
+                        UsernamePasswordAuthenticationFilter.class
+//                        SecurityContextPersistenceFilter.class
                 );
 
         return http.build();
@@ -85,9 +93,11 @@ public class SecurityConfig {
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, authException) -> {
+            System.out.println("[401] " + request.getMethod() + " " + request.getServletPath() +
+                    " auth=" + (org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication()));
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"message\": \"❗아이디 또는 비밀번호가 일치하지 않습니다.\"}");
+            response.getWriter().write("{\"message\": \"❗로그인이 만료되었거나 유효하지 않습니다.\"}");
         };
     }
 
