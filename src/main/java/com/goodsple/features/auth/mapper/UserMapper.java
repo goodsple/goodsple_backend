@@ -72,8 +72,8 @@ public interface UserMapper {
     /** 내 프로필 수정 */
     void updateMyProfile(User user);
 
-    /** 내 계정 삭제(탈퇴) */
-    void deleteMyProfile(@Param("userId") Long userId);
+    /** 회원 탈퇴 (소프트 삭제) */
+    void withdrawMyAccount(@Param("userId") Long userId);
 
    /** 마이페이지 조회*/
    @Select("""

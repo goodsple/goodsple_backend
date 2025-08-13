@@ -1,5 +1,6 @@
 package com.goodsple.security;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -29,6 +30,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
+        // 에러 디스패치/에러 경로는 필터 스킵
+        if (request.getDispatcherType() == DispatcherType.ERROR) return true;
+        if ("/error".equals(request.getServletPath())) return true;
+
         String path = request.getServletPath();
         // 로그인/회원가입/토큰 재발급/Kakao 콜백 등 인증이 _아직_ 불필요한 엔드포인트만 열어둡니다.
         if (path.equals("/api/auth/login")
@@ -54,13 +59,43 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        System.out.println("▶ JWT Filter on path: " + request.getServletPath());
         // 1) resolveToken() 로 헤더→쿠키 순서대로 토큰 꺼내기
         String token = resolveToken(request);
+        String path = request.getServletPath();
+
+        System.out.println("[JWT] path=" + path + ", hasToken=" + (token != null));
+
+        boolean valid = token != null && jwtProvider.validateToken(token);
+        System.out.println("[JWT] valid=" + valid);
+
+        if (valid) {
+            try {
+                Authentication auth = jwtProvider.getAuthentication(token);
+                System.out.println("[JWT] auth=" + (auth != null) + ", roles=" + (auth != null ? auth.getAuthorities() : "null"));
+                if (auth != null) {
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            } catch (UsernameNotFoundException ex) {
+                System.out.println("[JWT] user not found, clear context");
+                SecurityContextHolder.clearContext();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                SecurityContextHolder.clearContext();
+            }
+        }
 
         // 2) 유효성 검사 및 SecurityContext 설정
         if (token != null && jwtProvider.validateToken(token)) {
             try {
+                // 토큰 속 userId 뽑아서 상태 확인
+                Long userId = jwtProvider.getUserIdFromToken(token);
+                boolean active = jwtProvider.isUserActive(userId); // 내부에서 userMapper.findById(...)로 체크
+                if (!active) {
+                    // 탈퇴/정지면 인증하지 않음
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
                 Authentication auth = jwtProvider.getAuthentication(token);
                 if (auth != null) {
                     SecurityContextHolder.getContext().setAuthentication(auth);
