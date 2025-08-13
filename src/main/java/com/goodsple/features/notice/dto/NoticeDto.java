@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
 public class NoticeDto {
 
   private Long noticeId;
-  private Long userId;
+  private Long userId;  // fk
   private String noticeTitle;
   private String noticeContent;
   private OffsetDateTime noticeCreatedAt;
@@ -23,4 +24,5 @@ public class NoticeDto {
   private Boolean isPopup;
   private List<NoticeAttachmentDto> attachments;
 
+  private PopupNoticeDto popupInfo;
 }
