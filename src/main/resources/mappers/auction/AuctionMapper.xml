@@ -12,13 +12,15 @@
             <if test="productName != null and productName != ''">
                 AND a.auction_title LIKE CONCAT('%', #{productName}, '%')
             </if>
+            <!-- status 값이 비어있지 않을 때만 조건을 추가하도록 수정 -->
             <if test="status != null and status != ''">
                 AND a.auction_status = #{status}::auction_status_enum
             </if>
-            <if test="startDate != null and startDate != ''">
+            <!-- 날짜 값이 null이 아닐 때만 조건을 추가하도록 수정 -->
+            <if test="startDate != null">
                 AND a.auction_start_time &gt;= #{startDate}::date
             </if>
-            <if test="endDate != null and endDate != ''">
+            <if test="endDate != null">
                 AND a.auction_start_time &lt; (#{endDate}::date + INTERVAL '1 day')
             </if>
         </where>

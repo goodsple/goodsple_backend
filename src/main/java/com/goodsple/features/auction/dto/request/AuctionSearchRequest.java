@@ -5,11 +5,14 @@
 package com.goodsple.features.auction.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 
 @Schema(description = "경매 목록 검색 조건 DTO")
-@Data // Getter, Setter, ToString 등을 자동 생성
+@Getter // 3. @Getter 추가
+@Setter // 4. @Setter 추가
 public class AuctionSearchRequest {
     @Schema(description = "페이지 번호 (0부터 시작)", example = "0")
     private int page = 0;

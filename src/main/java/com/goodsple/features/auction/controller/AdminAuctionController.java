@@ -23,11 +23,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.time.LocalDate;
 
 @Tag(name = "02. 경매 관리 (Admin)", description = "관리자용 경매 생성, 조회, 수정, 상태 변경 API")
 @RestController
@@ -45,7 +47,22 @@ public class AdminAuctionController {
     })
     @GetMapping
     public ResponseEntity<PagedResponse<AuctionAdminListResponse>> getAuctionList(
-            @Parameter(description = "검색 조건 DTO") @ModelAttribute AuctionSearchRequest searchRequest) {
+            @Parameter(description = "페이지 번호 (0부터 시작)", in = ParameterIn.QUERY) @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "페이지 크기", in = ParameterIn.QUERY) @RequestParam(defaultValue = "10") int size,
+            @Parameter(description = "상품명 검색어", in = ParameterIn.QUERY) @RequestParam(required = false) String productName,
+            @Parameter(description = "경매 상태 필터", in = ParameterIn.QUERY) @RequestParam(required = false) String status,
+            @Parameter(description = "검색 시작 날짜 (YYYY-MM-DD)", in = ParameterIn.QUERY) @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
+            @Parameter(description = "검색 종료 날짜 (YYYY-MM-DD)", in = ParameterIn.QUERY) @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
+    ) {
+        // DTO 대신, 직접 받은 파라미터로 SearchRequest 객체를 생성합니다.
+        AuctionSearchRequest searchRequest = new AuctionSearchRequest();
+        searchRequest.setPage(page);
+        searchRequest.setSize(size);
+        searchRequest.setProductName(productName);
+        searchRequest.setStatus(status);
+        searchRequest.setStartDate(startDate);
+        searchRequest.setEndDate(endDate);
+
         PagedResponse<AuctionAdminListResponse> response = adminAuctionService.getAuctionList(searchRequest);
         return ResponseEntity.ok(response);
     }
@@ -77,7 +94,7 @@ public class AdminAuctionController {
             )
             @Valid @RequestBody AuctionCreateRequest createRequest) {
         Long auctionId = adminAuctionService.createAuction(createRequest);
-        URI location = URI.create(String.format("/api/v1/admin/auctions/%d", auctionId));
+        URI location = URI.create(String.format("/api/admin/auctions/%d", auctionId));
         return ResponseEntity.created(location).build();
     }
 
