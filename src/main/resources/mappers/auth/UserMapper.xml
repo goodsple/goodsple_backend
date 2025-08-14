@@ -311,9 +311,11 @@
     </update>
 
     <!-- 3) 내 계정 삭제(탈퇴) -->
-    <delete id="deleteMyProfile"
-            parameterType="long">
-        DELETE FROM users
+    <update id="withdrawMyAccount" parameterType="long">
+        UPDATE users
+        SET suspension_status = 'withdrawn',
+            user_updated_at   = NOW()
         WHERE user_id = #{userId}
-    </delete>
+    </update>
+
 </mapper>
