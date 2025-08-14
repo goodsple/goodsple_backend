@@ -53,3 +53,5 @@ public class BackendApplication {
 }
 
 //http://localhost:8080/swagger-ui.html 스웨거 확인 주소.
+
+//http://localhost:8080/swagger-ui/index.html 이겁니다. 20250814
