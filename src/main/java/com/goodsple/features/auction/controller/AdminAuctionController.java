@@ -31,7 +31,7 @@ import java.net.URI;
 
 @Tag(name = "02. 경매 관리 (Admin)", description = "관리자용 경매 생성, 조회, 수정, 상태 변경 API")
 @RestController
-@RequestMapping("/api/v1/admin/auctions")
+@RequestMapping("/api/admin/auctions")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMIN')") // 이 컨트롤러의 모든 API는 ADMIN 권한 필요
 public class AdminAuctionController {
