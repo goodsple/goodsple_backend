@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -136,13 +137,20 @@ public class AdminAuctionService {
         Auction existingAuction = auctionMapper.findAuctionForUpdate(auctionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 경매를 찾을 수 없습니다. ID: " + auctionId));
 
-        if (!"scheduled".equalsIgnoreCase(existingAuction.getAuctionStatus())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "예정 상태의 경매만 수정할 수 있습니다.");
+        // '예정(scheduled)' 또는 '중지(cancelled)' 상태가 아닐 경우에만 에러를 발생시킵니다.
+        String currentStatus = existingAuction.getAuctionStatus().toLowerCase();
+        if (!"scheduled".equals(currentStatus) && !"cancelled".equals(currentStatus)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "예정 또는 중지 상태의 경매만 수정할 수 있습니다.");
         }
 
-        // 2. 시간 유효성 및 중복 검증 (생성 로직과 동일)
+        // 2. 시간 유효성 검사
         if (request.startTime.isAfter(request.endTime) || request.startTime.isEqual(request.endTime)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "경매 종료 시간은 시작 시간보다 이후여야 합니다.");
+        }
+
+        // '예정' 상태의 경매를 수정할 때만 시작 시간이 미래인지 검사합니다.
+        if ("scheduled".equals(currentStatus) && request.startTime.isBefore(OffsetDateTime.now())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "예정 상태 경매의 시작 시간은 미래여야 합니다.");
         }
         // TODO: 시간 중복 검사 시 자기 자신은 제외하는 로직 추가 필요
 
