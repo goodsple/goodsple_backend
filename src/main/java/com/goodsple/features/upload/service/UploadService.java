@@ -62,71 +62,71 @@
 package com.goodsple.features.upload.service;
 
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UploadService {
 
     private final AmazonS3 s3Client;
-    private final String bucketName = "goodsple-0814";
 
-    // 허용할 업로드 타입 목록
-    private static final Set<String> ALLOWED_TYPES = Set.of("profile", "post", "product");
-
-    public UploadService() {
-        this.s3Client = AmazonS3ClientBuilder.standard()
-                .withRegion("ap-northeast-2")
-                .build();
-    }
+    @Value("${aws.s3.bucket}") private String bucket;
+    @Value("${aws.s3.allowed-types}") private String allowedTypesCsv;
 
     public String upload(MultipartFile file, String type) {
-        // 0. 업로드 타입 검증
-        if (!ALLOWED_TYPES.contains(type)) {
-            throw new IllegalArgumentException("허용되지 않은 업로드 타입입니다: " + type);
+        // 0) 업로드 타입 검증: yml 값 사용
+        Set<String> allowedTypes = Set.of(allowedTypesCsv.split("\\s*,\\s*"));
+        if (!allowedTypes.contains(type)) {
+            throw new IllegalArgumentException("허용되지 않은 업로드 타입: " + type);
         }
 
-        // 1. 원본 파일명 정리 및 보안 검사
-        String originalFilename = StringUtils.cleanPath(
-                file.getOriginalFilename() != null ? file.getOriginalFilename() : "");
-        if (originalFilename.isBlank() || originalFilename.contains("..")) {
-            throw new IllegalArgumentException("잘못된 파일명입니다: " + originalFilename);
+        // 1) 파일명 정리/검증
+        String original = StringUtils.cleanPath(file.getOriginalFilename() == null ? "" : file.getOriginalFilename());
+        if (original.isBlank() || original.contains("..")) {
+            throw new IllegalArgumentException("잘못된 파일명: " + original);
         }
+        String safe = original.replaceAll("[\r\n]", "_");
 
-        // 2. UUID + 원본이름 조합하여 S3 키 생성
-        String uuid = UUID.randomUUID().toString();
-        String s3Key = type + "/" + uuid + "_" + originalFilename;
+        // 2) 키 생성
+        String key = type + "/" + UUID.randomUUID() + "_" + safe;
 
         try {
-            // 3. S3 메타데이터 설정
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(file.getSize());
-            metadata.setContentType(file.getContentType());
+            ObjectMetadata meta = new ObjectMetadata();
+            meta.setContentLength(file.getSize());
+            meta.setContentType(file.getContentType());
 
-            // 4. S3에 업로드 (퍼블릭 읽기 권한 설정)
-            PutObjectRequest putObjectRequest = new PutObjectRequest(
-                    bucketName,
-                    s3Key,
-                    file.getInputStream(),
-                    metadata
-            ).withCannedAcl(CannedAccessControlList.PublicRead);
+            PutObjectRequest put = new PutObjectRequest(bucket, key, file.getInputStream(), meta);
+            // ⚠ 퍼블릭이 꼭 필요할 때만 사용. 가능하면 제거하고 프리사인드/CloudFront 고려.
+            // put = put.withCannedAcl(CannedAccessControlList.PublicRead);
 
-            s3Client.putObject(putObjectRequest);
+            s3Client.putObject(put);
 
-            // 5. S3 URL 반환
-            return String.format("https://%s.s3.ap-northeast-2.amazonaws.com/%s", bucketName, s3Key);
+            // 권장: key만 반환(DB에도 key 저장)
+            return key;
 
         } catch (IOException e) {
-            throw new RuntimeException("파일 업로드에 실패했습니다.", e);
+            throw new RuntimeException("파일 업로드 실패", e);
         }
+    }
+
+    public String publicUrl(String key) {
+        return String.format(
+                "https://%s.s3.%s.amazonaws.com/%s",
+                bucket,
+                s3Client.getRegionName(), // 현재 S3 클라이언트 리전
+                URLEncoder.encode(key, StandardCharsets.UTF_8).replace("+", "%20")
+        );
     }
 }
