@@ -15,7 +15,8 @@ import org.springframework.web.client.RestTemplate;
         "com.goodsple.features.auth.mapper",
         "com.goodsple.features.report.mapper",
         "com.goodsple.features.admin.user.mapper",
-        "com.goodsple.features.notice.mapper"
+        "com.goodsple.features.notice.mapper",
+        "com.goodsple.features.category.mapper"
 
 })
 @EnableScheduling
@@ -53,7 +54,7 @@ public class BackendApplication {
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
-
 }
 
 //http://localhost:8080/swagger-ui.html 스웨거 확인 주소.
+//http://localhost:8080/swagger-ui/index.html
