@@ -66,6 +66,8 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -75,6 +77,7 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class UploadService {
 
     private final AmazonS3 s3Client;
@@ -82,12 +85,6 @@ public class UploadService {
 
     // 허용할 업로드 타입 목록
     private static final Set<String> ALLOWED_TYPES = Set.of("profile", "post", "product");
-
-    public UploadService() {
-        this.s3Client = AmazonS3ClientBuilder.standard()
-                .withRegion("ap-northeast-2")
-                .build();
-    }
 
     public String upload(MultipartFile file, String type) {
         // 0. 업로드 타입 검증

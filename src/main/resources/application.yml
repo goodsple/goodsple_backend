@@ -76,6 +76,14 @@ email:
 
 # 이미지 업로드
 
+cloud:
+  aws:
+    region:
+      static: ap-northeast-2
+    stack:
+      auto: false
+
+
 # 1) macOS/Linux용 기본 경로
 
 file:
