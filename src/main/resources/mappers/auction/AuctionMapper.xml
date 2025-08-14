@@ -227,4 +227,14 @@
         ORDER BY
             b.bid_created_at DESC
     </select>
+
+    <!-- 경매 상태를 변경하는 쿼리 -->
+    <update id="updateAuctionStatus">
+        UPDATE auctions
+        SET
+            auction_status = #{status}::auction_status_enum,
+            auction_updated_at = now()
+        WHERE
+            auction_id = #{auctionId}
+    </update>
 </mapper>
