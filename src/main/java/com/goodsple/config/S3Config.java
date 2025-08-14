@@ -1,6 +1,8 @@
 package com.goodsple.config;
 
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,20 +15,18 @@ public class S3Config {
     @Value("${aws.s3.region}")
     private String region;
 
-    @Value("${aws.s3.bucket}")
-    private String bucketName;
+    String accessKey = System.getenv("AWS_ACCESS_KEY_ID");
+    String secretKey = System.getenv("AWS_SECRET_ACCESS_KEY");
 
     @Bean
     public AmazonS3 amazonS3() {
-        return AmazonS3ClientBuilder.standard()
-                .withRegion(region)
-                .withCredentials(InstanceProfileCredentialsProvider.getInstance())
-                .build();
-    }
+        System.out.println("Access Key: " + (accessKey != null ? accessKey.substring(0, 4) + "..." : "null"));
+        System.out.println("Secret Key: " + (secretKey != null ? "***설정됨***" : "null"));
 
-    @Bean
-    public String s3BucketName() {
-        return bucketName;
+        if (accessKey != null && !accessKey.isEmpty()) {
+            AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
+            return AmazonS3ClientBuilder.standard().withRegion(region).withCredentials(new AWSStaticCredentialsProvider(credentials)).build();
+        }
+        return AmazonS3ClientBuilder.standard().withRegion(region).build();
     }
-}
 }
