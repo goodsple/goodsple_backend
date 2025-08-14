@@ -81,14 +81,24 @@ import java.util.UUID;
 public class UploadService {
 
     private final AmazonS3 s3Client;
-    private final String bucketName = "goodsple-0814";
 
-    // 허용할 업로드 타입 목록
-    private static final Set<String> ALLOWED_TYPES = Set.of("profile", "post", "product");
+    @Value("${aws.s3.bucket}")
+    private String bucketName;
+
+    @Value("${aws.s3.region}")
+    private String region;
+
+    @Value("${aws.s3.allowed-types}")
+    private String allowedTypesStr;
+
+    // 허용할 업로드 타입 목록을 yml에서 동적으로 가져오기
+    private Set<String> getAllowedTypes() {
+        return Set.of(allowedTypesStr.split(","));
+    }
 
     public String upload(MultipartFile file, String type) {
         // 0. 업로드 타입 검증
-        if (!ALLOWED_TYPES.contains(type)) {
+        if (!getAllowedTypes().contains(type)) {
             throw new IllegalArgumentException("허용되지 않은 업로드 타입입니다: " + type);
         }
 
@@ -120,7 +130,7 @@ public class UploadService {
             s3Client.putObject(putObjectRequest);
 
             // 5. S3 URL 반환
-            return String.format("https://%s.s3.ap-northeast-2.amazonaws.com/%s", bucketName, s3Key);
+            return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, s3Key);
 
         } catch (IOException e) {
             throw new RuntimeException("파일 업로드에 실패했습니다.", e);

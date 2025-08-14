@@ -5,39 +5,59 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.goodsple.features.upload.service.UploadService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/upload")
 @RequiredArgsConstructor
-@Tag(name = "Upload", description = "사용자 프로필 이미지 업로드 API")
+@Tag(name = "Upload", description = "파일 업로드 API")
 public class UploadController {
     private final UploadService uploadService;
 
-    @PostMapping("/profile")
-    public ResponseEntity<Map<String,String>>uploadProfileImage(
-            @RequestPart MultipartFile file) {
-        // @RequestPart는 multipart/form-data 요청에서 특정 파트를 꺼내는 어노테이션
-        String url = uploadService.upload(file, "profile");
-        return ResponseEntity.ok(Map.of("url", url));
-    }
+    /**
+     * 타입(profile, post, review 등)에 따라 업로드
+     * - 파일 파라미터 이름은 반드시 "file"
+     * - consumes 설정으로 Swagger/프론트 혼선 방지
+     */
+    @PostMapping(
+            path = "/{type}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<Map<String, String>> upload(
+            @PathVariable String type,
+            @RequestPart("file") MultipartFile file
+    ) {
+        // 1) 파일 유효성
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "파일이 비어 있습니다."));
+        }
 
-    @PostMapping("/review")
-    public ResponseEntity<Map<String,String>>uploadReviewImage(
-            @RequestPart(required = false) MultipartFile file){
-        String url = uploadService.upload(file, "review");
-        return ResponseEntity.ok(Map.of("url", url));
-    }
+        // 2) 업로드 (권장: service는 key를 반환)
+        String key = uploadService.upload(file, type);
 
-    @PostMapping("/post")
-    public ResponseEntity<Map<String,String>>uploadPostImage(
-            @RequestPart(required = false) MultipartFile file){
-        String url = uploadService.upload(file, "post");
-        return ResponseEntity.ok(Map.of("url", url));
+        // 3) URL 필요 시(퍼블릭 버킷/ACL일 때만)
+        //    비공개면 presigned-GET API 따로 쓰세요.
+        String maybeUrl = null;
+        try {
+            maybeUrl = uploadService.publicUrl(key); // 퍼블릭이 아닐 수 있으니 실패 안 나게 구현해두세요.
+        } catch (Exception ignored) {}
+
+        // 4) 응답: key는 항상 주고, url은 가능할 때만
+        Map<String, String> body = (maybeUrl == null)
+                ? Map.of("key", key)
+                : Map.of("key", key, "url", maybeUrl);
+
+        // 201 Created + Location 헤더(key 기반) 선택(선호)
+        return ResponseEntity
+                .created(URI.create("/api/upload/" + type)) // 리소스 조회 엔드포인트 있으면 그걸로 변경
+                .body(body);
     }
 
     @GetMapping("/test")
