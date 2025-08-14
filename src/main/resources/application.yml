@@ -80,7 +80,7 @@ email:
 
 file:
 #  upload-dir: ${FILE_UPLOAD_DIR}   # 환경변수 or OS별 프로퍼티로 주입
-  upload-dir: /Users/yein/uploads
+#  upload-dir: /Users/yein/uploads
 
 ---
 # 2) Windows에서만 활성화
