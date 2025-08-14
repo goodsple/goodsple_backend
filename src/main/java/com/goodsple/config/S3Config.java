@@ -1,7 +1,6 @@
 package com.goodsple.config;
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.regions.Regions;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,11 +10,22 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class S3Config {
 
+    @Value("${aws.s3.region}")
+    private String region;
+
+    @Value("${aws.s3.bucket}")
+    private String bucketName;
+
     @Bean
-    public AmazonS3 amazonS3(@Value("${aws.s3.region}") String region) {
+    public AmazonS3 amazonS3() {
         return AmazonS3ClientBuilder.standard()
-                .withRegion(Regions.fromName(region))
-                .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
+                .withRegion(region)
+                .withCredentials(InstanceProfileCredentialsProvider.getInstance())
                 .build();
+    }
+
+    @Bean
+    public String s3BucketName() {
+        return bucketName;
     }
 }
