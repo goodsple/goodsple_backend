@@ -114,6 +114,15 @@ public class UserService {
                     "아이디 또는 비밀번호가 올바르지 않습니다."
             );
         }
+        // 계정 상태 체크 (탈퇴/정지 차단)
+        String status = String.valueOf(user.getSuspensionStatus()).toLowerCase(); // e.g. active/suspended/withdrawn
+        if ("withdrawn".equals(status)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "탈퇴한 계정입니다. 로그인할 수 없습니다.");
+        }
+        if ("suspended".equals(status)) {
+            // 423 LOCKED 써도 되고, 정책에 따라 FORBIDDEN으로 해도 됨
+            throw new ResponseStatusException(HttpStatus.LOCKED, "정지된 계정입니다.");
+        }
         // 토근 발급
         String at = jwtProvider.createAccessToken(user.getUserId(), user.getRole().name());
         String rt = jwtProvider.createRefreshToken(user.getUserId(), user.getRole().name());
@@ -124,7 +133,6 @@ public class UserService {
                 .refreshToken(rt)
                 .build();
     }
-
 
     // 아이디 찾기 인증번호 발급
     // 1) 인증번호 요청
@@ -254,8 +262,8 @@ public class UserService {
      * 내 계정 삭제(탈퇴)
      */
     @Transactional
-    public void deleteMyProfile(Long userId) {
-        userMapper.deleteMyProfile(userId);
+    public void withdrawMyAccount(Long userId) {
+        userMapper.withdrawMyAccount(userId);
     }
 
     /**

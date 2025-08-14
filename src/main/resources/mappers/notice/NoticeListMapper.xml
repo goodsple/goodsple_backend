@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.notice.mapper.NoticeListMapper">
+
+    <select id="selectNoticeList" resultType="com.goodsple.features.notice.dto.NoticeListDto">
+        SELECT n.notice_id, n.notice_title, n.notice_content, n.notice_created_at, n.is_popup
+        FROM notice n
+        WHERE 1=1
+        <if test="filter.keyword != null and filter.keyword != ''">
+            AND n.notice_title LIKE CONCAT('%', #{filter.keyword}, '%')
+        </if>
+        ORDER BY n.notice_created_at DESC
+        OFFSET #{filter.offset}
+        LIMIT #{filter.size}
+    </select>
+
+    <select id="countNoticeList" resultType="int">
+        SELECT COUNT(*)
+        FROM notice n
+        WHERE 1=1
+        <if test="filter.keyword != null and filter.keyword != ''">
+            AND (n.notice_title ILIKE CONCAT('%', #{filter.keyword}, '%')
+            OR n.notice_content ILIKE CONCAT('%', #{filter.keyword}, '%'))
+        </if>
+    </select>
+
+    <select id="selectNoticeDetail" resultType="com.goodsple.features.notice.dto.NoticeListDto">
+        SELECT n.notice_id, n.notice_title, n.notice_content, n.notice_created_at, n.is_popup
+        FROM notice n
+        WHERE n.notice_id = #{noticeId}
+    </select>
+
+</mapper>
