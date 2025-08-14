@@ -11,14 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication(scanBasePackages = "com.goodsple")
-@MapperScan(basePackages = {
-        "com.goodsple.features.auth.mapper",
-        "com.goodsple.features.report.mapper",
-        "com.goodsple.features.admin.user.mapper",
-        "com.goodsple.features.notice.mapper",
-        "com.goodsple.features.category.mapper"
-
-})
+@MapperScan(basePackages = "com.goodsple.features")
 @EnableScheduling
 @OpenAPIDefinition( // <<-- 이 어노테이션과 그 내용을 추가합니다.
         info = @Info(
@@ -58,3 +51,4 @@ public class BackendApplication {
 
 //http://localhost:8080/swagger-ui.html 스웨거 확인 주소.
 //http://localhost:8080/swagger-ui/index.html
+
