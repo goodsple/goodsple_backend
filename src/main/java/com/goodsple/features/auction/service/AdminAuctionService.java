@@ -170,11 +170,17 @@ public class AdminAuctionService {
 
     @Transactional
     public void updateAuctionStatus(Long auctionId, String status) {
-        // TODO: 경매 존재 여부 확인
-        // auctionMapper.updateAuctionStatus(auctionId, status);
-        // TODO: 상태 변경에 따른 후속 조치 (예: WebSocket으로 참여자에게 알림)
+        // 1. 수정할 경매가 존재하는지 확인
+        auctionMapper.findAuctionForUpdate(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 경매를 찾을 수 없습니다. ID: " + auctionId));
 
-        System.out.println("경매 상태 변경 로직 호출됨: ID " + auctionId + ", 상태 " + status);
+        // 2. 유효한 상태 값인지 확인하는 로직 (선택 사항이지만 권장)
+        // 예: Enum.valueOf(AuctionStatusEnum.class, status.toUpperCase());
+
+        // 3. 상태 업데이트 쿼리 실행
+        auctionMapper.updateAuctionStatus(auctionId, status);
+
+        // TODO: 상태 변경에 따른 후속 조치 (예: WebSocket으로 참여자에게 '경매 중지' 알림 전송)
     }
 
     @Transactional(readOnly = true)

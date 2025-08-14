@@ -82,4 +82,11 @@ public interface AuctionMapper {
      * @return 입찰 기록 리스트
      */
     List<BidHistoryInfo> findBidHistoryByAuctionId(Long auctionId);
+
+    /**
+     * 특정 경매의 상태를 변경합니다.
+     * @param auctionId 상태를 변경할 경매 ID
+     * @param status 새로운 상태 값 (예: cancelled, active)
+     */
+    void updateAuctionStatus(@Param("auctionId") Long auctionId, @Param("status") String status);
 }
