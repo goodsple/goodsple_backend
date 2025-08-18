@@ -4,24 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NoticeListDto {
+public class PopupNoticeDto {
 
-  private Long noticeId;
-  private String noticeTitle;
-  private OffsetDateTime noticeCreatedAt;
-  private OffsetDateTime noticeUpdatedAt;
-  private Integer attachmentCount;
-  private String userName;
-  private Boolean isPopup;
+  private Long popupId;
+  private Long noticeId;  // fk
   private LocalDate popupStart;
   private LocalDate popupEnd;
+  private String popupImageUrl;
+  private String popupSummary;
 
 }

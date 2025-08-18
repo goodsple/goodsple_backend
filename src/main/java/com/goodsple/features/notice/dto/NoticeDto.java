@@ -5,23 +5,23 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class NoticeListDto {
+public class NoticeDto {
 
   private Long noticeId;
+  private Long userId;  // fk
   private String noticeTitle;
+  private String noticeContent;
   private OffsetDateTime noticeCreatedAt;
   private OffsetDateTime noticeUpdatedAt;
-  private Integer attachmentCount;
-  private String userName;
   private Boolean isPopup;
-  private LocalDate popupStart;
-  private LocalDate popupEnd;
+  private List<NoticeAttachmentDto> attachments;
 
+  private PopupNoticeDto popupInfo;
 }
