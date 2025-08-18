@@ -8,11 +8,10 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface NoticeMapper {
 
-  // 일반 공지사항 등록
-  void createNotice(NoticeDto noticeDto);
-  void insertNoticeAttachment(NoticeAttachmentDto attachmentDto);
+  int insertNotice(NoticeDto notice);
 
-  // 팝업 공지사항 등록
-  void createPopupNotice(PopupNoticeDto popupNoticeDto);
+  int insertAttachment(NoticeAttachmentDto attachment);
+
+  int insertPopup(PopupNoticeDto popup);
 
 }
