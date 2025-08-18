@@ -20,5 +20,6 @@
         VALUES (#{noticeId}, #{popupStart}, #{popupEnd}, #{popupImageUrl}, #{popupSummary})
     </insert>
 
+
 </mapper>
 
