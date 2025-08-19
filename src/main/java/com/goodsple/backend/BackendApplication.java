@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication(scanBasePackages = "com.goodsple")
 @MapperScan("com.goodsple.features.auth.mapper")
 @MapperScan("com.goodsple.features.report.mapper")
+@MapperScan("com.goodsple.features.community.mapper")
 @EnableScheduling
 @OpenAPIDefinition( // <<-- 이 어노테이션과 그 내용을 추가합니다.
         info = @Info(

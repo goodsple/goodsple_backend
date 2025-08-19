@@ -6,8 +6,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.messaging.simp.config.ChannelRegistration;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -16,6 +21,8 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 import java.util.List;
+
+import static org.springframework.messaging.simp.stomp.StompCommand.DISCONNECT;
 
 @Configuration
 public class SecurityConfig {
@@ -69,6 +76,10 @@ public class SecurityConfig {
                         // 신고 등록은 로그인 필요
                         .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
 
+                        // 채팅 관련
+                        .requestMatchers(HttpMethod.GET, "/history/**").permitAll() // GET 요청 테스트 허용
+                        .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
+
                         // 그 외 모든 요청은 JWT 인증 필요
                         .anyRequest().authenticated()
                 )
@@ -107,6 +118,36 @@ public class SecurityConfig {
         // 비밀번호 암호화 (Spring Security에서 제공)
         // Configuration에서 Bean으로 등록해서 사용하는 방식
         return new BCryptPasswordEncoder();
+    }
+
+    // --- WebSocket용 JWT Interceptor ---
+    @Bean
+    public ChannelInterceptor websocketAuthInterceptor() {
+        return new ChannelInterceptor() {
+            @Override
+            public org.springframework.messaging.Message<?> preSend(org.springframework.messaging.Message<?> message,
+                                                                    org.springframework.messaging.MessageChannel channel) {
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                if (accessor != null && accessor.getCommand() != null) {
+                    switch (accessor.getCommand()) {
+                        case CONNECT -> {
+                            String token = accessor.getFirstNativeHeader("Authorization");
+                            if (token != null && token.startsWith("Bearer ")) {
+                                token = token.substring(7);
+                                Authentication auth = jwtProvider.getAuthentication(token);
+                                accessor.setUser(auth);
+                            }
+                        }
+                        case DISCONNECT -> {
+                            // 필요 시 처리
+                        }
+                        default -> {
+                        }
+                    }
+                }
+                return message;
+            }
+        };
     }
 
 }
