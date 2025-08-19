@@ -118,7 +118,15 @@ public class JwtTokenProvider {
         if (u == null) {
             // 토큰상 userId가 DB에 없으면 인증 실패 처리
             throw new UsernameNotFoundException("No user found with id: " + userId);
-            // 또는 return null; 하고, 필터에서 null 체크 후 SecurityContext에 세팅하지 않도록 해도 됩니다.
+            // 또는 return null; 하고, 필터에서 null 체크 후 SecurityContext에 세팅하지 않도록 해도 된다.
+        }
+
+        // 상태 체크: 탈퇴/정지면 인증 객체를 만들지 않음
+        String status = String.valueOf(u.getSuspensionStatus()).toLowerCase();
+        if ("withdrawn".equals(status) || "suspended".equals(status)) {
+            // 필터에서 auth == null이면 SecurityContext에 세팅하지 않으므로 자연스럽게 거부됨
+            return null;
+            // (원하면) throw new UsernameNotFoundException("Inactive user"); 로도 가능
         }
 
         String role = claims.get("role", String.class);
@@ -137,6 +145,20 @@ public class JwtTokenProvider {
                 token,
                 principal.getAuthorities()
         );
+    }
+
+    /** userId 기준으로 active 여부 판단 */
+    public boolean isUserActive(Long userId) {
+        User u = userMapper.findById(userId);
+        if (u == null) return false;
+        String st = String.valueOf(u.getSuspensionStatus()).toLowerCase(); // active/suspended/withdrawn
+        return !"withdrawn".equals(st) && !"suspended".equals(st);
+    }
+
+    // subject에서 userId 읽기 (키 재사용)
+    public Long getUserIdFromToken(String token) {
+        Claims claims = parseClaims(token); // 키(key) 재사용
+        return Long.valueOf(claims.getSubject()); // subject = userId
     }
 
     /**
