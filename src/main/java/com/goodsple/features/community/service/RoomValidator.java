@@ -7,10 +7,11 @@ import java.util.Set;
 @Component
 public class RoomValidator {
 
-    private static final Set<String> ALLOWED = Set.of("K-POP","MOVIE","GAME","ANIMATION");
+    private static final Set<String> ALLOWED = Set.of("K-POP", "MOVIE", "GAME", "ANIMATION");
 
     public void ensureValid(String roomId) {
-        if(!ALLOWED.contains(roomId)) throw new IllegalArgumentException("Invalid roomId");
+        if (roomId == null || !ALLOWED.contains(roomId)) {
+            throw new IllegalArgumentException("유효하지 않은 roomId: " + roomId);
+        }
     }
 }
-
