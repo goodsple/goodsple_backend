@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.exchange.mapper.ExchangePostMapper">
+
+    <insert id="insertExchangePost" parameterType="map" useGeneratedKeys="true" keyProperty="post.exchangePostId">
+        INSERT INTO exchange_post (
+                                   user_id, third_cate_id, exchange_post_title, post_description,
+                                   post_location_code, post_location_name, post_hope_region,
+                                   post_trade_type, delivery_price_normal, delivery_price_half, half_delivery_type)
+        VALUES (#{userId}, #{post.thirdCateId}, #{post.exchangePostTitle}, #{post.postDescription},
+                #{post.postLocationCode}, #{post.postLocationName},
+                #{post.postHopeRegion}, #{post.postTradeType}, #{post.deliveryPriceNormal},
+                #{post.deliveryPriceHalf}, #{post.halfDeliveryType})
+    </insert>
+
+    <insert id="insertExchangePostImage">
+        INSERT INTO exchange_post_image (exchange_post_id, post_image_url, post_sort_order)
+        VALUES (#{exchangePostId}, #{imageUrl}, #{sortOrder})
+    </insert>
+
+    <update id="updateExchangePost" parameterType="map">
+        UPDATE exchange_post
+        SET third_cate_id       = #{post.thirdCateId},
+            exchange_post_title = #{post.exchangePostTitle},
+            post_description    = #{post.postDescription},
+            post_hope_region    = #{post.postHopeRegion},
+            post_trade_type     = #{post.postTradeType},
+            delivery_price_normal = #{post.deliveryPriceNormal}, delivery_price_half = #{post.deliveryPriceHalf}, exchange_post_updated_at = now()
+        WHERE
+            exchange_post_id = #{postId}
+    </update>
+
+    <delete id="deleteExchangePostImages">
+        DELETE
+        FROM exchange_post_image
+        WHERE exchange_post_id = #{exchangePostId}
+    </delete>
+
+    <delete id="deleteExchangePost">
+        DELETE
+        FROM exchange_post
+        WHERE exchange_post_id = #{exchangePostId}
+    </delete>
+
+</mapper>

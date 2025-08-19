@@ -11,7 +11,17 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication(scanBasePackages = "com.goodsple")
-@MapperScan(basePackages = "com.goodsple.features")
+@MapperScan(basePackages =     {
+    "com.goodsple.features.admin.user.mapper",
+    "com.goodsple.features.auction.mapper",
+    "com.goodsple.features.auth.mapper",
+    "com.goodsple.features.category.mapper",
+    "com.goodsple.features.notice.mapper",
+    "com.goodsple.features.report.mapper",
+    "com.goodsple.features.exchange.mapper",
+    "com.goodsple.features.community.mapper",
+
+})
 @EnableScheduling
 @OpenAPIDefinition( // <<-- 이 어노테이션과 그 내용을 추가합니다.
         info = @Info(
