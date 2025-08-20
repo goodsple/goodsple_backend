@@ -4,7 +4,7 @@
  * 파일 경로: src/main/resources/mappers/AuctionMapper.xml
  * 설명: 경매 관련 SQL 쿼리를 정의하는 MyBatis 매퍼 XML 파일입니다.
 -->
-<mapper namespace="com.goodsple.features.auction.mapper.AuctionMapper">
+<mapper namespace="com.goodsple.features.admin.auction.mapper.AuctionMapper">
 
     <!-- 공통 검색 조건을 위한 SQL 조각 -->
     <sql id="searchCondition">
@@ -27,7 +27,7 @@
     </sql>
 
     <!-- 관리자용 경매 목록 조회 쿼리 -->
-    <select id="findAuctions" resultType="com.goodsple.features.auction.dto.response.AuctionAdminListResponse">
+    <select id="findAuctions" resultType="com.goodsple.features.admin.auction.dto.response.AuctionAdminListResponse">
         SELECT
         a.auction_id AS id,
         a.auction_title AS productName,
@@ -55,7 +55,7 @@
     </select>
 
     <!-- 새로운 경매를 생성하는 쿼리 -->
-    <insert id="insertAuction" parameterType="com.goodsple.features.auction.entity.Auction"
+    <insert id="insertAuction" parameterType="com.goodsple.features.admin.auction.entity.Auction"
             useGeneratedKeys="true" keyProperty="auctionId">
         INSERT INTO auctions (
             user_id, auction_title, auction_description, auction_start_price,
@@ -82,7 +82,7 @@
     </select>
 
     <!-- 경매 상세 정보 조회를 위한 ResultMap -->
-    <resultMap id="AuctionAdminDetailResultMap" type="com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse">
+    <resultMap id="AuctionAdminDetailResultMap" type="com.goodsple.features.admin.auction.dto.response.AuctionAdminDetailResponse">
         <id property="id" column="auction_id"/>
         <result property="productName" column="auction_title"/>
         <result property="description" column="auction_description"/>
@@ -117,7 +117,7 @@
     </select>
 
     <!-- 수정을 위해 경매 엔티티 하나를 조회하는 쿼리 -->
-    <select id="findAuctionForUpdate" resultType="com.goodsple.features.auction.entity.Auction">
+    <select id="findAuctionForUpdate" resultType="com.goodsple.features.admin.auction.entity.Auction">
         SELECT
             auction_id as auctionId,
             auction_status::text as auctionStatus
@@ -126,7 +126,7 @@
     </select>
 
     <!-- 경매 정보를 수정하는 쿼리 (동적 SQL 사용) -->
-    <update id="updateAuction" parameterType="com.goodsple.features.auction.entity.Auction">
+    <update id="updateAuction" parameterType="com.goodsple.features.admin.auction.entity.Auction">
         UPDATE auctions
         <set>
             <if test="auctionTitle != null">auction_title = #{auctionTitle},</if>
@@ -146,7 +146,7 @@
     </delete>
 
     <!-- 경매 결과 조회를 위한 복합 ResultMap (수정) -->
-    <resultMap id="AuctionAdminResultMap" type="com.goodsple.features.auction.dto.response.AuctionAdminResultResponse">
+    <resultMap id="AuctionAdminResultMap" type="com.goodsple.features.admin.auction.dto.response.AuctionAdminResultResponse">
         <!-- 기본 정보 -->
         <result property="productName" column="auction_title"/>
         <result property="imageUrl" column="auction_image_url"/>
@@ -158,14 +158,14 @@
         <result property="paymentStatus" column="order_status"/>
 
         <!-- 낙찰자 정보 -->
-        <association property="winnerInfo" javaType="com.goodsple.features.auction.dto.response.WinnerInfo">
+        <association property="winnerInfo" javaType="com.goodsple.features.admin.auction.dto.response.WinnerInfo">
             <result property="userId" column="winner_user_id"/>
             <result property="nickname" column="winner_nickname"/>
             <result property="phone" column="winner_phone"/>
         </association>
 
         <!-- 배송 정보 -->
-        <association property="shippingInfo" javaType="com.goodsple.features.auction.dto.response.ShippingInfo">
+        <association property="shippingInfo" javaType="com.goodsple.features.admin.auction.dto.response.ShippingInfo">
             <result property="name" column="shipping_recipient_name"/>
             <result property="phone" column="shipping_recipient_phone"/>
             <result property="address" column="shipping_address"/>
@@ -178,7 +178,7 @@
         <collection property="bidHistory"
                     select="findBidHistoryByAuctionId"
                     column="auction_id"
-                    ofType="com.goodsple.features.auction.dto.response.BidHistoryInfo"/>
+                    ofType="com.goodsple.features.admin.auction.dto.response.BidHistoryInfo"/>
     </resultMap>
 
     <!-- 경매 결과 상세 정보 조회 쿼리 (수정) -->
@@ -214,7 +214,7 @@
     </select>
 
     <!-- 입찰 기록만 조회하는 새로운 서브 쿼리 (추가) -->
-    <select id="findBidHistoryByAuctionId" resultType="com.goodsple.features.auction.dto.response.BidHistoryInfo">
+    <select id="findBidHistoryByAuctionId" resultType="com.goodsple.features.admin.auction.dto.response.BidHistoryInfo">
         SELECT
             b.bid_created_at AS time,
             u.nickname AS bidder,

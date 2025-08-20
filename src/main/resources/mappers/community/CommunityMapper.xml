@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.community.mapper.CommunityMapper">
+
+    <!-- 1) 게시글 삽입 -->
+    <insert id="insertPost">
+        INSERT INTO community(user_id, comm_room_id, content, comm_created_at)
+        VALUES (#{userId}, #{roomId}, #{content}, #{createdAt})
+    </insert>
+
+    <!-- 2) 최근 게시글 조회 -->
+    <select id="selectRecent" resultType="com.goodsple.features.community.dto.Community">
+        SELECT
+        c.community_id       AS communityId,
+        c.user_id            AS userId,
+        c.comm_room_id       AS roomId,
+        c.content            AS content,
+        c.comm_created_at    AS createdAt,
+        u.nickname           AS nickname,
+        u.profile_image      AS userProfile
+        FROM community c
+        JOIN users u ON u.user_id = c.user_id
+        WHERE c.comm_room_id = #{roomId}
+        <if test="before != null">
+            AND c.comm_created_at &lt; #{before}
+        </if>
+        ORDER BY c.comm_created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 3) 특정 사용자 조회 -->
+    <select id="findUser" resultType="com.goodsple.features.community.dto.Community">
+        SELECT
+            user_id       AS userId,
+            nickname      AS nickname,
+            profile_image AS userProfile
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+</mapper>

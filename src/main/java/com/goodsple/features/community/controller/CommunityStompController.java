@@ -3,9 +3,12 @@ package com.goodsple.features.community.controller;
 import com.goodsple.features.community.dto.Community;
 import com.goodsple.features.community.service.CommunityService;
 import com.goodsple.features.community.service.RoomValidator;
+import com.goodsple.security.CustomUserDetails;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.*;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -20,12 +23,13 @@ public class CommunityStompController {
     private final SimpMessagingTemplate template;
     private final RoomValidator roomValidator;
 
+    // 방 참여
     @MessageMapping("/join/{roomId}")
     public void join(@DestinationVariable String roomId) {
         roomValidator.ensureValid(roomId);
-        // 필요 시 시스템 메시지 저장/알림 구현 가능
     }
 
+    // 채팅 메시지 전송
     @MessageMapping("/sendPost/{roomId}")
     public void send(@DestinationVariable String roomId,
                      @Payload SendPostPayload payload,
@@ -33,30 +37,31 @@ public class CommunityStompController {
 
         roomValidator.ensureValid(roomId);
 
-        // JWT에서 Principal 가져오기
-        Long userId = null;
-        Object principal = auth.getPrincipal();
-        if (principal instanceof String) {
-            userId = Long.parseLong((String) principal);
-        } else if (principal instanceof Long) {
-            userId = (Long) principal;
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new IllegalStateException("인증 정보가 없습니다.");
         }
 
-        if (userId == null || payload.getContent() == null || payload.getContent().isBlank()) return;
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        Long userId = userDetails.getUserId();
 
-        // 게시글 저장
+        if (payload.getContent() == null || payload.getContent().isBlank()) return;
+
+        // DB 저장
         communityService.savePost(roomId, userId, payload.getContent());
 
-        // 브로드캐스트용 DTO 구성
+        // 유저 기본 정보 가져오기
         Community brief = communityService.getUserInfo(userId);
+
+        // 브로드캐스트용 DTO 생성
         Community out = new Community();
-        out.setRoomId(roomId);
+        out.setCommRoomId(roomId);
         out.setUserId(userId);
         out.setContent(payload.getContent());
-        out.setUserName(brief != null ? brief.getUserName() : "익명");
+        out.setNickname(brief != null ? brief.getNickname() : "익명"); // 수정
         out.setUserProfile(brief != null ? brief.getUserProfile() : null);
-        out.setCreatedAt(Instant.now().toString());
+        out.setCommCreatedAt(Instant.now().toString());
 
+        // 클라이언트 전송
         template.convertAndSend("/topic/" + roomId, out);
     }
 

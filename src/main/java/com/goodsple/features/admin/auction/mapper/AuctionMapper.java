@@ -2,14 +2,14 @@
  * 파일 경로: src/main/java/com/goodsple/features/auction/mapper/AuctionMapper.java
  * 설명: 경매 관련 데이터베이스 쿼리를 호출하는 MyBatis 매퍼 인터페이스입니다.
  */
-package com.goodsple.features.auction.mapper;
+package com.goodsple.features.admin.auction.mapper;
 
-import com.goodsple.features.auction.dto.request.AuctionSearchRequest;
-import com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse;
-import com.goodsple.features.auction.dto.response.AuctionAdminListResponse;
-import com.goodsple.features.auction.dto.response.AuctionAdminResultResponse;
-import com.goodsple.features.auction.dto.response.BidHistoryInfo;
-import com.goodsple.features.auction.entity.Auction;
+import com.goodsple.features.admin.auction.dto.request.AuctionSearchRequest;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminDetailResponse;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminListResponse;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminResultResponse;
+import com.goodsple.features.admin.auction.dto.response.BidHistoryInfo;
+import com.goodsple.features.admin.auction.entity.Auction;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

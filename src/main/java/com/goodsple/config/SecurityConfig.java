@@ -86,7 +86,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
 
                         // 채팅 관련
-                        .requestMatchers(HttpMethod.GET, "/history/**").permitAll() // GET 요청 테스트 허용
+                        .requestMatchers(HttpMethod.GET, "/api/chat/history/**").permitAll() // GET 요청 테스트 허용
                         .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
 
 
