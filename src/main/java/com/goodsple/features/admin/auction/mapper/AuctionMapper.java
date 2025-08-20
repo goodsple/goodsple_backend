@@ -10,6 +10,7 @@ import com.goodsple.features.admin.auction.dto.response.AuctionAdminListResponse
 import com.goodsple.features.admin.auction.dto.response.AuctionAdminResultResponse;
 import com.goodsple.features.admin.auction.dto.response.BidHistoryInfo;
 import com.goodsple.features.admin.auction.entity.Auction;
+import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -89,4 +90,6 @@ public interface AuctionMapper {
      * @param status 새로운 상태 값 (예: cancelled, active)
      */
     void updateAuctionStatus(@Param("auctionId") Long auctionId, @Param("status") String status);
+
+    Optional<AuctionPageDataResponse> findAuctionPageDataById(Long auctionId);
 }

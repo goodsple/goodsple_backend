@@ -238,4 +238,72 @@
         WHERE
             auction_id = #{auctionId}
     </update>
+
+    <!-- 사용자용 라이브 경매 페이지 데이터 조회를 위한 ResultMap -->
+    <resultMap id="AuctionPageDataResultMap" type="com.goodsple.features.auction.dto.response.AuctionPageDataResponse">
+        <association property="itemInfo" javaType="com.goodsple.features.auction.dto.response.AuctionPageDataResponse$ItemInfo">
+            <result property="id" column="auction_id"/>
+            <result property="title" column="auction_title"/>
+            <result property="description" column="auction_description"/>
+            <collection property="images" ofType="java.lang.String"
+                        select="findImageUrlsByAuctionId" column="auction_id"/>
+        </association>
+        <association property="status" javaType="com.goodsple.features.auction.dto.response.AuctionPageDataResponse$AuctionStatus">
+            <result property="startTime" column="auction_start_time"/>
+            <result property="endTime" column="auction_end_time"/>
+            <result property="startPrice" column="auction_start_price"/>
+            <result property="currentPrice" column="current_price"/>
+            <result property="highestBidderNickname" column="top_bidder_nickname"/>
+            <result property="minBidUnit" column="auction_min_bid_unit"/>
+        </association>
+        <association property="currentUser" javaType="com.goodsple.features.auction.dto.response.AuctionPageDataResponse$CurrentUser">
+            <result property="isBanned" column="is_banned_from_auction"/>
+        </association>
+        <collection property="bidHistory" ofType="com.goodsple.features.auction.dto.response.BidHistoryInfo"
+                    select="findBidHistoryByAuctionId" column="auction_id"/>
+        <collection property="chatHistory" ofType="com.goodsple.features.auction.dto.response.AuctionPageDataResponse$ChatMessageInfo"
+                    select="findChatHistoryByAuctionId" column="auction_id"/>
+    </resultMap>
+
+    <!-- 사용자용 라이브 경매 페이지 메인 쿼리 -->
+    <select id="findAuctionPageDataById" resultMap="AuctionPageDataResultMap">
+        SELECT
+            a.auction_id,
+            a.auction_title,
+            a.auction_description,
+            a.auction_start_time,
+            a.auction_end_time,
+            a.auction_start_price,
+            a.auction_min_bid_unit,
+            COALESCE((SELECT MAX(b.bid_amount) FROM bids b WHERE b.auction_id = a.auction_id), a.auction_start_price) AS current_price,
+            (SELECT u.nickname FROM users u JOIN bids b ON u.user_id = b.user_id WHERE b.auction_id = a.auction_id ORDER BY b.bid_amount DESC LIMIT 1) AS top_bidder_nickname,
+        (SELECT u.is_banned_from_auction FROM users u WHERE u.user_id = (SELECT user_id FROM users LIMIT 1)) AS is_banned_from_auction -- TODO: 현재 로그인 유저 ID로 변경 필요
+        FROM
+            auctions a
+        WHERE
+            a.auction_id = #{auctionId} AND a.auction_status = 'active'::auction_status_enum
+    </select>
+
+    <!-- 서브 쿼리: 이미지 URL 목록 조회 -->
+    <select id="findImageUrlsByAuctionId" resultType="java.lang.String">
+        SELECT auction_image_url FROM auction_images WHERE auction_id = #{auctionId}
+    </select>
+
+    <!-- 서브 쿼리: 채팅 내역 조회 (최근 50개) -->
+    <select id="findChatHistoryByAuctionId" resultType="com.goodsple.features.auction.dto.response.AuctionPageDataResponse$ChatMessageInfo">
+        SELECT
+            c.chat_message_id as chatId,
+            u.nickname as userNickname,
+            c.chat_message as message,
+            c.chat_created_at as timestamp
+        FROM
+            auction_chat_messages c
+            JOIN
+            users u ON c.user_id = u.user_id
+        WHERE
+            c.auction_id = #{auctionId}
+        ORDER BY
+            c.chat_created_at DESC
+            LIMIT 50
+    </select>
 </mapper>
