@@ -213,12 +213,13 @@
             a.auction_id = #{auctionId}
     </select>
 
-    <!-- 입찰 기록만 조회하는 새로운 서브 쿼리 (추가) -->
-    <select id="findBidHistoryByAuctionId" resultType="com.goodsple.features.admin.auction.dto.response.BidHistoryInfo">
+    <!-- 입찰 기록만 조회하는 새로운 서브 쿼리 (수정) -->
+    <select id="findBidHistoryByAuctionId" resultType="com.goodsple.features.auction.dto.response.BidHistoryInfo">
         SELECT
-            b.bid_created_at AS time,
-            u.nickname AS bidder,
-            b.bid_amount AS price
+            b.bid_id AS bidId,
+            u.nickname AS userNickname,
+            b.bid_amount AS bidAmount,
+            b.bid_created_at AS timestamp
         FROM
             bids b
             JOIN
@@ -306,4 +307,18 @@
             c.chat_created_at DESC
             LIMIT 50
     </select>
+
+    <!-- Redis 초기화를 위한 경매 정보 조회 쿼리 -->
+    <select id="findInitialAuctionStateById" resultType="com.goodsple.features.auction.dto.AuctionState">
+        SELECT
+            auction_id AS auctionId,
+            auction_start_price AS currentPrice, -- 시작 시에는 시작가가 현재가
+            auction_min_bid_unit AS minBidUnit,
+            auction_end_time AS endTime
+        FROM
+            auctions
+        WHERE
+            auction_id = #{auctionId}
+    </select>
+
 </mapper>

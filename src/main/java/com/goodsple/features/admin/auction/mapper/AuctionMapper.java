@@ -10,6 +10,7 @@ import com.goodsple.features.admin.auction.dto.response.AuctionAdminListResponse
 import com.goodsple.features.admin.auction.dto.response.AuctionAdminResultResponse;
 import com.goodsple.features.admin.auction.dto.response.BidHistoryInfo;
 import com.goodsple.features.admin.auction.entity.Auction;
+import com.goodsple.features.auction.dto.AuctionState;
 import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -92,4 +93,11 @@ public interface AuctionMapper {
     void updateAuctionStatus(@Param("auctionId") Long auctionId, @Param("status") String status);
 
     Optional<AuctionPageDataResponse> findAuctionPageDataById(Long auctionId);
+
+    /**
+     * Redis에 저장할 경매 초기 상태 정보를 DB에서 조회합니다.
+     * @param auctionId 경매 ID
+     * @return 경매 초기 상태 DTO
+     */
+    Optional<AuctionState> findInitialAuctionStateById(Long auctionId);
 }

@@ -34,28 +34,21 @@ public class AuctionRealtimeService {
     private final AuctionRedisKeyManager keyManager;
     // private final ProhibitedWordService prohibitedWordService; // TODO: 금지어 기능 연동 시 주석 해제
 
-    /**
-     * 경매 시작 시 호출될 메소드 (스케줄러 등에서 호출)
-     * @param initialState 경매 시작 시의 초기 상태 정보
-     */
+    // ... (startAuction 메소드는 기존과 동일) ...
     public void startAuction(AuctionState initialState) {
         String stateKey = keyManager.getAuctionStateKey(initialState.getAuctionId());
-
-        // Map으로 변환하여 Redis Hash에 한 번에 저장
         Map<String, Object> stateMap = Map.of(
                 "currentPrice", initialState.getCurrentPrice(),
                 "minBidUnit", initialState.getMinBidUnit(),
                 "topBidderNickname", "없음",
                 "topBidderId", -1L,
-                "endTime", initialState.getEndTime()
+                "endTime", initialState.getEndTime().toString()
         );
         redisTemplate.opsForHash().putAll(stateKey, stateMap);
         log.info("경매 ID {} 상태 Redis에 초기화 완료.", initialState.getAuctionId());
     }
 
-    /**
-     * 입찰 요청을 처리하는 메소드
-     */
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ processBid 메소드 전체를 아래 내용으로 교체합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     public void processBid(Long auctionId, CustomUserDetails userDetails, BidRequest bidRequest) {
         String stateKey = keyManager.getAuctionStateKey(auctionId);
         HashOperations<String, Object, Object> hashOps = redisTemplate.opsForHash();
@@ -65,7 +58,7 @@ public class AuctionRealtimeService {
         Map<Object, Object> entries = hashOps.entries(stateKey);
         if (entries.isEmpty()) {
             log.warn("진행중인 경매(ID: {}) 정보를 Redis에서 찾을 수 없습니다.", auctionId);
-            return; // 또는 예외 처리
+            return;
         }
 
         AuctionState currentState = new AuctionState(
@@ -74,12 +67,16 @@ public class AuctionRealtimeService {
                 new BigDecimal(entries.get("minBidUnit").toString()),
                 (String) entries.get("topBidderNickname"),
                 Long.valueOf(entries.get("topBidderId").toString()),
-                (OffsetDateTime) entries.get("endTime")
+                OffsetDateTime.parse((String) Objects.requireNonNull(entries.get("endTime")))
         );
+
+        if (OffsetDateTime.now().isAfter(currentState.getEndTime())) {
+            log.warn("종료된 경매(ID: {})에 대한 입찰 시도.", auctionId);
+            return;
+        }
 
         if (bidRequest.getAmount().compareTo(currentState.getCurrentPrice().add(currentState.getMinBidUnit())) < 0) {
             log.warn("유효하지 않은 입찰 금액입니다.");
-            // TODO: 입찰 실패 메시지를 해당 사용자에게만 보내는 로직 추가 필요
             return;
         }
 
@@ -90,40 +87,42 @@ public class AuctionRealtimeService {
         OffsetDateTime extendedTime = currentState.getEndTime();
         if (OffsetDateTime.now().isAfter(currentState.getEndTime().minusSeconds(60))) {
             extendedTime = OffsetDateTime.now().plusSeconds(60);
-            hashOps.put(stateKey, "endTime", extendedTime);
+            hashOps.put(stateKey, "endTime", extendedTime.toString());
             log.info("경매 ID {} 시간 연장됨.", auctionId);
         }
 
-        String bidsKey = keyManager.getAuctionBidsKey(auctionId);
+        // 프론트엔드의 Bid 타입과 속성 이름을 일치시킵니다.
         BidHistoryInfo newBid = BidHistoryInfo.builder()
-                .time(OffsetDateTime.now())
-                .bidder(userDetails.getNickname())
-                .price(bidRequest.getAmount())
+                .bidId(System.currentTimeMillis()) // 임시 ID 생성
+                .userNickname(userDetails.getNickname())
+                .bidAmount(bidRequest.getAmount())
+                .timestamp(OffsetDateTime.now())
                 .build();
-        redisTemplate.opsForZSet().add(bidsKey, newBid, System.currentTimeMillis());
+
+        // 입찰 내역을 Redis에 저장하는 로직은 그대로 유지할 수 있습니다.
+        // String bidsKey = keyManager.getAuctionBidsKey(auctionId);
+        // redisTemplate.opsForZSet().add(bidsKey, newBid, System.currentTimeMillis());
 
         AuctionStatusUpdateResponse updateResponse = AuctionStatusUpdateResponse.builder()
+                .type("AUCTION_UPDATE") // type 필드를 명시적으로 추가합니다.
                 .currentPrice(bidRequest.getAmount())
                 .topBidderNickname(userDetails.getNickname())
                 .extendedEndTime(extendedTime)
-                .newBid(newBid)
+                .newBid(newBid) // 프론트엔드와 형식이 일치된 newBid 객체
                 .build();
 
         messagingTemplate.convertAndSend("/topic/auctions/" + auctionId, updateResponse);
         log.info("경매 ID {} 상태 업데이트 전파 완료.", auctionId);
     }
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
-    /**
-     * 채팅 메시지를 브로드캐스트하는 메소드
-     */
+    // ... (broadcastChatMessage 메소드는 기존과 동일) ...
     public void broadcastChatMessage(Long auctionId, CustomUserDetails userDetails, ChatRequest chatRequest) {
         log.info("경매 ID {}에 대한 채팅 수신: 사용자 {}, 메시지: {}",
                 auctionId, userDetails.getNickname(), chatRequest.getMessage());
 
-        // TODO: 금지어 필터링 로직
-
         ChatMessageResponse chatResponse = ChatMessageResponse.builder()
-                .type("CHAT_MESSAGE") // type 필드를 명시적으로 추가합니다.
+                .type("CHAT_MESSAGE")
                 .senderNickname(userDetails.getNickname())
                 .message(chatRequest.getMessage())
                 .timestamp(OffsetDateTime.now())
