@@ -3,6 +3,7 @@ package com.goodsple.features.exchange.service.Impl;
 import com.goodsple.features.exchange.dto.ExchangePostDto;
 import com.goodsple.features.exchange.mapper.ExchangePostMapper;
 import com.goodsple.features.exchange.service.ExchangePostService;
+import com.goodsple.features.exchange.service.ImageUploadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.Optional;
 public class ExchangePostServiceImpl implements ExchangePostService {
 
   private final ExchangePostMapper exchangePostMapper;
+  private final ImageUploadService imageUploadService; // S3 삭제를 위해 추가
 
   @Override
   @Transactional
@@ -68,8 +70,19 @@ public class ExchangePostServiceImpl implements ExchangePostService {
     if (!postUserId.get().equals(userId)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "게시글을 수정할 권한이 없습니다.");
     }
-    // 수정 시에도 DTO에 포함된 모든 필드를 업데이트
+
+    // 기존 이미지 URL을 DB에서 조회
+    List<String> existingImageUrls = exchangePostMapper.findImageUrlsByPostId(postId);
+
+    // S3에서 기존 이미지 삭제
+    if (existingImageUrls != null && !existingImageUrls.isEmpty()) {
+      imageUploadService.deleteImagesFromS3(existingImageUrls);
+    }
+
+    // 게시글 업데이트
     exchangePostMapper.updateExchangePost(postId, post);
+
+    // DB의 이미지 정보 삭제 후 새로 삽입
     exchangePostMapper.deleteExchangePostImages(postId);
     if (post.getImageUrls() != null && !post.getImageUrls().isEmpty()) {
       List<String> imageUrls = post.getImageUrls();
@@ -90,7 +103,20 @@ public class ExchangePostServiceImpl implements ExchangePostService {
     if (!postUserId.get().equals(userId)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "게시글을 삭제할 권한이 없습니다.");
     }
+
+    // 삭제할 이미지 URL을 DB에서 조회
+    List<String> imageUrls = exchangePostMapper.findImageUrlsByPostId(postId);
+
+    // 게시글 이미지 DB 정보 먼저 삭제 (외래키 제약조건 위반 방지)
+    exchangePostMapper.deleteExchangePostImages(postId);
+
+    // 게시글 삭제
     exchangePostMapper.deleteExchangePost(postId);
+
+    // S3에서 이미지 삭제 (가장 마지막에 수행)
+    if (imageUrls != null && !imageUrls.isEmpty()) {
+      imageUploadService.deleteImagesFromS3(imageUrls);
+    }
   }
 
 }

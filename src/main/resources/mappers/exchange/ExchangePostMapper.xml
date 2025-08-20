@@ -45,4 +45,10 @@
         WHERE exchange_post_id = #{exchangePostId}
     </delete>
 
+    <select id="findImageUrlsByPostId" resultType="java.lang.String">
+        SELECT post_image_url
+        FROM exchange_post_image
+        WHERE exchange_post_id = #{exchangePostId}
+    </select>
+
 </mapper>
