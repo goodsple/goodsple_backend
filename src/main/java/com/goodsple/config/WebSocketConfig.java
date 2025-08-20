@@ -1,5 +1,6 @@
-package com.goodsple.features.community.config;
+package com.goodsple.config;
 
+import com.goodsple.features.community.config.SubscriptionTrackerInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.simp.config.ChannelRegistration;
