@@ -15,6 +15,7 @@ import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -100,4 +101,10 @@ public interface AuctionMapper {
      * @return 경매 초기 상태 DTO
      */
     Optional<AuctionState> findInitialAuctionStateById(Long auctionId);
+
+    List<AuctionState> findAuctionsToStart(OffsetDateTime now);
+
+    List<Long> findAuctionsToEnd(OffsetDateTime now);
+
+    void updateAuctionWinner(@Param("auctionId") Long auctionId, @Param("winnerId") Long winnerId, @Param("finalPrice") BigDecimal finalPrice);
 }

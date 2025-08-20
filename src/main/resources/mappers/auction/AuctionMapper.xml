@@ -321,4 +321,37 @@
             auction_id = #{auctionId}
     </select>
 
+    <!-- 시작 시간이 된 '예정' 상태의 경매를 조회하는 쿼리 -->
+    <select id="findAuctionsToStart" resultType="com.goodsple.features.auction.dto.AuctionState">
+        SELECT
+            auction_id AS auctionId,
+            auction_start_price AS currentPrice,
+            auction_min_bid_unit AS minBidUnit,
+            auction_end_time AS endTime
+        FROM
+            auctions
+        WHERE
+            auction_status = 'scheduled'::auction_status_enum
+        AND auction_start_time &lt;= #{now}
+    </select>
+
+    <!-- 종료 시간이 된 '진행중' 상태의 경매 ID 목록을 조회하는 쿼리 -->
+    <select id="findAuctionsToEnd" resultType="java.lang.Long">
+        SELECT auction_id
+        FROM auctions
+        WHERE
+            auction_status = 'active'::auction_status_enum
+        AND auction_end_time &lt;= #{now}
+    </select>
+
+    <!-- 경매 종료 시 최종 낙찰자 정보를 업데이트하는 쿼리 -->
+    <update id="updateAuctionWinner">
+        UPDATE auctions
+        SET
+            auction_winning_user_id = #{winnerId},
+            auction_final_price = #{finalPrice}
+        WHERE
+            auction_id = #{auctionId}
+    </update>
+
 </mapper>
