@@ -2,17 +2,17 @@
  * 파일 경로: src/main/java/com/goodsple/features/auction/controller/AdminAuctionController.java
  * 설명: 관리자용 경매 관리 API의 엔드포인트를 정의하는 컨트롤러입니다.
  */
-package com.goodsple.features.auction.controller;
+package com.goodsple.features.admin.auction.controller;
 
 import com.goodsple.common.dto.PagedResponse;
-import com.goodsple.features.auction.dto.request.AuctionCreateRequest;
-import com.goodsple.features.auction.dto.request.AuctionSearchRequest;
-import com.goodsple.features.auction.dto.request.AuctionStatusUpdateRequest;
-import com.goodsple.features.auction.dto.request.AuctionUpdateRequest;
-import com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse;
-import com.goodsple.features.auction.dto.response.AuctionAdminListResponse;
-import com.goodsple.features.auction.dto.response.AuctionAdminResultResponse;
-import com.goodsple.features.auction.service.AdminAuctionService;
+import com.goodsple.features.admin.auction.dto.request.AuctionCreateRequest;
+import com.goodsple.features.admin.auction.dto.request.AuctionSearchRequest;
+import com.goodsple.features.admin.auction.dto.request.AuctionStatusUpdateRequest;
+import com.goodsple.features.admin.auction.dto.request.AuctionUpdateRequest;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminDetailResponse;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminListResponse;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminResultResponse;
+import com.goodsple.features.admin.auction.service.AdminAuctionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

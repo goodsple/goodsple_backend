@@ -2,7 +2,7 @@
  * 파일 경로: src/main/java/com/goodsple/features/auction/dto/request/AuctionSearchRequest.java
  * 설명: 경매 목록 검색 조건을 담는 DTO입니다.
  */
-package com.goodsple.features.auction.dto.request;
+package com.goodsple.features.admin.auction.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.Getter;

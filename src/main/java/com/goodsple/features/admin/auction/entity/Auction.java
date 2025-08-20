@@ -2,7 +2,7 @@
  * 파일 경로: src/main/java/com/goodsple/features/auction/entity/Auction.java
  * 설명: 데이터베이스의 'auctions' 테이블과 매핑되는 도메인 엔티티 클래스입니다.
  */
-package com.goodsple.features.auction.entity;
+package com.goodsple.features.admin.auction.entity;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -2,16 +2,16 @@
  * 파일 경로: src/main/java/com/goodsple/features/auction/service/AdminAuctionService.java
  * 설명: 관리자용 경매 관리 기능의 비즈니스 로직을 처리하는 서비스 클래스입니다.
  */
-package com.goodsple.features.auction.service;
+package com.goodsple.features.admin.auction.service;
 
-import com.goodsple.features.auction.dto.request.AuctionCreateRequest;
-import com.goodsple.features.auction.dto.request.AuctionSearchRequest;
-import com.goodsple.features.auction.dto.request.AuctionUpdateRequest;
-import com.goodsple.features.auction.dto.response.AuctionAdminDetailResponse;
-import com.goodsple.features.auction.dto.response.AuctionAdminListResponse;
-import com.goodsple.features.auction.dto.response.AuctionAdminResultResponse;
-import com.goodsple.features.auction.entity.Auction;
-import com.goodsple.features.auction.mapper.AuctionMapper;
+import com.goodsple.features.admin.auction.dto.request.AuctionCreateRequest;
+import com.goodsple.features.admin.auction.dto.request.AuctionSearchRequest;
+import com.goodsple.features.admin.auction.dto.request.AuctionUpdateRequest;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminDetailResponse;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminListResponse;
+import com.goodsple.features.admin.auction.dto.response.AuctionAdminResultResponse;
+import com.goodsple.features.admin.auction.entity.Auction;
+import com.goodsple.features.admin.auction.mapper.AuctionMapper;
 import com.goodsple.common.dto.PagedResponse;
 import com.goodsple.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;

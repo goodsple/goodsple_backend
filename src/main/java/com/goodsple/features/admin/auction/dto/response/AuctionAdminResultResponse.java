@@ -2,7 +2,7 @@
  * 파일 경로: src/main/java/com/goodsple/features/auction/dto/response/AuctionAdminResultResponse.java
  * 설명: 경매 결과 페이지의 전체 정보를 담는 메인 DTO입니다.
  */
-package com.goodsple.features.auction.dto.response;
+package com.goodsple.features.admin.auction.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
