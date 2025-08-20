@@ -8,10 +8,14 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface NoticeMapper {
 
-  int insertNotice(NoticeDto notice);
+  void insertNotice(NoticeDto notice);
 
-  int insertAttachment(NoticeAttachmentDto attachment);
+  void updateNotice(NoticeDto notice);
 
-  int insertPopup(PopupNoticeDto popup);
+  void deleteNotice(Long noticeId);
+
+  void insertAttachment(NoticeAttachmentDto attachment);
+
+  void insertPopup(PopupNoticeDto popup);
 
 }
