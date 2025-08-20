@@ -1,4 +1,4 @@
-package com.goodsple.backend;
+package com.goodsple;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
@@ -10,12 +10,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootApplication(scanBasePackages = "com.goodsple")
+@SpringBootApplication //(scanBasePackages = "com.goodsple")
 @MapperScan(basePackages =
     {
         "com.goodsple.features.admin.user.mapper",
-        "com.goodsple.features.auction.mapper",
         "com.goodsple.features.auth.mapper",
+        "com.goodsple.features.auction.mapper",
         "com.goodsple.features.category.mapper",
         "com.goodsple.features.notice.mapper",
         "com.goodsple.features.report.mapper"
