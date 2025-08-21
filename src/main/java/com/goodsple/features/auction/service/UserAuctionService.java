@@ -53,6 +53,14 @@ public class UserAuctionService {
         // 1. 대표 경매(진행중 또는 예정) 1개 조회
         UserMainAuctionDto mainAuction = auctionMapper.findMainAuction();
 
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 디버깅을 위한 로그를 추가합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        if (mainAuction == null) {
+            System.out.println("[DEBUG] findMainAuction()이 null을 반환했습니다. 매퍼가 경매를 찾지 못했습니다.");
+        } else {
+            System.out.println("[DEBUG] findMainAuction()이 경매를 찾았습니다: ID = " + mainAuction.getAuctionId() + ", 상태 = " + mainAuction.getStatus());
+        }
+        // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
         // 2. 최종 DTO로 조립하여 반환 (mainAuction이 null일 수도 있음)
         return UserMainPageResponseDto.builder()
                 .mainAuction(mainAuction)

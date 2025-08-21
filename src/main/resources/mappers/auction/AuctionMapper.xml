@@ -378,43 +378,38 @@
         WHERE nickname = #{nickname}
     </select>
 
-    <!-- 사용자 메인 페이지용 대표 경매 조회 쿼리 -->
+    <!-- 사용자 메인 페이지용 대표 경매 조회 쿼리 (수정) -->
     <select id="findMainAuction" resultType="com.goodsple.features.auction.dto.response.UserMainAuctionDto">
-        (
-            -- 1순위: 진행중인 경매 중 가장 마감이 임박한 경매
-            SELECT
-                a.auction_id AS auctionId,
-                a.auction_title AS auctionTitle,
-                (SELECT ai.auction_image_url FROM auction_images ai WHERE ai.auction_id = a.auction_id LIMIT 1) AS imageUrl,
-            a.auction_start_price AS startPrice,
-            COALESCE((SELECT MAX(b.bid_amount) FROM bids b WHERE b.auction_id = a.auction_id), a.auction_start_price) AS currentPrice,
-            a.auction_start_time AS startTime,
-            a.auction_end_time AS endTime,
-            a.auction_status::text AS status
-        FROM auctions a
-        WHERE a.auction_status = 'active'::auction_status_enum
-        ORDER BY a.auction_end_time ASC
-        LIMIT 1
-    )
-    UNION ALL
-    (
-        -- 2순위: 진행중인 경매가 없을 경우, 가장 빨리 시작될 예정 경매
         SELECT
             a.auction_id AS auctionId,
             a.auction_title AS auctionTitle,
             (SELECT ai.auction_image_url FROM auction_images ai WHERE ai.auction_id = a.auction_id LIMIT 1) AS imageUrl,
-            a.auction_start_price AS startPrice,
-            a.auction_start_price AS currentPrice, -- 예정 경매는 현재가가 시작가
-            a.auction_start_time AS startTime,
-            a.auction_end_time AS endTime,
-            a.auction_status::text AS status
-        FROM auctions a
-        WHERE a.auction_status = 'scheduled'::auction_status_enum
-          AND NOT EXISTS (SELECT 1 FROM auctions WHERE auction_status = 'active'::auction_status_enum) -- 진행중인 경매가 없을 때만
-        ORDER BY a.auction_start_time ASC
-        LIMIT 1
-    )
-    LIMIT 1; -- 최종적으로 1개만 선택
+        a.auction_start_price AS startPrice,
+        -- 진행중 경매는 현재가, 예정 경매는 시작가를 currentPrice로 설정
+        CASE
+            WHEN a.auction_status = 'active' THEN COALESCE((SELECT MAX(b.bid_amount) FROM bids b WHERE b.auction_id = a.auction_id), a.auction_start_price)
+            ELSE a.auction_start_price
+        END AS currentPrice,
+        a.auction_start_time AS startTime,
+        a.auction_end_time AS endTime,
+        a.auction_status::text AS status
+    FROM
+        auctions a
+    WHERE
+        a.auction_status IN ('active'::auction_status_enum, 'scheduled'::auction_status_enum)
+    ORDER BY
+        -- 1순위: 'active' 상태가 먼저 오도록 정렬
+        CASE a.auction_status
+            WHEN 'active'::auction_status_enum THEN 1
+            WHEN 'scheduled'::auction_status_enum THEN 2
+            ELSE 3
+        END,
+        -- 2순위: 'active'는 종료 임박 순, 'scheduled'는 시작 임박 순으로 정렬
+        CASE a.auction_status
+            WHEN 'active'::auction_status_enum THEN a.auction_end_time
+            ELSE a.auction_start_time
+        END ASC
+    LIMIT 1
     </select>
 
     <select id="findUpcomingAuctions" resultType="com.goodsple.features.auction.dto.response.UserMainAuctionDto">
