@@ -18,11 +18,9 @@ public class AuctionAdminListResponse {
     public String productName;
 
     @Schema(description = "경매 시작 시간", example = "2025-08-20 21:00:00")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     public OffsetDateTime startTime;
 
     @Schema(description = "경매 종료 시간", example = "2025-08-20 22:00:00")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     public OffsetDateTime endTime;
 
     @Schema(description = "현재가/낙찰가", example = "12000")
