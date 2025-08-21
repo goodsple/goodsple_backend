@@ -13,6 +13,7 @@ import com.goodsple.features.admin.auction.entity.Auction;
 import com.goodsple.features.auction.dto.AuctionState;
 import com.goodsple.features.auction.dto.BidLogDto;
 import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
+import com.goodsple.features.auction.dto.response.UserMainAuctionDto;
 import com.goodsple.features.order.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -120,4 +121,25 @@ public interface AuctionMapper {
      * @return 사용자 ID
      */
     Long findUserIdByNickname(@Param("nickname") String nickname);
+
+    /**
+     * 사용자 메인 페이지에 표시될 대표 경매(진행중 또는 예정) 1개를 조회합니다.
+     * @return 대표 경매 정보 DTO
+     */
+    UserMainAuctionDto findMainAuction();
+
+    /**
+     * 대표 경매를 제외한 예정 경매 목록을 조회합니다.
+     * @param excludeId 제외할 경매 ID
+     * @param limit 조회할 개수
+     * @return 예정 경매 목록
+     */
+    List<UserMainAuctionDto> findUpcomingAuctions(@Param("excludeId") Long excludeId, @Param("limit") int limit);
+
+    /**
+     * 최근 종료된 경매 목록을 조회합니다.
+     * @param limit 조회할 개수
+     * @return 최근 종료 경매 목록
+     */
+    List<UserMainAuctionDto> findRecentlyEndedAuctions(@Param("limit") int limit);
 }

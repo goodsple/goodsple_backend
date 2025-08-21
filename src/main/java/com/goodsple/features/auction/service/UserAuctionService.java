@@ -6,6 +6,8 @@ package com.goodsple.features.auction.service;
 
 import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
 import com.goodsple.features.admin.auction.mapper.AuctionMapper;
+import com.goodsple.features.auction.dto.response.UserMainAuctionDto;
+import com.goodsple.features.auction.dto.response.UserMainPageResponseDto;
 import com.goodsple.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,11 +16,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserAuctionService {
 
     private final AuctionMapper auctionMapper;
+    private static final int UPCOMING_AUCTION_LIMIT = 5;
+    private static final int RECENTLY_ENDED_AUCTION_LIMIT = 5;
 
     @Transactional(readOnly = true)
     public AuctionPageDataResponse getAuctionPageData(Long auctionId) {
@@ -37,5 +43,28 @@ public class UserAuctionService {
         // isBanned 정보는 DB에서 가져온 값을 사용
 
         return response;
+    }
+
+    /**
+     * 사용자 메인 페이지에 필요한 모든 경매 목록을 조회하는 새로운 메소드
+     */
+    @Transactional(readOnly = true)
+    public UserMainPageResponseDto getMainPageAuctions() {
+        // 1. 대표 경매(진행중 또는 예정) 1개 조회
+        UserMainAuctionDto mainAuction = auctionMapper.findMainAuction();
+
+        // 2. 대표 경매를 제외한 예정 경매 목록 조회
+        Long excludeId = (mainAuction != null) ? mainAuction.getAuctionId() : -1L;
+        List<UserMainAuctionDto> upcomingAuctions = auctionMapper.findUpcomingAuctions(excludeId, UPCOMING_AUCTION_LIMIT);
+
+        // 3. 최근 종료된 경매 목록 조회
+        List<UserMainAuctionDto> recentlyEndedAuctions = auctionMapper.findRecentlyEndedAuctions(RECENTLY_ENDED_AUCTION_LIMIT);
+
+        // 4. 최종 DTO로 조립하여 반환
+        return UserMainPageResponseDto.builder()
+                .mainAuction(mainAuction)
+                .upcomingAuctions(upcomingAuctions)
+                .recentlyEndedAuctions(recentlyEndedAuctions)
+                .build();
     }
 }

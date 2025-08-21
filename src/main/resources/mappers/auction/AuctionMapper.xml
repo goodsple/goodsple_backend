@@ -377,4 +377,76 @@
         FROM users
         WHERE nickname = #{nickname}
     </select>
+
+    <!-- 사용자 메인 페이지용 쿼리 -->
+    <select id="findMainAuction" resultType="com.goodsple.features.auction.dto.response.UserMainAuctionDto">
+        (
+            -- 1순위: 진행중인 경매 중 가장 마감이 임박한 경매
+            SELECT
+                a.auction_id AS auctionId,
+                a.auction_title AS auctionTitle,
+                (SELECT ai.auction_image_url FROM auction_images ai WHERE ai.auction_id = a.auction_id LIMIT 1) AS imageUrl,
+            a.auction_start_price AS startPrice,
+            COALESCE((SELECT MAX(b.bid_amount) FROM bids b WHERE b.auction_id = a.auction_id), a.auction_start_price) AS currentPrice,
+            a.auction_start_time AS startTime,
+            a.auction_end_time AS endTime,
+            a.auction_status::text AS status
+        FROM auctions a
+        WHERE a.auction_status = 'active'::auction_status_enum
+        ORDER BY a.auction_end_time ASC
+        LIMIT 1
+    )
+    UNION ALL
+    (
+        -- 2순위: 진행중인 경매가 없을 경우, 가장 빨리 시작될 예정 경매
+        SELECT
+            a.auction_id AS auctionId,
+            a.auction_title AS auctionTitle,
+            (SELECT ai.auction_image_url FROM auction_images ai WHERE ai.auction_id = a.auction_id LIMIT 1) AS imageUrl,
+            a.auction_start_price AS startPrice,
+            a.auction_start_price AS currentPrice, -- 예정 경매는 현재가가 시작가
+            a.auction_start_time AS startTime,
+            a.auction_end_time AS endTime,
+            a.auction_status::text AS status
+        FROM auctions a
+        WHERE a.auction_status = 'scheduled'::auction_status_enum
+          AND NOT EXISTS (SELECT 1 FROM auctions WHERE auction_status = 'active'::auction_status_enum) -- 진행중인 경매가 없을 때만
+        ORDER BY a.auction_start_time ASC
+        LIMIT 1
+    )
+    LIMIT 1; -- 최종적으로 1개만 선택
+    </select>
+
+    <select id="findUpcomingAuctions" resultType="com.goodsple.features.auction.dto.response.UserMainAuctionDto">
+        SELECT
+            a.auction_id AS auctionId,
+            a.auction_title AS auctionTitle,
+            (SELECT ai.auction_image_url FROM auction_images ai WHERE ai.auction_id = a.auction_id LIMIT 1) AS imageUrl,
+        a.auction_start_price AS startPrice,
+        a.auction_start_price AS currentPrice,
+        a.auction_start_time AS startTime,
+        a.auction_end_time AS endTime,
+        a.auction_status::text AS status
+        FROM auctions a
+        WHERE a.auction_status = 'scheduled'::auction_status_enum
+          AND a.auction_id != #{excludeId}
+        ORDER BY a.auction_start_time ASC
+            LIMIT #{limit}
+    </select>
+
+    <select id="findRecentlyEndedAuctions" resultType="com.goodsple.features.auction.dto.response.UserMainAuctionDto">
+        SELECT
+            a.auction_id AS auctionId,
+            a.auction_title AS auctionTitle,
+            (SELECT ai.auction_image_url FROM auction_images ai WHERE ai.auction_id = a.auction_id LIMIT 1) AS imageUrl,
+        a.auction_start_price AS startPrice,
+        a.auction_final_price AS currentPrice, -- 종료된 경매는 현재가가 최종가
+        a.auction_start_time AS startTime,
+        a.auction_end_time AS endTime,
+        a.auction_status::text AS status
+        FROM auctions a
+        WHERE a.auction_status = 'ended'::auction_status_enum
+        ORDER BY a.auction_end_time DESC
+            LIMIT #{limit}
+    </select>
 </mapper>
