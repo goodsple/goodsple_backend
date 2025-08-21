@@ -1,6 +1,6 @@
 /**
  * 파일 경로: src/main/java/com/goodsple/features/auction/controller/UserAuctionController.java
- * 설명: 사용자 메인 페이지 경매 목록 등 사용자용 API를 제공하는 컨트롤러입니다.
+ * 설명: 사용자 메인 페이지 경매 정보 등 사용자용 API를 제공하는 컨트롤러입니다.
  */
 package com.goodsple.features.auction.controller;
 
@@ -22,10 +22,10 @@ public class UserAuctionController {
 
     private final UserAuctionService userAuctionService;
 
-    @Operation(summary = "메인 페이지 경매 목록 조회", description = "사용자 메인 페이지에 필요한 모든 경매 목록을 조회합니다.")
-    @GetMapping("/auctions")
-    public ResponseEntity<UserMainPageResponseDto> getMainPageAuctions() {
-        UserMainPageResponseDto response = userAuctionService.getMainPageAuctions();
+    @Operation(summary = "메인 페이지 대표 경매 조회", description = "사용자 메인 페이지에 필요한 대표 경매 1개를 조회합니다.")
+    @GetMapping("/auction") // 경로를 단수형으로 변경
+    public ResponseEntity<UserMainPageResponseDto> getMainPageAuction() {
+        UserMainPageResponseDto response = userAuctionService.getMainPageAuction();
         return ResponseEntity.ok(response);
     }
 }

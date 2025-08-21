@@ -46,25 +46,16 @@ public class UserAuctionService {
     }
 
     /**
-     * 사용자 메인 페이지에 필요한 모든 경매 목록을 조회하는 새로운 메소드
+     * 사용자 메인 페이지에 필요한 대표 경매 정보를 조회하는 새로운 메소드
      */
     @Transactional(readOnly = true)
-    public UserMainPageResponseDto getMainPageAuctions() {
+    public UserMainPageResponseDto getMainPageAuction() {
         // 1. 대표 경매(진행중 또는 예정) 1개 조회
         UserMainAuctionDto mainAuction = auctionMapper.findMainAuction();
 
-        // 2. 대표 경매를 제외한 예정 경매 목록 조회
-        Long excludeId = (mainAuction != null) ? mainAuction.getAuctionId() : -1L;
-        List<UserMainAuctionDto> upcomingAuctions = auctionMapper.findUpcomingAuctions(excludeId, UPCOMING_AUCTION_LIMIT);
-
-        // 3. 최근 종료된 경매 목록 조회
-        List<UserMainAuctionDto> recentlyEndedAuctions = auctionMapper.findRecentlyEndedAuctions(RECENTLY_ENDED_AUCTION_LIMIT);
-
-        // 4. 최종 DTO로 조립하여 반환
+        // 2. 최종 DTO로 조립하여 반환 (mainAuction이 null일 수도 있음)
         return UserMainPageResponseDto.builder()
                 .mainAuction(mainAuction)
-                .upcomingAuctions(upcomingAuctions)
-                .recentlyEndedAuctions(recentlyEndedAuctions)
                 .build();
     }
 }

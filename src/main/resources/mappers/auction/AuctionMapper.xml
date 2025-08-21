@@ -378,7 +378,7 @@
         WHERE nickname = #{nickname}
     </select>
 
-    <!-- 사용자 메인 페이지용 쿼리 -->
+    <!-- 사용자 메인 페이지용 대표 경매 조회 쿼리 -->
     <select id="findMainAuction" resultType="com.goodsple.features.auction.dto.response.UserMainAuctionDto">
         (
             -- 1순위: 진행중인 경매 중 가장 마감이 임박한 경매
