@@ -13,6 +13,8 @@ import com.goodsple.features.admin.auction.dto.response.AuctionAdminResultRespon
 import com.goodsple.features.admin.auction.entity.Auction;
 import com.goodsple.features.admin.auction.mapper.AuctionMapper;
 import com.goodsple.common.dto.PagedResponse;
+import com.goodsple.features.auction.dto.AuctionState;
+import com.goodsple.features.auction.service.AuctionRealtimeService;
 import com.goodsple.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,7 @@ import java.util.List;
 public class AdminAuctionService {
 
     private final AuctionMapper auctionMapper;
+    private final AuctionRealtimeService auctionRealtimeService;
 
     @Transactional(readOnly = true)
     public PagedResponse<AuctionAdminListResponse> getAuctionList(AuctionSearchRequest searchRequest) {
@@ -195,5 +198,22 @@ public class AdminAuctionService {
     public AuctionAdminResultResponse getAuctionResult(Long auctionId) {
         return auctionMapper.findAuctionResultById(auctionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 경매 결과를 찾을 수 없습니다. ID: " + auctionId));
+    }
+
+    /**
+     * 특정 경매의 실시간 상태를 Redis에 초기화합니다. (테스트용)
+     * @param auctionId 초기화할 경매 ID
+     */
+    @Transactional
+    public void initializeAuctionInRedis(Long auctionId) {
+        // 1. DB에서 경매 상태를 'active'로 변경
+        auctionMapper.updateAuctionStatus(auctionId, "active");
+
+        // 2. Redis에 저장할 초기 정보 조회
+        AuctionState initialState = auctionMapper.findInitialAuctionStateById(auctionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "경매 정보를 찾을 수 없습니다. ID: " + auctionId));
+
+        // 3. 실시간 서비스의 startAuction 메소드 호출
+        auctionRealtimeService.startAuction(initialState);
     }
 }

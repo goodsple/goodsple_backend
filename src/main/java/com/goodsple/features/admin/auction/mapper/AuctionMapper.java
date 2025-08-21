@@ -10,9 +10,15 @@ import com.goodsple.features.admin.auction.dto.response.AuctionAdminListResponse
 import com.goodsple.features.admin.auction.dto.response.AuctionAdminResultResponse;
 import com.goodsple.features.admin.auction.dto.response.BidHistoryInfo;
 import com.goodsple.features.admin.auction.entity.Auction;
+import com.goodsple.features.auction.dto.AuctionState;
+import com.goodsple.features.auction.dto.BidLogDto;
+import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
+import com.goodsple.features.auction.dto.response.UserMainAuctionDto;
+import com.goodsple.features.order.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -89,4 +95,51 @@ public interface AuctionMapper {
      * @param status 새로운 상태 값 (예: cancelled, active)
      */
     void updateAuctionStatus(@Param("auctionId") Long auctionId, @Param("status") String status);
+
+    Optional<AuctionPageDataResponse> findAuctionPageDataById(Long auctionId);
+
+    /**
+     * Redis에 저장할 경매 초기 상태 정보를 DB에서 조회합니다.
+     * @param auctionId 경매 ID
+     * @return 경매 초기 상태 DTO
+     */
+    Optional<AuctionState> findInitialAuctionStateById(Long auctionId);
+
+    List<AuctionState> findAuctionsToStart(OffsetDateTime now);
+
+    List<Long> findAuctionsToEnd(OffsetDateTime now);
+
+    void updateAuctionWinner(@Param("auctionId") Long auctionId, @Param("winnerId") Long winnerId, @Param("finalPrice") BigDecimal finalPrice);
+
+    void insertBidsBatch(List<BidLogDto> bids);
+
+    void insertOrder(Order order);
+
+    /**
+     * 사용자의 닉네임으로 사용자 ID를 조회합니다.
+     * @param nickname 조회할 사용자의 닉네임
+     * @return 사용자 ID
+     */
+    Long findUserIdByNickname(@Param("nickname") String nickname);
+
+    /**
+     * 사용자 메인 페이지에 표시될 대표 경매(진행중 또는 예정) 1개를 조회합니다.
+     * @return 대표 경매 정보 DTO
+     */
+    UserMainAuctionDto findMainAuction();
+
+    /**
+     * 대표 경매를 제외한 예정 경매 목록을 조회합니다.
+     * @param excludeId 제외할 경매 ID
+     * @param limit 조회할 개수
+     * @return 예정 경매 목록
+     */
+    List<UserMainAuctionDto> findUpcomingAuctions(@Param("excludeId") Long excludeId, @Param("limit") int limit);
+
+    /**
+     * 최근 종료된 경매 목록을 조회합니다.
+     * @param limit 조회할 개수
+     * @return 최근 종료 경매 목록
+     */
+    List<UserMainAuctionDto> findRecentlyEndedAuctions(@Param("limit") int limit);
 }

@@ -139,4 +139,15 @@ public class AdminAuctionController {
         AuctionAdminResultResponse response = adminAuctionService.getAuctionResult(auctionId);
         return ResponseEntity.ok(response);
     }
+
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 아래 테스트용 API를 추가합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    @Operation(summary = "[테스트용] 경매 실시간 시작", description = "특정 경매를 '진행중' 상태로 바꾸고 Redis에 실시간 데이터를 초기화합니다.")
+    @PostMapping("/{auctionId}/start-realtime")
+    public ResponseEntity<Void> startAuctionRealtime(
+            @Parameter(name = "auctionId", description = "시작할 경매의 ID", required = true, in = ParameterIn.PATH)
+            @PathVariable Long auctionId) {
+
+        adminAuctionService.initializeAuctionInRedis(auctionId);
+        return ResponseEntity.ok().build();
+    }
 }
