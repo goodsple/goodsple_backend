@@ -19,6 +19,7 @@ import java.time.OffsetDateTime;
 public class BidHistoryInfo {
     // 프론트엔드의 Bid 타입과 필드 이름을 일치시킵니다.
     private Long bidId;
+    private Long userId;
     private String userNickname;
     private BigDecimal bidAmount;
     private OffsetDateTime timestamp;

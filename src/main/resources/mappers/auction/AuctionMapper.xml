@@ -217,6 +217,7 @@
     <select id="findBidHistoryByAuctionId" resultType="com.goodsple.features.auction.dto.response.BidHistoryInfo">
         SELECT
             b.bid_id AS bidId,
+            u.user_id AS userId, -- userId를 추가로 조회합니다.
             u.nickname AS userNickname,
             b.bid_amount AS bidAmount,
             b.bid_created_at AS timestamp
@@ -354,4 +355,26 @@
             auction_id = #{auctionId}
     </update>
 
+    <!-- 여러 입찰 기록을 한 번에 저장하는 쿼리 (Batch Insert) -->
+    <insert id="insertBidsBatch" parameterType="java.util.List">
+        INSERT INTO bids (auction_id, user_id, bid_amount, bid_created_at)
+        VALUES
+        <foreach collection="list" item="bid" separator=",">
+            (#{bid.auctionId}, #{bid.userId}, #{bid.bidAmount}, #{bid.bidCreatedAt})
+        </foreach>
+    </insert>
+
+    <!-- 경매 종료 후 새로운 주문을 생성하는 쿼리 -->
+    <insert id="insertOrder" parameterType="com.goodsple.features.order.entity.Order">
+        INSERT INTO orders (auction_id, user_id, order_amount, order_status)
+        VALUES
+            (#{auctionId}, #{userId}, #{orderAmount}, #{orderStatus}::order_status_enum)
+    </insert>
+
+    <!-- 닉네임으로 사용자 ID를 조회하는 쿼리 -->
+    <select id="findUserIdByNickname" resultType="java.lang.Long">
+        SELECT user_id
+        FROM users
+        WHERE nickname = #{nickname}
+    </select>
 </mapper>

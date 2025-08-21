@@ -11,7 +11,9 @@ import com.goodsple.features.admin.auction.dto.response.AuctionAdminResultRespon
 import com.goodsple.features.admin.auction.dto.response.BidHistoryInfo;
 import com.goodsple.features.admin.auction.entity.Auction;
 import com.goodsple.features.auction.dto.AuctionState;
+import com.goodsple.features.auction.dto.BidLogDto;
 import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
+import com.goodsple.features.order.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -107,4 +109,15 @@ public interface AuctionMapper {
     List<Long> findAuctionsToEnd(OffsetDateTime now);
 
     void updateAuctionWinner(@Param("auctionId") Long auctionId, @Param("winnerId") Long winnerId, @Param("finalPrice") BigDecimal finalPrice);
+
+    void insertBidsBatch(List<BidLogDto> bids);
+
+    void insertOrder(Order order);
+
+    /**
+     * 사용자의 닉네임으로 사용자 ID를 조회합니다.
+     * @param nickname 조회할 사용자의 닉네임
+     * @return 사용자 ID
+     */
+    Long findUserIdByNickname(@Param("nickname") String nickname);
 }

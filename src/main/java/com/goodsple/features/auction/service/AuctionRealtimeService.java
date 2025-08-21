@@ -91,24 +91,25 @@ public class AuctionRealtimeService {
             log.info("경매 ID {} 시간 연장됨.", auctionId);
         }
 
-        // 프론트엔드의 Bid 타입과 속성 이름을 일치시킵니다.
+        // 5. 입찰 내역을 Redis Sorted Set에 추가
+        String bidsKey = keyManager.getAuctionBidsKey(auctionId);
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ newBid 객체를 생성할 때 userId를 추가합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
         BidHistoryInfo newBid = BidHistoryInfo.builder()
-                .bidId(System.currentTimeMillis()) // 임시 ID 생성
+                .bidId(System.currentTimeMillis()) // 임시 ID
+                .userId(userDetails.getUserId()) // userId 추가!
                 .userNickname(userDetails.getNickname())
                 .bidAmount(bidRequest.getAmount())
                 .timestamp(OffsetDateTime.now())
                 .build();
+        redisTemplate.opsForZSet().add(bidsKey, newBid, System.currentTimeMillis());
 
-        // 입찰 내역을 Redis에 저장하는 로직은 그대로 유지할 수 있습니다.
-        // String bidsKey = keyManager.getAuctionBidsKey(auctionId);
-        // redisTemplate.opsForZSet().add(bidsKey, newBid, System.currentTimeMillis());
-
+        // 6. 모든 참여자에게 상태 업데이트 메시지 브로드캐스트 (이하 동일)
         AuctionStatusUpdateResponse updateResponse = AuctionStatusUpdateResponse.builder()
-                .type("AUCTION_UPDATE") // type 필드를 명시적으로 추가합니다.
+                .type("AUCTION_UPDATE")
                 .currentPrice(bidRequest.getAmount())
                 .topBidderNickname(userDetails.getNickname())
                 .extendedEndTime(extendedTime)
-                .newBid(newBid) // 프론트엔드와 형식이 일치된 newBid 객체
+                .newBid(newBid)
                 .build();
 
         messagingTemplate.convertAndSend("/topic/auctions/" + auctionId, updateResponse);
