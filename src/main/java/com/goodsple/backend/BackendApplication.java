@@ -17,7 +17,8 @@ import org.springframework.web.client.RestTemplate;
         "com.goodsple.features.category.mapper",
         "com.goodsple.features.notice.mapper",
         "com.goodsple.features.report.mapper",
-        "com.goodsple.features.community.mapper"})
+        "com.goodsple.features.community.mapper",
+        "com.goodsple.features.bookmark.mapper"})
 
 
 @EnableScheduling
