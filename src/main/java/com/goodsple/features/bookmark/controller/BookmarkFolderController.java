@@ -9,9 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap; // 수정됨⭐
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;     // 수정됨⭐
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/bookmark-folders")
