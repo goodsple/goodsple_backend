@@ -11,14 +11,18 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication(scanBasePackages = "com.goodsple")
-@MapperScan(basePackages = {"com.goodsple.features.admin.user.mapper",
+@MapperScan(basePackages = {
+        "com.goodsple.features.admin.user.mapper",
         "com.goodsple.features.admin.auction.mapper",
         "com.goodsple.features.auth.mapper",
         "com.goodsple.features.category.mapper",
         "com.goodsple.features.notice.mapper",
         "com.goodsple.features.report.mapper",
         "com.goodsple.features.community.mapper",
-        "com.goodsple.features.bookmark.mapper"})
+        "com.goodsple.features.bookmark.mapper",
+        "com.goodsple.features.exchange.mapper"
+
+})
 
 
 @EnableScheduling

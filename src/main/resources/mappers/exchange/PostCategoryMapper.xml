@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.exchange.mapper.PostCategoryMapper">
+
+    <select id="findAllThirdCategories" resultType="com.goodsple.features.exchange.dto.PostCategoryDto">
+        SELECT tc.third_cate_id  AS thirdCateId,
+               tc.cate_name      AS thirdCateName,
+               sc.second_cate_id AS secondCateId,
+               sc.cate_name      AS secondCateName,
+               fc.first_cate_id  AS firstCateId,
+               fc.cate_name      AS firstCateName
+        FROM public.third_cate AS tc
+        JOIN
+             public.second_cate AS sc ON tc.second_cate_id = sc.second_cate_id
+        JOIN
+             public.first_cate AS fc ON sc.first_cate_id = fc.first_cate_id
+    </select>
+
+</mapper>
