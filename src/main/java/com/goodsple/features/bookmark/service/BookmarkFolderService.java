@@ -23,12 +23,8 @@ public class BookmarkFolderService {
     }
 
     // 폴더 생성
-    @Transactional // 이 메소드 내의 DB 작업들이 하나의 단위로 묶여요. 중간에 실패하면 모두 롤백!
+    @Transactional
     public Long createFolder(FolderCreationRequest request, Long userId) {
-        // 나중에는 여기에 폴더 개수 제한, 이름 중복 검사 등의 로직을 추가할 수 있어요.
-
-        // DB에 저장하기 위해 Mapper를 호출해요.
-        // DTO에 있는 정보와 유저 ID를 넘겨줍니다.
         bookmarkFolderMapper.save(request.getFolderName(), request.getFolderColor(), userId);
 
         Long folderId = bookmarkFolderMapper.getLastInsertId();
