@@ -1,6 +1,7 @@
 package com.goodsple.features.exchange.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -18,7 +19,9 @@ public class LocationService {
 
   private final RestTemplate restTemplate = new RestTemplate();
 
-  private final String REST_API_KEY = "b26e6bfdf513ea8d31a56ab317271e20"; // ← 여기에 REST API 키 넣기
+  @Value("${KAKAO_REST_API_KEY}") // 환경변수 이름과 동일하게
+  private String restApiKey;
+
 
   // 좌표 → 행정동 코드
   public Map<String, Object> getRegion(double latitude, double longitude) {
@@ -26,7 +29,7 @@ public class LocationService {
         + "?x=" + longitude + "&y=" + latitude;
 
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "KakaoAK " + REST_API_KEY);
+    headers.set("Authorization", "KakaoAK " + restApiKey);
     HttpEntity<Void> entity = new HttpEntity<>(headers);
 
     ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
@@ -38,7 +41,7 @@ public class LocationService {
     String url = "https://dapi.kakao.com/v2/local/search/address.json?query=" + address;
 
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "KakaoAK " + REST_API_KEY);
+    headers.set("Authorization", "KakaoAK " + restApiKey);
     HttpEntity<Void> entity = new HttpEntity<>(headers);
 
     ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
