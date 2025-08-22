@@ -10,10 +10,10 @@
         n.notice_title,
         n.notice_created_at,
         n.notice_updated_at,
-        u.name,
+        u.name AS user_name,
         n.is_popup,
-        COALESCE(p.popup_start, NULL) AS popup_start,
-        COALESCE(p.popup_end, NULL) AS popup_end,
+        p.popup_start,
+        p.popup_end,
         (SELECT COUNT(*) FROM notice_attachment a WHERE a.notice_id = n.notice_id) AS attachment_count
         FROM notice n
         LEFT JOIN notice_popup p ON n.notice_id = p.notice_id
@@ -27,5 +27,19 @@
             </if>
         </where>
         ORDER BY n.notice_created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="selectNoticeListCount" resultType="int">
+        SELECT COUNT(*)
+        FROM notice n
+        <where>
+            <if test="title != null and title != ''">
+                AND n.notice_title ILIKE CONCAT('%', #{title}, '%')
+            </if>
+            <if test="isPopup != null">
+                AND n.is_popup = #{isPopup}
+            </if>
+        </where>
     </select>
 </mapper>

@@ -4,7 +4,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.goodsple.features.notice.mapper.NoticeMapper">
-
     <insert id="insertNotice" useGeneratedKeys="true" keyProperty="noticeId">
         INSERT INTO notice (user_id, notice_title, notice_content, notice_created_at, notice_updated_at, is_popup)
         VALUES (#{userId}, #{noticeTitle}, #{noticeContent}, NOW(), NOW(), #{isPopup})
@@ -20,6 +19,16 @@
         VALUES (#{noticeId}, #{popupStart}, #{popupEnd}, #{popupImageUrl}, #{popupSummary})
     </insert>
 
+    <update id="updateNotice">
+        UPDATE notice
+        SET notice_title = #{noticeTitle},
+            notice_content = #{noticeContent},
+            notice_updated_at = NOW(),
+            is_popup = #{isPopup}
+        WHERE notice_id = #{noticeId}
+    </update>
 
+    <delete id="deleteNotice">
+        DELETE FROM notice WHERE notice_id = #{noticeId}
+    </delete>
 </mapper>
-
