@@ -6,15 +6,16 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Mapper
 public interface ExchangePostMapper {
 
   // 게시글 등록
-  void insertExchangePost(@Param("post") ExchangePostDto post, @Param("userId") Long userId);
+  void insertExchangePost(Map<String, Object> param);
   // 게시글 수정
-  void updateExchangePost(@Param("postId") Long postId, @Param("post") ExchangePostDto post);
+  void updateExchangePost(Map<String, Object> param);
   // 게시글 삭제
   void deleteExchangePost(Long exchangePostId);
 

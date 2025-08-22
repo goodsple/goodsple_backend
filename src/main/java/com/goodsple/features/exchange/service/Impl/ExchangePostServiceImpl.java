@@ -11,7 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -24,6 +26,7 @@ public class ExchangePostServiceImpl implements ExchangePostService {
   @Override
   @Transactional
   public Long createPost(ExchangePostDto post, Long userId) {
+
 
     // 카테고리 유효성 검증
     if (post.getThirdCateId() == null) {
@@ -46,7 +49,11 @@ public class ExchangePostServiceImpl implements ExchangePostService {
       post.setHalfDeliveryType(null);
     }
 
-    exchangePostMapper.insertExchangePost(post, userId);
+    Map<String, Object> param = new HashMap<>();
+    param.put("post", post);
+    param.put("userId", userId);
+
+    exchangePostMapper.insertExchangePost(param);
     Long newPostId = post.getExchangePostId();
 
     if (post.getImageUrls() != null && !post.getImageUrls().isEmpty()) {
@@ -79,8 +86,12 @@ public class ExchangePostServiceImpl implements ExchangePostService {
       imageUploadService.deleteImagesFromS3(existingImageUrls);
     }
 
+    Map<String, Object> param = new HashMap<>();
+    param.put("postId", postId);
+    param.put("post", post);
+
     // 게시글 업데이트
-    exchangePostMapper.updateExchangePost(postId, post);
+    exchangePostMapper.updateExchangePost(param);
 
     // DB의 이미지 정보 삭제 후 새로 삽입
     exchangePostMapper.deleteExchangePostImages(postId);
