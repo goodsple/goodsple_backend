@@ -39,6 +39,7 @@ out/
 # Redis / DB 관련 임시 파일
 dump.rdb
 appendonly.aof
+redis-stable.tar.gz
 
 # Redis 소스/빌드 폴더 통째로 무시
 /redis-stable/
