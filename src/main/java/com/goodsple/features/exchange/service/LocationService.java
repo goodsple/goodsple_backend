@@ -19,8 +19,8 @@ public class LocationService {
 
   private final RestTemplate restTemplate = new RestTemplate();
 
-  @Value("${KAKAO_REST_API_KEY}") // 환경변수 이름과 동일하게
-  private String restApiKey;
+  @Value("${kakao.client-id}")
+  private String restApiKey; // REST API 키 = client-id
 
 
   // 좌표 → 행정동 코드
