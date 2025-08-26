@@ -33,6 +33,11 @@ public class LocationService {
     HttpEntity<Void> entity = new HttpEntity<>(headers);
 
     ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+    if (response.getBody() == null) {
+      throw new RuntimeException("카카오 API 응답이 비어있습니다.");
+    }
+
     return response.getBody();
   }
 
