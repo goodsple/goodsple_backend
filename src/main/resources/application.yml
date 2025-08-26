@@ -70,6 +70,7 @@ kakao:
   client-id:     0f69a9009a695e1a7a933e9cc124cf76
   client-secret: rZH2IkMkykHp0m3mFlF3bnBOHWslBv2N
   redirect-uri:  http://localhost:8080/api/auth/kakao/callback
+  rest-api-key: ${KAKAO_REST_API_KEY}   # 교환게시글 등록 시 내위치/주소검색 용도 (삭제금지)
 
 # 이메일 인증 관련 설정
 email:

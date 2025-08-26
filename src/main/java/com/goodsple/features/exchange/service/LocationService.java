@@ -19,8 +19,8 @@ public class LocationService {
 
   private final RestTemplate restTemplate = new RestTemplate();
 
-  @Value("${kakao.client-id}")
-  private String restApiKey; // REST API 키 = client-id
+  @Value("${KAKAO_REST_API_KEY:}")   // 환경변수 이름과 동일하게
+  private String restApiKey;
 
 
   // 좌표 → 행정동 코드
@@ -33,6 +33,11 @@ public class LocationService {
     HttpEntity<Void> entity = new HttpEntity<>(headers);
 
     ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+    if (response.getBody() == null) {
+      throw new RuntimeException("카카오 API 응답이 비어있습니다.");
+    }
+
     return response.getBody();
   }
 
