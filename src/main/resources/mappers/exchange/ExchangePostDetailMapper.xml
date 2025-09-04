@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.exchangeDetail.mapper.ExchangePostDetailMapper">
+
+    <!-- 게시글 상세 조회 -->
+    <select id="selectPostDetailById" resultType="com.goodsple.features.exchangeDetail.dto.PostDetailDto">
+        SELECT
+            p.exchange_post_id AS postId,
+            p.exchange_post_title AS title,
+            p.post_description AS description,
+            p.post_hope_region AS location,
+            p.post_trade_status AS status,
+            p.delivery_price_normal AS "delivery.normal",
+            p.delivery_price_half AS "delivery.half",
+            p.half_delivery_type AS "delivery.halfDeliveryType",
+            p.user_id AS writerId,
+            u.nickname AS "writer.nickname",
+            u.profile_image AS "writer.profileImageUrl"
+        FROM exchange_post p
+                 JOIN users u ON u.user_id = p.user_id
+        WHERE p.exchange_post_id = #{postId}
+    </select>
+
+    <!-- 거래 상태 변경 -->
+    <update id="updatePostStatus">
+        UPDATE exchange_post
+        SET post_trade_status = #{status},
+            exchange_post_updated_at = now()
+        WHERE exchange_post_id = #{postId}
+    </update>
+
+    <!-- 게시글 이미지 조회 -->
+    <select id="findImageUrlsByPostId" resultType="java.lang.String">
+        SELECT post_image_url
+        FROM exchange_post_image
+        WHERE exchange_post_id = #{postId}
+        ORDER BY post_sort_order
+    </select>
+
+</mapper>
