@@ -68,21 +68,31 @@
     </select>    <!-- 상세 조회 -->
     <select id="selectAdminUserDetail" parameterType="long"
             resultType="com.goodsple.features.admin.user.dto.AdminUserDetail">
-        SELECT u.user_id           AS userId,
-               u.login_id          AS loginId,
-               u.nickname          AS nickname,
-               u.email             AS email,
-               u.role              AS role,
-               u.suspension_status AS suspensionStatus,
-               u.user_created_at   AS joinedAt,
-               COALESCE(
-                       (SELECT COUNT(*) FROM reviews r WHERE r.writer_id = u.user_id),
-                       0)          AS reviewCount, /* 목록과 동일한 거래횟수 계산 */
-               COALESCE((SELECT COUNT(*)
-                         FROM exchange_post ep
-                         WHERE ep.user_id = u.user_id
-                           AND ep.post_trade_status IN ('COMPLETED')
-        -- 교환 완료),0)+COALESCE((SELECT COUNT(*) FROM auctions a WHERE a.auction_winning_user_id = u.user_id AND a.auction_status IN ('ended')  -- 경매 낙찰(구매)), 0) AS tradeCount,COALESCE((SELECT COUNT(*) FROM reports rp WHERE rp.report_target_user_id = u.user_id), 0) AS reportCount FROM users u WHERE u.user_id = #{userId}
+        SELECT
+            u.user_id           AS userId,
+            u.login_id          AS loginId,
+            u.nickname          AS nickname,
+            u.email             AS email,
+            u.role              AS role,
+            u.suspension_status AS suspensionStatus,
+            u.user_created_at   AS joinedAt,
+            COALESCE((SELECT COUNT(*) FROM reviews r WHERE r.writer_id = u.user_id), 0) AS reviewCount,
+            /* 목록과 동일한 거래횟수 계산: 교환 완료 + 경매 낙찰(구매) */
+            COALESCE(
+                    (SELECT COUNT(*)
+                     FROM exchange_post ep
+                     WHERE ep.user_id = u.user_id
+                       AND ep.post_trade_status IN ('COMPLETED')), 0
+            ) +
+            COALESCE(
+                    (SELECT COUNT(*)
+                     FROM auctions a
+                     WHERE a.auction_winning_user_id = u.user_id
+                       AND a.auction_status IN ('ended')), 0
+            ) AS tradeCount,
+            COALESCE((SELECT COUNT(*) FROM reports rp WHERE rp.report_target_user_id = u.user_id), 0) AS reportCount
+        FROM users u
+        WHERE u.user_id = #{userId}
     </select>
 
     <!-- 상태/권한 변경 -->
