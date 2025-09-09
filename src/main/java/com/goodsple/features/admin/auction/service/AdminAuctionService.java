@@ -18,6 +18,7 @@ import com.goodsple.features.auction.service.AuctionRealtimeService;
 import com.goodsple.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class AdminAuctionService {
 
     private final AuctionMapper auctionMapper;
     private final AuctionRealtimeService auctionRealtimeService;
+    private final SimpMessagingTemplate messagingTemplate; // [추가] SimpMessagingTemplate 의존성 주입
 
     @Transactional(readOnly = true)
     public PagedResponse<AuctionAdminListResponse> getAuctionList(AuctionSearchRequest searchRequest) {
@@ -180,18 +183,52 @@ public class AdminAuctionService {
     }
 
     @Transactional
-    public void updateAuctionStatus(Long auctionId, String status) {
+    public void updateAuctionStatus(Long auctionId, String newStatus) { // [수정] 변수명 명확화 (status -> newStatus)
         // 1. 수정할 경매가 존재하는지 확인
-        auctionMapper.findAuctionForUpdate(auctionId)
+        Auction auction = auctionMapper.findAuctionForUpdate(auctionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 경매를 찾을 수 없습니다. ID: " + auctionId));
 
-        // 2. 유효한 상태 값인지 확인하는 로직 (선택 사항이지만 권장)
-        // 예: Enum.valueOf(AuctionStatusEnum.class, status.toUpperCase());
+        // 2. [추가] 이미 같은 상태이면 아무 작업도 하지 않고 리턴 (불필요한 DB 업데이트 및 알림 방지)
+        if (auction.getAuctionStatus().equalsIgnoreCase(newStatus)) {
+            return;
+        }
 
-        // 3. 상태 업데이트 쿼리 실행
-        auctionMapper.updateAuctionStatus(auctionId, status);
+        // 3. 유효한 상태 값인지 확인하는 로직 (선택 사항이지만 권장)
+        // 예: Enum.valueOf(AuctionStatusEnum.class, newStatus.toUpperCase());
 
-        // TODO: 상태 변경에 따른 후속 조치 (예: WebSocket으로 참여자에게 '경매 중지' 알림 전송)
+        // 4. 상태 업데이트 쿼리 실행
+        auctionMapper.updateAuctionStatus(auctionId, newStatus);
+
+        // 5. [추가] 상태 변경에 따른 후속 조치: WebSocket으로 참여자에게 알림 전송
+        String message;
+        String type;
+
+        // newStatus 값에 따라 메시지와 타입을 결정합니다.
+        // 프론트엔드와 약속된 타입(예: AUCTION_CANCELLED, AUCTION_STOPPED)을 사용합니다.
+        switch (newStatus.toLowerCase()) {
+            case "cancelled":
+                message = "경매가 관리자에 의해 취소되었습니다.";
+                type = "AUCTION_CANCELLED";
+                break;
+            // '중지' 상태가 있다면 여기에 추가할 수 있습니다.
+            // case "stopped":
+            //     message = "경매가 관리자에 의해 일시 중지되었습니다.";
+            //     type = "AUCTION_STOPPED";
+            //     break;
+            default:
+                // 다른 상태 변경(예: scheduled -> active)은 스케줄러가 담당하므로
+                // 여기서는 별도의 알림을 보내지 않거나, 필요 시 추가할 수 있습니다.
+                return;
+        }
+
+        // 알림 메시지를 담을 DTO(Map) 생성
+        Map<String, String> payload = Map.of(
+                "type", type,
+                "message", message
+        );
+
+        // 해당 경매의 토픽을 구독 중인 모든 클라이언트에게 메시지 전송
+        messagingTemplate.convertAndSend("/topic/auctions/" + auctionId, payload);
     }
 
     @Transactional(readOnly = true)

@@ -14,6 +14,7 @@ import com.goodsple.features.order.entity.Order;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ public class AuctionScheduler {
     private final AuctionRealtimeService auctionRealtimeService;
     private final RedisTemplate<String, Object> redisTemplate;
     private final AuctionRedisKeyManager keyManager;
+    private final SimpMessagingTemplate messagingTemplate; // [추가] SimpMessagingTemplate 의존성 주입
 
     /**
      * 1분마다 실행되어 시작 시간이 된 경매를 'active' 상태로 변경하고 Redis에 등록합니다.
@@ -65,6 +67,20 @@ public class AuctionScheduler {
 
         for (Long auctionId : auctionIdsToEnd) {
             log.info("경매 ID {}를 종료합니다.", auctionId);
+
+            // [추가] DB 업데이트 전에 먼저 경매 종료 알림을 보냅니다.
+            // 이렇게 하면 사용자는 종료 사실을 즉시 인지하고, 백엔드는 백그라운드에서 안전하게 데이터 처리를 계속할 수 있습니다.
+            String finalWinnerNickname = getFinalWinnerNicknameFromRedis(auctionId); // 아래 추가된 헬퍼 메소드 사용
+
+            Map<String, Object> payload = Map.of(
+                    "type", "AUCTION_ENDED",
+                    "message", "경매가 종료되었습니다. 최종 낙찰자는 '" + finalWinnerNickname + "'님 입니다.",
+                    "winner", finalWinnerNickname
+            );
+            messagingTemplate.convertAndSend("/topic/auctions/" + auctionId, payload);
+            log.info("경매 ID {} 종료 알림 전송 완료.", auctionId);
+
+            // --- 이하 기존 데이터 처리 로직 ---
             String stateKey = keyManager.getAuctionStateKey(auctionId);
             Map<Object, Object> finalState = redisTemplate.opsForHash().entries(stateKey);
 
@@ -116,6 +132,20 @@ public class AuctionScheduler {
             redisTemplate.delete(stateKey);
             redisTemplate.delete(keyManager.getAuctionBidsKey(auctionId));
             log.info("경매 ID {}의 Redis 데이터가 정리되었습니다.", auctionId);
+        }
+    }
+
+    /**
+     * [추가] Redis에서 최종 낙찰자의 닉네임을 조회하는 헬퍼(helper) 메소드
+     */
+    private String getFinalWinnerNicknameFromRedis(Long auctionId) {
+        String stateKey = keyManager.getAuctionStateKey(auctionId);
+        Object winnerNicknameObj = redisTemplate.opsForHash().get(stateKey, "topBidderNickname");
+
+        if (winnerNicknameObj != null && !winnerNicknameObj.toString().equals("없음")) {
+            return winnerNicknameObj.toString();
+        } else {
+            return "없음"; // 낙찰자가 없는 경우
         }
     }
 }
