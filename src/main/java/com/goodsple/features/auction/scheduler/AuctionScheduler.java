@@ -4,6 +4,7 @@
  */
 package com.goodsple.features.auction.scheduler;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.goodsple.features.admin.auction.mapper.AuctionMapper;
 import com.goodsple.features.auction.dto.AuctionState;
 import com.goodsple.features.auction.dto.BidLogDto;
@@ -36,6 +37,7 @@ public class AuctionScheduler {
     private final RedisTemplate<String, Object> redisTemplate;
     private final AuctionRedisKeyManager keyManager;
     private final SimpMessagingTemplate messagingTemplate; // [추가] SimpMessagingTemplate 의존성 주입
+    private final ObjectMapper objectMapper; // [추가] ObjectMapper 의존성 주입
 
     /**
      * 1분마다 실행되어 시작 시간이 된 경매를 'active' 상태로 변경하고 Redis에 등록합니다.
@@ -102,16 +104,20 @@ public class AuctionScheduler {
                 String bidsKey = keyManager.getAuctionBidsKey(auctionId);
                 Set<Object> bidObjects = redisTemplate.opsForZSet().range(bidsKey, 0, -1);
                 if (bidObjects != null && !bidObjects.isEmpty()) {
+                    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 이 부분이 핵심 수정 사항입니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
                     List<BidLogDto> bidsToSave = bidObjects.stream()
                             .map(obj -> {
-                                BidHistoryInfo info = (BidHistoryInfo) obj;
-                                // 이제 info 객체에 userId가 있으므로, DB 조회 없이 바로 사용합니다.
+                                // LinkedHashMap을 BidHistoryInfo 클래스로 명시적으로 변환합니다.
+                                BidHistoryInfo info = objectMapper.convertValue(obj, BidHistoryInfo.class);
+
                                 return new BidLogDto(auctionId, info.getUserId(), info.getBidAmount(), info.getTimestamp());
                             })
                             .collect(Collectors.toList());
+                    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
                     if (!bidsToSave.isEmpty()) {
                         auctionMapper.insertBidsBatch(bidsToSave);
+                        log.info("경매 ID {}의 입찰 내역 {}건을 DB에 저장했습니다.", auctionId, bidsToSave.size());
                     }
                 }
 
