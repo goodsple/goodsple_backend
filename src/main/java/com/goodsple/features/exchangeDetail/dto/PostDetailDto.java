@@ -22,9 +22,10 @@ public class PostDetailDto {
   private String status;
   private Long writerId;
   private String location;
+  private String tradeType;
   private DeliveryInfo delivery;
   private List<String> images;
-  private UserInfo writer;
+//  private UserInfo writer;
   private OffsetDateTime createdAt;
 //  private int likes;
 //  private int views;

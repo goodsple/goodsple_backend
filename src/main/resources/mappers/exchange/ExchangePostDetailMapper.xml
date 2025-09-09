@@ -13,10 +13,12 @@
             p.post_description AS description,
             p.post_hope_region AS location,
             p.post_trade_status AS status,
+            p.post_trade_type AS tradeType,
             p.delivery_price_normal AS "delivery.normal",
             p.delivery_price_half AS "delivery.half",
             p.half_delivery_type AS "delivery.halfDeliveryType",
             p.user_id AS writerId,
+            p.exchange_post_created_at AS createdAt,
             u.nickname AS "writer.nickname",
             u.profile_image AS "writer.profileImageUrl"
         FROM exchange_post p
