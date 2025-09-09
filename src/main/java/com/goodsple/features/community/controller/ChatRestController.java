@@ -30,13 +30,37 @@ public class ChatRestController {
             try {
                 pivot = Instant.parse(before);
             } catch (java.time.format.DateTimeParseException e) {
-                pivot = null; // 잘못된 값이면 무시
+                pivot = null;
             }
         }
 
         int safeLimit = Math.min(Math.max(1, limit), 100);
-
-        // DTO 필드명 기준으로 결과 반환
         return communityService.getPosts(roomId, safeLimit, pivot);
     }
+
+    // 유저 정보 조회
+    @GetMapping("/user/{userId}")
+    public Community getUserInfo(@PathVariable Long userId) {
+        return communityService.getUserInfo(userId);
+    }
+
+    // 현재 방 접속자 수 조회
+    @GetMapping("/room/{roomId}/users")
+    public int getRoomUserCount(@PathVariable String roomId) {
+        return communityService.getRoomUserCount(roomId);
+    }
+
+    // 확성기 남은 횟수 조회
+    @GetMapping("/megaphone-remaining")
+    public int getMegaphoneRemaining(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) throw new IllegalStateException("인증 정보가 없습니다.");
+        return communityService.getMegaphoneRemaining(userDetails.getUserId());
+    }
+
+    // 최신 확성기 메시지 1개 반환 메서드 ( 메인페이지 )
+    @GetMapping("/megaphone/latest")
+    public Community getLatestMegaphone() {
+        return communityService.getLatestMegaphone();
+    }
+
 }

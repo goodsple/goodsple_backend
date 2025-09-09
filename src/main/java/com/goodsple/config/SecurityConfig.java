@@ -152,11 +152,6 @@ public class SecurityConfig {
                                 accessor.setUser(auth);
                             }
                         }
-                        case DISCONNECT -> {
-                            // 필요 시 처리
-                        }
-                        default -> {
-                        }
                     }
                 }
                 return message;
