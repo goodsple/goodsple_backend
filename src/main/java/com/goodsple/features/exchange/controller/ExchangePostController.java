@@ -14,7 +14,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 
-@Tag(name = "03. 교환게시글", description = "교환 게시글 등록, 수정, 삭제 API")
+@Tag(name = "교환게시글", description = "교환 게시글 등록, 수정, 삭제 API")
 @RestController
 @RequestMapping("/api/exchange-posts")
 @RequiredArgsConstructor
