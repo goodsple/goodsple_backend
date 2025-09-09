@@ -25,8 +25,10 @@ public class PostDetailDto {
   private String tradeType;
   private DeliveryInfo delivery;
   private List<String> images;
-//  private UserInfo writer;
+  private PostWriterDto writer;
   private OffsetDateTime createdAt;
+
+  private Boolean isWriter;
 //  private int likes;
 //  private int views;
 //  private int queueCount;
