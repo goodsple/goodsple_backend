@@ -21,7 +21,8 @@ import org.springframework.web.client.RestTemplate;
         "com.goodsple.features.community.mapper",
         "com.goodsple.features.bookmark.mapper",
         "com.goodsple.features.exchange.mapper",
-        "com.goodsple.features.exchangeDetail.mapper"
+        "com.goodsple.features.exchangeDetail.mapper",
+        "com.goodsple.features.mybids.mapper"
 
 })
 
