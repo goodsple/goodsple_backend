@@ -5,10 +5,7 @@ import com.goodsple.features.myexchange.service.MyExchangePostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,4 +35,20 @@ public class MyExchangePostController {
     result.put("totalCount", totalCount);
     return result;
   }
+
+
+  // 거래상태 변경
+  @Operation(summary = "거래상태 변경", description = "내 거래글의 상태를 변경합니다.")
+  @PatchMapping("/{postId}/status")
+  public void updateStatus(
+      @PathVariable Long postId,
+      @RequestParam Long userId, // JWT에서 가져올 경우 @RequestHeader로 처리 가능
+      @RequestParam String status
+  ) {
+
+    myExchangePostService.updatePostStatus(postId, userId, status);
+  }
+
+
+
 }
