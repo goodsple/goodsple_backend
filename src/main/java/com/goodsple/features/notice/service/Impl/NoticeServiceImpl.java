@@ -33,6 +33,12 @@ public class NoticeServiceImpl implements NoticeService {
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public NoticeDto getNotice(Long noticeId) {
+    return noticeMapper.selectNoticeById(noticeId);
+  }
+
+  @Override
   @Transactional
   public void updateNotice(NoticeDto dto) {
     noticeMapper.updateNotice(dto);

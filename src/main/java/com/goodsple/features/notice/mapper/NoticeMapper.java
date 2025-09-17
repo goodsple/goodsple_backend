@@ -10,6 +10,8 @@ public interface NoticeMapper {
 
   void insertNotice(NoticeDto notice);
 
+  NoticeDto selectNoticeById(Long noticeId);
+
   void updateNotice(NoticeDto notice);
 
   void deleteNotice(Long noticeId);
