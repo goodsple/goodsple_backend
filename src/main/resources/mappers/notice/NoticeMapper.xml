@@ -19,16 +19,85 @@
         VALUES (#{noticeId}, #{popupStart}, #{popupEnd}, #{popupImageUrl}, #{popupSummary})
     </insert>
 
+    <select id="selectNoticeById" resultMap="NoticeWithPopupResultMap">
+        SELECT n.notice_id,
+               n.user_id,
+               n.notice_title,
+               n.notice_content,
+               n.notice_created_at,
+               n.notice_updated_at,
+               n.is_popup,
+               p.popup_id,
+               p.popup_start,
+               p.popup_end,
+               p.popup_image_url,
+               p.popup_summary
+        FROM notice n
+                 LEFT JOIN notice_popup p ON n.notice_id = p.notice_id
+        WHERE n.notice_id = #{noticeId}
+    </select>
+
+    <resultMap id="NoticeWithPopupResultMap" type="com.goodsple.features.notice.dto.NoticeDto">
+        <id property="noticeId" column="notice_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="noticeTitle" column="notice_title"/>
+        <result property="noticeContent" column="notice_content"/>
+        <result property="noticeCreatedAt" column="notice_created_at"/>
+        <result property="noticeUpdatedAt" column="notice_updated_at"/>
+        <result property="isPopup" column="is_popup"/>
+        <association property="popupInfo" javaType="com.goodsple.features.notice.dto.PopupNoticeDto">
+            <id property="popupId" column="popup_id"/>
+            <result property="noticeId" column="notice_id"/>
+            <result property="popupStart" column="popup_start"/>
+            <result property="popupEnd" column="popup_end"/>
+            <result property="popupImageUrl" column="popup_image_url"/>
+            <result property="popupSummary" column="popup_summary"/>
+        </association>
+    </resultMap>
+
     <update id="updateNotice">
         UPDATE notice
-        SET notice_title = #{noticeTitle},
-            notice_content = #{noticeContent},
+        SET notice_title      = #{noticeTitle},
+            notice_content    = #{noticeContent},
             notice_updated_at = NOW(),
-            is_popup = #{isPopup}
+            is_popup          = #{isPopup}
+        WHERE notice_id = #{noticeId}
+    </update>
+
+    <update id="updatePopup">
+        UPDATE notice_popup
+        SET popup_start     = #{popupStart},
+            popup_end       = #{popupEnd},
+            popup_image_url = #{popupImageUrl},
+            popup_summary   = #{popupSummary}
         WHERE notice_id = #{noticeId}
     </update>
 
     <delete id="deleteNotice">
-        DELETE FROM notice WHERE notice_id = #{noticeId}
+        DELETE
+        FROM notice
+        WHERE notice_id = #{noticeId}
     </delete>
+
+
+    <select id="selectActivePopupNotices" resultMap="NoticeWithPopupResultMap">
+        SELECT n.notice_id,
+               n.user_id,
+               n.notice_title,
+               n.notice_content,
+               n.notice_created_at,
+               n.notice_updated_at,
+               n.is_popup,
+               p.popup_id,
+               p.popup_start,
+               p.popup_end,
+               p.popup_image_url,
+               p.popup_summary
+        FROM notice n
+                 LEFT JOIN notice_popup p ON n.notice_id = p.notice_id
+        WHERE n.is_popup = TRUE
+          AND CURRENT_DATE BETWEEN p.popup_start AND p.popup_end
+        ORDER BY n.notice_updated_at DESC
+        LIMIT 3
+    </select>
 </mapper>

@@ -32,11 +32,15 @@ public class NoticeListController {
     List<NoticeListDto> list = noticeListService.getNoticeList(title, isPopup, page, size);
     int totalCount = noticeListService.getNoticeListTotalCount(title, isPopup);
 
+    // totalPages 계산
+    int totalPages = (int) Math.ceil((double) totalCount / size);
+
     Map<String, Object> response = new HashMap<>();
     response.put("data", list);
     response.put("page", page);
     response.put("size", size);
     response.put("totalCount", totalCount);
+    response.put("totalPages", totalPages);
 
     return ResponseEntity.ok(response);
   }

@@ -17,12 +17,21 @@ public class NoticeController {
 
   private final NoticeService noticeService;
 
+  // 등록
   @PostMapping
   public ResponseEntity<Long> createNotice(@RequestBody NoticeDto dto) {
     Long noticeId = noticeService.createNotice(dto);
     return ResponseEntity.ok(noticeId);
   }
 
+  // 수정을 위해 조회
+  @GetMapping("/{noticeId}")
+  public ResponseEntity<NoticeDto> getNotice(@PathVariable Long noticeId) {
+    NoticeDto dto = noticeService.getNotice(noticeId);
+    return ResponseEntity.ok(dto);
+  }
+
+  // 수정
   @PutMapping("/{noticeId}")
   public ResponseEntity<Void> updateNotice(@PathVariable Long noticeId,
                                            @RequestBody NoticeDto dto) {
@@ -31,6 +40,7 @@ public class NoticeController {
     return ResponseEntity.ok().build();
   }
 
+  // 삭제
   @DeleteMapping("/{noticeId}")
   public ResponseEntity<Void> deleteNotice(@PathVariable Long noticeId) {
     noticeService.deleteNotice(noticeId);
