@@ -2,6 +2,8 @@ package com.goodsple.features.notice.service;
 
 import com.goodsple.features.notice.dto.NoticeDto;
 
+import java.util.List;
+
 
 public interface NoticeService {
 
@@ -9,5 +11,8 @@ public interface NoticeService {
   NoticeDto getNotice(Long noticeId);
   void updateNotice(NoticeDto dto);
   void deleteNotice(Long noticeId);
+
+  // 팝업 공지사항
+  List<NoticeDto> getActivePopups();
 
 }

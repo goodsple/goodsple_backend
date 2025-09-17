@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +44,19 @@ public class NoticeServiceImpl implements NoticeService {
   @Transactional
   public void updateNotice(NoticeDto dto) {
     noticeMapper.updateNotice(dto);
-    // 첨부파일이나 팝업 업데이트 로직 필요 시 구현
+
+    if (dto.getPopupInfo() != null) {
+      dto.getPopupInfo().setNoticeId(dto.getNoticeId());
+
+      if (dto.getPopupInfo().getPopupId() != null) {
+        // 기존 팝업 정보가 있으면 update
+        noticeMapper.updatePopup(dto.getPopupInfo());
+      } else {
+        // 기존 팝업이 없었으면 새로 insert
+        noticeMapper.insertPopup(dto.getPopupInfo());
+      }
+    }
+    // 체크박스 해제 시 isPopup만 false로 업데이트되고, 기존 popupInfo는 그대로 유지
   }
 
   @Override
@@ -50,4 +64,10 @@ public class NoticeServiceImpl implements NoticeService {
   public void deleteNotice(Long noticeId) {
     noticeMapper.deleteNotice(noticeId);
   }
+
+  @Transactional(readOnly = true)
+  public List<NoticeDto> getActivePopups() {
+    return noticeMapper.selectActivePopupNotices();
+  }
+
 }
