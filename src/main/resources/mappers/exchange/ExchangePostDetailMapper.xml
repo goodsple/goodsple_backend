@@ -3,8 +3,8 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.goodsple.features.exchangeDetail.mapper.ExchangePostDetailMapper">
-    <resultMap id="postDetailMap" type="com.goodsple.features.exchangeDetail.dto.PostDetailDto">
+<mapper namespace="com.goodsple.features.exchangedetail.mapper.ExchangePostDetailMapper">
+    <resultMap id="postDetailMap" type="com.goodsple.features.exchangedetail.dto.PostDetailDto">
         <id property="postId" column="exchange_post_id"/>
         <result property="title" column="exchange_post_title"/>
         <result property="description" column="post_description"/>
@@ -12,13 +12,13 @@
         <result property="status" column="post_trade_status"/>
         <result property="tradeType" column="post_trade_type"/>
         <result property="createdAt" column="exchange_post_created_at"/>
-        <result property="writerId" column="user_id"/>  <association property="writer" javaType="com.goodsple.features.exchangeDetail.dto.PostWriterDto">
+        <result property="writerId" column="user_id"/>  <association property="writer" javaType="com.goodsple.features.exchangedetail.dto.PostWriterDto">
         <result property="id" column="user_id"/>
         <result property="nickname" column="nickname"/>
         <result property="profileImageUrl" column="profile_image"/>
     </association>
 
-        <association property="delivery" javaType="com.goodsple.features.exchangeDetail.dto.DeliveryInfo">
+        <association property="delivery" javaType="com.goodsple.features.exchangedetail.dto.DeliveryInfo">
             <result property="normal" column="delivery_price_normal"/>
             <result property="half" column="delivery_price_half"/>
             <result property="halfDeliveryType" column="half_delivery_type"/>
