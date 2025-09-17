@@ -3,6 +3,7 @@ package com.goodsple.features.report.controller;
 import com.goodsple.features.report.dto.request.Report;
 import com.goodsple.features.report.dto.request.ReportReason;
 import com.goodsple.features.report.service.ReportService;
+import com.goodsple.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -10,6 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,11 +37,16 @@ public class ReportController {
     })
     @PostMapping
     public ResponseEntity<Void> createReport(
+            @AuthenticationPrincipal CustomUserDetails me,
             @RequestBody Report request,
             @RequestParam List<Long> reasonIds
     ) {
+        if (me == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        request.setReporterId(me.getUserId()); // 여기서 신고자 ID 주입
         reportService.createReport(request, reasonIds);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+
     }
 
     /**
