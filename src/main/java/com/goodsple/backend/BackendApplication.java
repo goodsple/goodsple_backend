@@ -1,4 +1,4 @@
-package com.goodsple.features.admin.backend;
+package com.goodsple.backend;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Contact;
