@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.myexchange.mapper.MyExchangePostMapper">
+
+    <select id="selectMyExchangePosts" resultType="com.goodsple.features.myexchange.dto.MyExchangePostDto">
+        SELECT
+        p.exchange_post_id        AS exchangePostId,
+        p.exchange_post_title     AS exchangePostTitle,
+        p.post_trade_status       AS postTradeStatus,
+        p.post_trade_type         AS postTradeType,
+        TO_CHAR(p.exchange_post_updated_at, 'YYYY.MM.DD HH24:MI') AS updatedAt,
+        p.post_location_name      AS postLocationName,
+        p.delivery_price_normal   AS deliveryPriceNormal,
+        p.delivery_price_half     AS deliveryPriceHalf
+        FROM exchange_post p
+        WHERE p.user_id = #{userId}
+        <if test="status != null">
+            AND p.post_trade_status = #{status}
+        </if>
+        ORDER BY p.exchange_post_updated_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countMyExchangePosts" resultType="int">
+        SELECT COUNT(*)
+        FROM exchange_post p
+        WHERE p.user_id = #{userId}
+        <if test="status != null and status != ''">
+            AND p.post_trade_status = #{status}
+        </if>
+    </select>
+</mapper>
