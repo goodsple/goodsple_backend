@@ -51,25 +51,25 @@ public class MyExchangePostController {
   }
 
 
-  @Operation(summary = "거래글 수정", description = "내 거래글의 내용을 수정합니다.")
-  @PutMapping("/{postId}")
-  public void updatePost(
-      @PathVariable Long postId,
-      @RequestParam Long userId,   // JWT에서 가져올 경우 @RequestHeader로 처리 가능
-      @RequestBody MyExchangePostUpdateDto updateDto
-  ) {
-    myExchangePostService.updatePost(postId, userId, updateDto);
-  }
-
-
-  @Operation(summary = "거래글 삭제", description = "내 거래글을 삭제합니다.")
-  @DeleteMapping("/{postId}")
-  public void deletePost(
-      @PathVariable Long postId,
-      @RequestParam Long userId // JWT에서 가져오면 @RequestHeader로 처리 가능
-  ) {
-    myExchangePostService.deletePost(postId, userId);
-  }
+//  @Operation(summary = "거래글 수정", description = "내 거래글의 내용을 수정합니다.")
+//  @PutMapping("/{postId}")
+//  public void updatePost(
+//      @PathVariable Long postId,
+//      @RequestParam Long userId,   // JWT에서 가져올 경우 @RequestHeader로 처리 가능
+//      @RequestBody MyExchangePostUpdateDto updateDto
+//  ) {
+//    myExchangePostService.updatePost(postId, userId, updateDto);
+//  }
+//
+//
+//  @Operation(summary = "거래글 삭제", description = "내 거래글을 삭제합니다.")
+//  @DeleteMapping("/{postId}")
+//  public void deletePost(
+//      @PathVariable Long postId,
+//      @RequestParam Long userId // JWT에서 가져오면 @RequestHeader로 처리 가능
+//  ) {
+//    myExchangePostService.deletePost(postId, userId);
+//  }
 
 
 

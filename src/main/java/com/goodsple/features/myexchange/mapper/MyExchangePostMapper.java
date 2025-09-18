@@ -28,11 +28,11 @@ public interface MyExchangePostMapper {
                        @Param("userId") Long userId,
                        @Param("status") String status);
 
-  int deletePost(@Param("postId") Long postId,
-                 @Param("userId") Long userId);
-
-  int updatePost(@Param("postId") Long postId,
-                 @Param("userId") Long userId,
-                 @Param("dto") MyExchangePostUpdateDto dto);
+//  int deletePost(@Param("postId") Long postId,
+//                 @Param("userId") Long userId);
+//
+//  int updatePost(@Param("postId") Long postId,
+//                 @Param("userId") Long userId,
+//                 @Param("dto") MyExchangePostUpdateDto dto);
 
 }

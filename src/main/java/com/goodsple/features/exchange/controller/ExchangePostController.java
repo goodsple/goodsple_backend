@@ -42,6 +42,15 @@ public class ExchangePostController {
     return ResponseEntity.created(location).body(Map.of("postId", postId));
   }
 
+
+  @Operation(summary = "교환 게시글 조회", description = "특정 교환 게시글 정보를 조회합니다.")
+  @GetMapping("/{postId}")
+  public ResponseEntity<ExchangePostDto> getExchangePost(@PathVariable Long postId) {
+    ExchangePostDto post = exchangePostService.getPost(postId);
+    return ResponseEntity.ok(post);
+  }
+
+
   @Operation(summary = "교환 게시글 수정", description = "기존 교환 게시글의 내용을 수정합니다.")
   @PutMapping("/{postId}")
   public ResponseEntity<Void> updateExchangePost(

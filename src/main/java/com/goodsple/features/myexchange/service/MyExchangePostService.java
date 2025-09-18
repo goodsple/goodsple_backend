@@ -10,8 +10,8 @@ public interface MyExchangePostService {
   int getMyPostsCount(Long userId, String status);
 
   void updatePostStatus(Long postId, Long userId, String status);
-  void deletePost(Long postId, Long userId);
-
-  // 거래글 수정 추가
-  void updatePost(Long postId, Long userId, MyExchangePostUpdateDto updateDto);
+//  void deletePost(Long postId, Long userId);
+//
+//  // 거래글 수정 추가
+//  void updatePost(Long postId, Long userId, MyExchangePostUpdateDto updateDto);
 }

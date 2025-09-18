@@ -10,4 +10,6 @@ public interface ExchangePostService {
 
   void deletePost(Long postId, Long userId);
 
+  ExchangePostDto getPost(Long postId);
+
 }

@@ -66,15 +66,34 @@ public class ExchangePostServiceImpl implements ExchangePostService {
     return newPostId;
   }
 
+
+  @Override
+  @Transactional(readOnly = true)
+  public ExchangePostDto getPost(Long postId) {
+    // 게시글 존재 여부 확인
+    ExchangePostDto post = exchangePostMapper.findPostById(postId);
+    if (post == null) {
+      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.");
+    }
+
+    // 이미지 URL 조회
+    List<String> imageUrls = exchangePostMapper.findImageUrlsByPostId(postId);
+    post.setImageUrls(imageUrls);
+
+    return post;
+  }
+
+
+  // 거래글 수정
   @Override
   @Transactional
   public void updatePost(Long postId, ExchangePostDto post, Long userId) {
 
-    Optional<Long> postUserId = exchangePostMapper.findUserIdByPostId(postId);
-    if (!postUserId.isPresent()) {
+    Long postUserId = exchangePostMapper.findUserIdByPostId(postId);
+    if (postUserId == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.");
     }
-    if (!postUserId.get().equals(userId)) {
+    if (!postUserId.equals(userId)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "게시글을 수정할 권한이 없습니다.");
     }
 
@@ -107,11 +126,11 @@ public class ExchangePostServiceImpl implements ExchangePostService {
   @Transactional
   public void deletePost(Long postId, Long userId) {
 
-    Optional<Long> postUserId = exchangePostMapper.findUserIdByPostId(postId);
-    if (!postUserId.isPresent()) {
+    Long postUserId = exchangePostMapper.findUserIdByPostId(postId);
+    if (postUserId == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.");
     }
-    if (!postUserId.get().equals(userId)) {
+    if (!postUserId.equals(userId)) {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "게시글을 삭제할 권한이 없습니다.");
     }
 

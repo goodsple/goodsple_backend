@@ -35,19 +35,19 @@ public class MyExchangePostServiceImpl implements MyExchangePostService {
     }
   }
 
-  @Override
-  public void deletePost(Long postId, Long userId) {
-    int deleted = myExchangePostMapper.deletePost(postId, userId);
-    if (deleted != 1) {
-      throw new RuntimeException("삭제 실패 또는 권한 없음");
-    }
-  }
-
-  @Override
-  public void updatePost(Long postId, Long userId, MyExchangePostUpdateDto updateDto) {
-    int updated = myExchangePostMapper.updatePost(postId, userId, updateDto);
-    if (updated != 1) {
-      throw new RuntimeException("거래글 수정 실패 또는 권한 없음");
-    }
-  }
+//  @Override
+//  public void deletePost(Long postId, Long userId) {
+//    int deleted = myExchangePostMapper.deletePost(postId, userId);
+//    if (deleted != 1) {
+//      throw new RuntimeException("삭제 실패 또는 권한 없음");
+//    }
+//  }
+//
+//  @Override
+//  public void updatePost(Long postId, Long userId, MyExchangePostUpdateDto updateDto) {
+//    int updated = myExchangePostMapper.updatePost(postId, userId, updateDto);
+//    if (updated != 1) {
+//      throw new RuntimeException("거래글 수정 실패 또는 권한 없음");
+//    }
+//  }
 }

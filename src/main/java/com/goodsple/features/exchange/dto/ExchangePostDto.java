@@ -47,8 +47,8 @@ public class ExchangePostDto {
   private String halfDeliveryType; // 반값택배 상세 옵션(둘다 가능, GS25만 가능, CU만 가능)
   private Integer deliveryPriceHalf; // 반값 택배비 (선택 사항)
 
-  @NotNull(message = "이미지 URL은 최소 하나 이상 필요합니다.")
-  @Size(min = 1, message = "이미지 URL은 최소 하나 이상 필요합니다.")
+  @NotNull(message = "이미지 URL은 하나 이상 필요합니다.")
+//  @Size(min = 1, message = "이미지 URL은 최소 하나 이상 필요합니다.")
   private List<String> imageUrls;
 
 
