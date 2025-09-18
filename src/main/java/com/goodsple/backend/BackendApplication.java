@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 @MapperScan(basePackages = {
     "com.goodsple.features.admin.user.mapper",
     "com.goodsple.features.admin.auction.mapper",
+    "com.goodsple.features.admin.prohibitedWord.mapper",
     "com.goodsple.features.auth.mapper",
     "com.goodsple.features.category.mapper",
     "com.goodsple.features.admin.notice.mapper",
@@ -25,7 +26,6 @@ import org.springframework.web.client.RestTemplate;
     "com.goodsple.features.mybids.mapper",
     "com.goodsple.features.myexchange.mapper",
     "com.goodsple.features.noticelist.mapper"
-
 })
 
 
