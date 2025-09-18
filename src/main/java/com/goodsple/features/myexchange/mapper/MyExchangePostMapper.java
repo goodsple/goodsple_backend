@@ -32,4 +32,9 @@ public interface MyExchangePostMapper {
       @Param("status") String status
   );
 
+  int deletePost(
+      @Param("postId") Long postId,
+      @Param("userId") Long userId
+  );
+
 }

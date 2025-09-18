@@ -32,4 +32,12 @@ public class MyExchangePostService {
     }
   }
 
+  // 거래글 삭제
+  public void deletePost(Long postId, Long userId) {
+    int deleted = myExchangePostMapper.deletePost(postId, userId);
+    if (deleted != 1) {
+      throw new RuntimeException("삭제 실패 또는 권한 없음");
+    }
+  }
+
 }

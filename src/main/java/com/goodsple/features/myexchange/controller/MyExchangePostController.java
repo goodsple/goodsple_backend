@@ -50,5 +50,15 @@ public class MyExchangePostController {
   }
 
 
+  @Operation(summary = "거래글 삭제", description = "내 거래글을 삭제합니다.")
+  @DeleteMapping("/{postId}")
+  public void deletePost(
+      @PathVariable Long postId,
+      @RequestParam Long userId // JWT에서 가져오면 @RequestHeader로 처리 가능
+  ) {
+    myExchangePostService.deletePost(postId, userId);
+  }
+
+
 
 }

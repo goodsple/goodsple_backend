@@ -32,4 +32,11 @@
             AND p.post_trade_status = #{status}
         </if>
     </select>
+
+    <delete id="deletePost">
+        DELETE FROM exchange_post
+        WHERE exchange_post_id = #{postId} AND user_id = #{userId}
+    </delete>
+
+
 </mapper>
