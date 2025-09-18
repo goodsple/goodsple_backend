@@ -79,3 +79,11 @@ email:
     subject: "이메일 인증 코드"   # 이메일 제목
     from-address: goodsple2@gmail.com  # 실제 발신 이메일 주소
     body-template: "이메일 인증 코드: {code}"  # 이메일 본문 템플릿
+
+# 토스페이먼츠 설정 추가
+payment:
+  toss:
+    # 아래 키는 실제 토스페이먼츠에서 제공하는 테스트용 시크릿 키입니다.
+    # 이 키를 사용하면 실제 돈이 나가지 않습니다.
+    secret-key: test_sk_zXLkKEypNArWvJ2Vj8DX7pok4j0x
+    # 나중에 실제 운영으로 전환할 때 이 키만 실제 키로 바꿔주면 됩니다.
