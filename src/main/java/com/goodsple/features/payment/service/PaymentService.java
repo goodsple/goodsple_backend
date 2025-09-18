@@ -4,6 +4,8 @@ import com.goodsple.features.payment.dto.request.PaymentConfirmRequest;
 import com.goodsple.features.payment.dto.response.PaymentInfoResponse;
 import com.goodsple.features.payment.mapper.PaymentMapper;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
+
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
     private final PaymentMapper paymentMapper;
     private final RestTemplate restTemplate; // BackendApplication에 Bean으로 등록되어 있음
@@ -55,7 +59,7 @@ public class PaymentService {
         // 4. 토스페이먼츠로 보낼 요청 본문(body) 생성
         Map<String, String> bodyMap = Map.of(
                 "paymentKey", request.getPaymentKey(),
-                "orderId", "ORD_" + request.getOrderId(), // DB의 숫자 ID 앞에 접두사를 붙여 고유한 주문 ID 생성
+                "orderId", request.getTossOrderId(), // [수정] 우리 orderId 대신 토스 orderId를 사용
                 "amount", request.getAmount().toString()
         );
 
@@ -79,7 +83,7 @@ public class PaymentService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "결제 승인에 실패했습니다.");
             }
         } catch (Exception e) {
-            // 네트워크 오류 또는 토스 서버 오류
+            log.error("토스페이먼츠 승인 API 호출 중 예외 발생", e); // [수정] 예외 로그를 남겨서 원인을 명확히 확인
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "결제 승인 중 오류가 발생했습니다.");
         }
     }

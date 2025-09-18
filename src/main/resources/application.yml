@@ -85,5 +85,5 @@ payment:
   toss:
     # 아래 키는 실제 토스페이먼츠에서 제공하는 테스트용 시크릿 키입니다.
     # 이 키를 사용하면 실제 돈이 나가지 않습니다.
-    secret-key: test_sk_zXLkKEypNArWvJ2Vj8DX7pok4j0x
+    secret-key: test_sk_pP2YxJ4K87qKNmzvR22zVRGZwXLO
     # 나중에 실제 운영으로 전환할 때 이 키만 실제 키로 바꿔주면 됩니다.

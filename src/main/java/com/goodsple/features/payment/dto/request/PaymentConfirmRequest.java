@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 public class PaymentConfirmRequest {
     private String paymentKey;
     private String orderId;
+    private String tossOrderId; // [추가]
     private BigDecimal amount;
     private ShippingInfoRequest shippingInfo;
 }

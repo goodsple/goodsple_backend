@@ -11,6 +11,7 @@
 
     <select id="findWonAuctionsByUserId" resultType="com.goodsple.features.mybids.dto.response.MyBidsResponse">
         SELECT
+            o.order_id AS orderId,  -- [추가] orders 테이블의 ID를 orderId로 선택합니다.
             a.auction_id AS auctionId,
             a.auction_title AS productName,
             (SELECT ai.auction_image_url FROM auction_images ai WHERE ai.auction_id = a.auction_id LIMIT 1) AS imageUrl,
