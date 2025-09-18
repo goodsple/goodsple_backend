@@ -37,13 +37,17 @@ public class ReportController {
     })
     @PostMapping
     public ResponseEntity<Void> createReport(
-            @AuthenticationPrincipal CustomUserDetails me,
+            Authentication authentication,
             @RequestBody Report request,
             @RequestParam List<Long> reasonIds
     ) {
-        if (me == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-        request.setReporterId(me.getUserId()); // 여기서 신고자 ID 주입
+        CustomUserDetails me = (CustomUserDetails) authentication.getPrincipal();
+        Long userId = me.getUserId();          // ← 신고자 ID
+        request.setReporterId(userId);
         reportService.createReport(request, reasonIds);
         return ResponseEntity.status(HttpStatus.CREATED).build();
 
