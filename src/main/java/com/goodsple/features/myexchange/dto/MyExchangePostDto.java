@@ -1,9 +1,15 @@
 package com.goodsple.features.myexchange.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
-  @Data
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
   public class MyExchangePostDto {
 
     private Long exchangePostId;          // exchange_post_id

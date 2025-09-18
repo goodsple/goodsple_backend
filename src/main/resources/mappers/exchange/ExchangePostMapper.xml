@@ -21,6 +21,32 @@
         VALUES (#{exchangePostId}, #{imageUrl}, #{sortOrder})
     </insert>
 
+    <!-- 게시글 전체 정보 가져옴 -->
+    <select id="findPostById" resultType="com.goodsple.features.exchange.dto.ExchangePostDto">
+        SELECT
+            exchange_post_id AS exchangePostId,
+            third_cate_id AS thirdCateId,
+            exchange_post_title AS exchangePostTitle,
+            post_description AS postDescription,
+            post_location_code AS postLocationCode,
+            post_location_name AS postLocationName,
+            post_hope_region AS postHopeRegion,
+            post_trade_type AS postTradeType,
+            delivery_price_normal AS deliveryPriceNormal,
+            delivery_price_half AS deliveryPriceHalf,
+            half_delivery_type AS halfDeliveryType
+        FROM exchange_post
+        WHERE exchange_post_id = #{postId}
+    </select>
+
+    <!-- 게시글 작성자 ID 조회 -->
+    <select id="findUserIdByPostId" resultType="java.lang.Long">
+        SELECT user_id
+        FROM exchange_post
+        WHERE exchange_post_id = #{postId}
+    </select>
+
+
     <update id="updateExchangePost" parameterType="map">
         UPDATE exchange_post
         SET third_cate_id       = #{post.thirdCateId},
@@ -28,10 +54,13 @@
             post_description    = #{post.postDescription},
             post_hope_region    = #{post.postHopeRegion},
             post_trade_type     = #{post.postTradeType},
-            delivery_price_normal = #{post.deliveryPriceNormal}, delivery_price_half = #{post.deliveryPriceHalf}, exchange_post_updated_at = now()
+            delivery_price_normal = #{post.deliveryPriceNormal},
+            delivery_price_half = #{post.deliveryPriceHalf},
+            exchange_post_updated_at = now()
         WHERE
             exchange_post_id = #{postId}
     </update>
+
 
     <delete id="deleteExchangePostImages">
         DELETE
