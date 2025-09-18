@@ -1,6 +1,7 @@
 package com.goodsple.features.myexchange.controller;
 
 import com.goodsple.features.myexchange.dto.MyExchangePostDto;
+import com.goodsple.features.myexchange.dto.MyExchangePostUpdateDto;
 import com.goodsple.features.myexchange.service.MyExchangePostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,6 +48,17 @@ public class MyExchangePostController {
   ) {
 
     myExchangePostService.updatePostStatus(postId, userId, status);
+  }
+
+
+  @Operation(summary = "거래글 수정", description = "내 거래글의 내용을 수정합니다.")
+  @PutMapping("/{postId}")
+  public void updatePost(
+      @PathVariable Long postId,
+      @RequestParam Long userId,   // JWT에서 가져올 경우 @RequestHeader로 처리 가능
+      @RequestBody MyExchangePostUpdateDto updateDto
+  ) {
+    myExchangePostService.updatePost(postId, userId, updateDto);
   }
 
 

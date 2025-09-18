@@ -24,6 +24,7 @@
         LIMIT #{size} OFFSET #{offset}
     </select>
 
+    <!-- 내 거래글 개수 -->
     <select id="countMyExchangePosts" resultType="int">
         SELECT COUNT(*)
         FROM exchange_post p
@@ -33,9 +34,34 @@
         </if>
     </select>
 
+    <!-- 거래상태 변경 -->
+    <update id="updatePostStatus">
+        UPDATE exchange_post
+        SET post_trade_status = #{status},
+            exchange_post_updated_at = NOW()
+        WHERE exchange_post_id = #{postId}
+          AND user_id = #{userId}
+    </update>
+
+    <!-- 거래글 수정 -->
+    <update id="updatePost">
+        UPDATE exchange_post
+        SET exchange_post_title   = #{dto.exchangePostTitle},
+            exchange_post_content = #{dto.exchangePostContent},
+            post_trade_type       = #{dto.postTradeType},
+            post_location_name    = #{dto.location},
+            delivery_price_normal = #{dto.deliveryFee},
+            image_url             = #{dto.imageUrl},
+            exchange_post_updated_at = NOW()
+        WHERE exchange_post_id = #{postId}
+          AND user_id = #{userId}
+    </update>
+
+    <!-- 거래글 삭제 -->
     <delete id="deletePost">
         DELETE FROM exchange_post
-        WHERE exchange_post_id = #{postId} AND user_id = #{userId}
+        WHERE exchange_post_id = #{postId}
+          AND user_id = #{userId}
     </delete>
 
 
