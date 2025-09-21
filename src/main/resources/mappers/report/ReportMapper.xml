@@ -36,9 +36,9 @@
         ) VALUES (
                      #{reporterId},
                      #{reportTargetUserId},
-                     #{targetType},
-                     #{targetId},
-                     COALESCE(#{reportStatus}, 'OPEN'),
+                     CAST(#{targetType,javaType=String} AS report_target_enum),
+                     #{targetId,jdbcType=BIGINT},
+                     COALESCE(#{reportStatus,javaType=String}::report_status_enum, 'pending'::report_status_enum),
                      #{actionTaken},
                      COALESCE(#{reportCreatedAt}, NOW()),
                      #{processedAt},
@@ -88,14 +88,14 @@
     <!-- ===== Report-Reason Mapping ===== -->
     <insert id="insertReasonMapping"
             parameterType="com.goodsple.features.report.dto.request.ReportReasonMapping">
-        INSERT INTO report_reason_mapping (report_id, report_reason_id)
+        INSERT INTO report_reason_map (report_id, report_reason_id)
         VALUES (#{reportId}, #{reportReasonId})
             ON CONFLICT (report_id, report_reason_id) DO NOTHING
     </insert>
 
     <select id="selectReasonIdsByReport" parameterType="long" resultType="long">
         SELECT report_reason_id
-        FROM report_reason_mapping
+        FROM report_reason_map
         WHERE report_id = #{reportId}
         ORDER BY report_reason_id
     </select>
