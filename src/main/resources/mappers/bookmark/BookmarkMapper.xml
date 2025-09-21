@@ -1,0 +1,90 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.goodsple.features.bookmark.mapper.BookmarkMapper">
+
+    <insert id="save" parameterType="com.goodsple.features.bookmark.entity.Bookmark"
+            useGeneratedKeys="true" keyProperty="bookmarkId">
+        INSERT INTO bookmark (user_id, folder_id, exchange_post_id, event_post_id)
+        VALUES (#{userId}, #{folderId}, #{exchangePostId}, #{eventPostId})
+    </insert>
+
+    <select id="findByUserId" parameterType="long" resultType="com.goodsple.features.bookmark.entity.Bookmark">
+        SELECT bookmark_id AS bookmarkId,
+               user_id AS userId,
+               folder_id AS folderId,
+               exchange_post_id AS exchangePostId,
+               event_post_id AS eventPostId,
+               bookmarked_at AS bookmarkedAt
+        FROM bookmark
+        WHERE user_id = #{userId}
+        ORDER BY bookmarked_at DESC
+    </select>
+
+    <select id="exists" parameterType="java.util.Map" resultType="boolean">
+        SELECT EXISTS(
+        SELECT 1
+        FROM bookmark
+        WHERE user_id = #{userId}
+        <if test="exchangePostId != null">
+            AND exchange_post_id = #{exchangePostId}
+        </if>
+        <if test="eventPostId != null">
+            AND event_post_id = #{eventPostId}
+        </if>
+        )
+    </select>
+
+    <delete id="delete" parameterType="long">
+        DELETE FROM bookmark WHERE bookmark_id = #{bookmarkId}
+    </delete>
+
+    <select id="findByFolderId" parameterType="long" resultType="com.goodsple.features.bookmark.entity.Bookmark">
+        SELECT bookmark_id AS bookmarkId,
+               user_id AS userId,
+               folder_id AS folderId,
+               exchange_post_id AS exchangePostId,
+               event_post_id AS eventPostId,
+               bookmarked_at AS bookmarkedAt
+        FROM bookmark
+        WHERE folder_id = #{folderId}
+        ORDER BY bookmarked_at DESC
+    </select>
+
+    <select id="findByUserIdAndFolderId" parameterType="java.util.Map" resultType="com.goodsple.features.bookmark.entity.Bookmark">
+        SELECT bookmark_id AS bookmarkId,
+               user_id AS userId,
+               folder_id AS folderId,
+               exchange_post_id AS exchangePostId,
+               event_post_id AS eventPostId,
+               bookmarked_at AS bookmarkedAt
+        FROM bookmark
+        WHERE user_id = #{userId}
+          AND folder_id = #{folderId}
+        ORDER BY bookmarked_at DESC
+    </select>
+
+    <update id="updateFolder" parameterType="java.util.Map">
+        UPDATE bookmark
+        SET folder_id = #{targetFolderId}
+        WHERE bookmark_id = #{bookmarkId}
+          AND user_id = #{userId}
+    </update>
+
+    <select id="countByExchangePostId" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM bookmark
+        WHERE exchange_post_id = #{postId}
+    </select>
+
+    <select id="countByEventPostId" parameterType="long" resultType="int">
+        SELECT COUNT(*) FROM bookmark
+        WHERE event_post_id = #{postId}
+    </select>
+
+    <delete id="deleteByUserAndBookmarkId" parameterType="java.util.Map">
+        DELETE FROM bookmark
+        WHERE bookmark_id = #{bookmarkId}
+          AND user_id = #{userId}
+    </delete>
+
+
+</mapper>

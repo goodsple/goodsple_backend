@@ -1,0 +1,30 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.goodsple.features.admin.prohibitedWord.mapper.ProhibitedWordMapper">
+
+    <!-- 전체 조회 -->
+    <select id="selectAllWords" resultType="com.goodsple.features.admin.prohibitedWord.dto.ProhibitedWordDTO">
+        SELECT word_id AS wordId,
+               word,
+               word_is_active AS wordIsActive,
+               word_created_at AS wordCreatedAt
+        FROM prohibited_word
+        ORDER BY word_created_at DESC
+    </select>
+
+    <!-- 금칙어 추가 -->
+    <insert id="insertWord">
+        INSERT INTO prohibited_word (word)
+        VALUES (#{word})
+    </insert>
+
+    <!-- 금칙어 삭제 -->
+    <delete id="deleteWords">
+        DELETE FROM prohibited_word
+        WHERE word_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

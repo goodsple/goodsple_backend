@@ -67,15 +67,15 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "회원 탈퇴", description = "로그인된 유저의 계정을 삭제합니다.")
+    @Operation(summary = "회원 탈퇴", description = "로그인된 유저의 계정을 탈퇴 처리(소프트 삭제)합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "탈퇴 성공"),
             @ApiResponse(responseCode = "401", description = "로그인 필요")
     })
     @DeleteMapping("/me")
-    public ResponseEntity<Void> deleteMyProfile(Authentication authentication) {
+    public ResponseEntity<Void> withdrawMyAccount(Authentication authentication) {
         CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
-        userService.deleteMyProfile(user.getUserId());
+        userService.withdrawMyAccount(user.getUserId());
         return ResponseEntity.noContent().build();
     }
 }

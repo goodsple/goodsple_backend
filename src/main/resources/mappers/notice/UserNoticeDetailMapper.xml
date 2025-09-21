@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.noticelist.mapper.UserNoticeDetailMapper">
+    <select id="selectNoticeById" resultType="com.goodsple.features.noticelist.dto.UserNoticeDetailDto">
+        SELECT
+            notice_id AS noticeId,
+            notice_title AS noticeTitle,
+            notice_content AS noticeContent,
+            notice_created_at AS noticeCreatedAt,
+            notice_updated_at AS noticeUpdatedAt
+        FROM notice
+        WHERE notice_id = #{noticeId}
+    </select>
+</mapper>

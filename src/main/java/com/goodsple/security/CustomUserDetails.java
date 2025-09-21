@@ -18,6 +18,8 @@ public class CustomUserDetails implements UserDetails {
     private final String username;
     // 암호화된 비밀번호
     private final String password;
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 1. 닉네임 필드를 추가합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    private final String nickname;
     // 사용자 권한 목록
     private final Collection<? extends GrantedAuthority> authorities;
 
@@ -28,6 +30,8 @@ public class CustomUserDetails implements UserDetails {
         this.userId      = u.getUserId();
         this.username    = u.getLoginId();
         this.password    = u.getPassword();
+        // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 2. 생성자에서 닉네임을 초기화합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+        this.nickname    = u.getNickname();
         this.authorities = auths;
     }
 
@@ -36,6 +40,11 @@ public class CustomUserDetails implements UserDetails {
      */
     public Long getUserId() {
         return userId;
+    }
+
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 3. 닉네임을 반환하는 getter 메소드를 추가합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    public String getNickname() {
+        return nickname;
     }
 
     // UserDetails 필수 구현 메서드 =======================================

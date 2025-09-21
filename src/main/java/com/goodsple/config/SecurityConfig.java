@@ -2,12 +2,18 @@ package com.goodsple.config;
 
 import com.goodsple.security.JwtAuthenticationFilter;
 import com.goodsple.security.JwtTokenProvider;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.messaging.simp.config.ChannelRegistration;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -17,6 +23,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 import java.util.List;
+
+import static org.springframework.messaging.simp.stomp.StompCommand.DISCONNECT;
 
 @Configuration
 public class SecurityConfig {
@@ -31,49 +39,69 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())  // CSRF 보안 기능 끄기 (API 서버라서)
+                // 1. CSRF 비활성화 (API 전용이라 세션 기반 공격 위험 낮음)
+                .csrf(csrf -> csrf.disable())
+
+                // 2. CORS 설정
                 .cors(cors -> cors.configurationSource(request -> {
                     var config = new org.springframework.web.cors.CorsConfiguration();
                     config.setAllowedOrigins(List.of("http://localhost:5173")); // 프론트 도메인 허용
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    // 여기에 Authorization, Content-Type 등 구체적으로 명시
-//                    config.setAllowedHeaders(List.of("Authorization","Content-Type","Accept"));
+                    config.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
+                    // AllowedHeaders는 한 번만 설정 (필요 시 * 로)
                     config.setAllowedHeaders(List.of("*"));
                     config.setAllowCredentials(true);
+                    config.setMaxAge(3600L);
                     return config;
                 }))
+                // 3. 세션 사용 안 함 (Stateless JWT)
                 .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // JWT 사용 → 세션 안 씀
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+                // 4. 기본 제공 폼 로그인, HTTP Basic 비활성화
                 .formLogin(form -> form.disable()) // 폼 로그인 사용 안 함
                 .httpBasic(basic -> basic.disable()) // 기본 인증창 안 띄움
+
                 // 인증/권한 에러 발생 시 JSON 응답 주기 위한 설정
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(authenticationEntryPoint()) // 로그인 안 했을 때 401 처리
                         .accessDeniedHandler(accessDeniedHandler())           // 권한 없을 때 403 처리
                 )
+                // 6. 요청별 인가 정책
                 .authorizeHttpRequests(auth -> auth
-                        // 1) CORS preflight(OPTIONS)를 인증 없이 허용
+                        // CORS preflight(OPTIONS)를 인증 없이 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+                        .dispatcherTypeMatchers(DispatcherType.ERROR, DispatcherType.FORWARD).permitAll()
+                        .requestMatchers("/error").permitAll()
 
-                        // 2) 로그인 전 허용 경로
+                        // 인증·인가 없이 접근 허용할 URI
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/admin/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reports/reasons").permitAll()
+//                    .requestMatchers("/api/notices").permitAll()
 
-                        // 신고 등록은 로그인 필요
+                        // 로그인 필요
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/reports").authenticated()
 
-                        // 3) 그 외 모든 요청은 JWT 인증 필요
-                        .anyRequest().authenticated()
+                        // 채팅 관련
+                        .requestMatchers(HttpMethod.GET, "/api/chat/history/**").permitAll() // GET 요청 테스트 허용
+                        .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
+
+                        .requestMatchers("/api/main/**").permitAll()
+
+                        // 그 외 모든 요청은 JWT 인증 필요
+                        .anyRequest().permitAll()
                 )
-//                .addFilterBefore(
-//                        new JwtAuthenticationFilter(jwtProvider),
+
+                // 7. JWT 필터 등록 (인가 설정 후 실행되도록)
+                .addFilterBefore(
+                        new JwtAuthenticationFilter(jwtProvider),
+                        UsernamePasswordAuthenticationFilter.class
 //                        SecurityContextPersistenceFilter.class
-//                );
-                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider),
-                        UsernamePasswordAuthenticationFilter.class);
+                );
+
 
         return http.build();
     }
@@ -82,9 +110,11 @@ public class SecurityConfig {
     @Bean
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return (request, response, authException) -> {
+            System.out.println("[401] " + request.getMethod() + " " + request.getServletPath() +
+                    " auth=" + (org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication()));
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"message\": \"❗아이디 또는 비밀번호가 일치하지 않습니다.\"}");
+            response.getWriter().write("{\"message\": \"❗로그인이 만료되었거나 유효하지 않습니다.\"}");
         };
     }
 
@@ -104,6 +134,31 @@ public class SecurityConfig {
         // 비밀번호 암호화 (Spring Security에서 제공)
         // Configuration에서 Bean으로 등록해서 사용하는 방식
         return new BCryptPasswordEncoder();
+    }
+
+    // --- WebSocket용 JWT Interceptor ---
+    @Bean
+    public ChannelInterceptor websocketAuthInterceptor() {
+        return new ChannelInterceptor() {
+            @Override
+            public org.springframework.messaging.Message<?> preSend(org.springframework.messaging.Message<?> message,
+                                                                    org.springframework.messaging.MessageChannel channel) {
+                StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
+                if (accessor != null && accessor.getCommand() != null) {
+                    switch (accessor.getCommand()) {
+                        case CONNECT -> {
+                            String token = accessor.getFirstNativeHeader("Authorization");
+                            if (token != null && token.startsWith("Bearer ")) {
+                                token = token.substring(7);
+                                Authentication auth = jwtProvider.getAuthentication(token);
+                                accessor.setUser(auth);
+                            }
+                        }
+                    }
+                }
+                return message;
+            }
+        };
     }
 
 }
