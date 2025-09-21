@@ -1,7 +1,6 @@
 package com.goodsple.features.category.service;
 
 import com.goodsple.features.category.entity.SecondCate;
-import com.goodsple.features.category.entity.SecondCate;
 import com.goodsple.features.category.mapper.SecondCateMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,13 +11,22 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SecondCateServiceImpl implements SecondCateService{
+
     private final SecondCateMapper secondCateMapper;
+
+//    @Override
+//    @Transactional
+//    public void createSecondCate(SecondCate secondCate) {
+//        secondCateMapper.insertCate(secondCate);
+//    }
 
     @Override
     @Transactional
-    public void createSecondCate(SecondCate secondCate) {
+    public SecondCate createSecondCate(SecondCate secondCate) {
         secondCateMapper.insertCate(secondCate);
+        return secondCate; // DB 저장 후 ID가 들어간 객체 반환
     }
+
 
     @Override
     public List<SecondCate> getAllSecondCate() {
@@ -37,9 +45,9 @@ public class SecondCateServiceImpl implements SecondCateService{
 
     @Override
     @Transactional
-    public void updateSecondCate(SecondCate SecondCate)
+    public void updateSecondCate(SecondCate secondCate)
     {
-        secondCateMapper.updateCate(SecondCate);
+        secondCateMapper.updateCate(secondCate);
     }
 
     @Override

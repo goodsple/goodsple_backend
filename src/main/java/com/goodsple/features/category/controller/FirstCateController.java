@@ -31,7 +31,7 @@ public class FirstCateController {
     })
     @PostMapping
     public ResponseEntity<Void> createFirstCate(
-            @RequestParam FirstCate firstCate)
+            @RequestBody  FirstCate firstCate)
     {
         firstCateService.createFirstCate(firstCate);
         return ResponseEntity.status(HttpStatus.CREATED).build();

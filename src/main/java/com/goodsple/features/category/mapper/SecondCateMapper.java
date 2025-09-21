@@ -11,8 +11,8 @@ public interface SecondCateMapper {
     @Select("SELECT * FROM second_cate WHERE second_cate_id = #{secondCateId}")
     SecondCate getSecondCateById(@Param("secondCateId") Long secondCateId);
 
-    @Select("SELECT * FROM second_cate WHERE first_cate_id = #{firstCateId}")
-    List<SecondCate> getAllSecondCateByFirstCateId(@Param("firstCateId") Long firstCateId);
+    @Select("SELECT second_cate_id FROM second_cate WHERE first_cate_id = #{firstCateId}")
+    Long getSecondCateIdByFirstCateId(@Param("firstCateId") Long firstCateId);
 
     @Select("SELECT * FROM second_cate")
     List<SecondCate> getAllSecondCate();
@@ -26,4 +26,8 @@ public interface SecondCateMapper {
 
     @Delete("DELETE FROM second_cate WHERE second_cate_id = #{secondCateId}")
     void deleteCateById(@Param("secondCateId") Long id);
+
+    @Select("SELECT * FROM second_cate WHERE first_cate_id = #{firstCateId}")
+    List<SecondCate> getAllSecondCateByFirstCateId(@Param("firstCateId") Long firstCateId);
+
 }

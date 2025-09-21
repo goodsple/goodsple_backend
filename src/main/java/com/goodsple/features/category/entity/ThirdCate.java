@@ -7,8 +7,6 @@ import lombok.Setter;
 
 @Data
 @NoArgsConstructor
-@Getter
-@Setter
 public class ThirdCate {
     private Long thirdCateId;
     private String cateName;
