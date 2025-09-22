@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.admin.report.mapper.AdminReportMapper">
+
+    <!-- ===================== 목록 ===================== -->
+    <resultMap id="AdminReportListItemMap" type="com.goodsple.features.admin.report.dto.AdminReportListItem">
+        <id     property="reportId"           column="report_id"/>
+        <result property="status"             column="status"/>
+        <result property="targetType"         column="target_type"/>
+        <result property="targetId"           column="target_id"/>
+        <result property="reporterId"         column="reporter_id"/>
+        <result property="reporterNickname"   column="reporter_nickname"/>
+        <result property="targetUserId"       column="target_user_id"/>
+        <result property="targetNickname"     column="target_nickname"/>
+        <result property="createdAt"          column="created_at"/>
+        <!-- reasons는 아래 select에서 array_agg로 넘김 -->
+        <collection property="reasons" ofType="string" column="reasons"/>
+    </resultMap>
+
+    <select id="selectReportList"
+            parameterType="com.goodsple.features.admin.report.dto.AdminReportSearchCond"
+            resultMap="AdminReportListItemMap">
+        <bind name="limit"  value="cond.size == null ? 20 : cond.size"/>
+        <bind name="offset" value="(cond.page == null ? 0 : cond.page) * (cond.size == null ? 20 : cond.size)"/>
+
+        SELECT
+        r.report_id,
+        r.report_status::text   AS status,
+        r.target_type::text     AS target_type,
+        r.target_id,
+        r.reporter_id,
+        u_rep.nickname          AS reporter_nickname,
+        r.report_target_user_id AS target_user_id,
+        u_tgt.nickname          AS target_nickname,
+        r.report_created_at     AS created_at,
+        COALESCE(
+        ARRAY_AGG(DISTINCT rr.report_reason_text)
+        FILTER (WHERE rr.report_reason_text IS NOT NULL),
+        '{}'
+        )                       AS reasons
+        FROM reports r
+        LEFT JOIN users u_rep ON u_rep.user_id = r.reporter_id
+        LEFT JOIN users u_tgt ON u_tgt.user_id = r.report_target_user_id
+        LEFT JOIN report_reason_mapping m ON m.report_id = r.report_id
+        LEFT JOIN report_reasons rr ON rr.report_reason_id = m.report_reason_id
+        <where>
+            <if test="cond.reportId != null">
+                AND r.report_id = #{cond.reportId}
+            </if>
+            <if test="cond.reporterId != null">
+                AND r.reporter_id = #{cond.reporterId}
+            </if>
+            <if test="cond.targetUserId != null">
+                AND r.report_target_user_id = #{cond.targetUserId}
+            </if>
+            <if test="cond.targetId != null">
+                AND r.target_id = #{cond.targetId}
+            </if>
+
+            <!-- 상태/타입은 enum 컬럼을 text로 비교하면 파라미터 캐스팅 신경 안 써도 됨 -->
+            <if test="cond.statuses != null and cond.statuses.size() &gt; 0">
+                AND r.report_status::text IN
+                <foreach collection="cond.statuses" item="st" open="(" separator="," close=")">
+                    #{st}
+                </foreach>
+            </if>
+            <if test="cond.targetTypes != null and cond.targetTypes.size() &gt; 0">
+                AND r.target_type::text IN
+                <foreach collection="cond.targetTypes" item="tt" open="(" separator="," close=")">
+                    #{tt}
+                </foreach>
+            </if>
+
+            <if test="cond.createdFrom != null">
+                AND r.report_created_at &gt;= #{cond.createdFrom}::date
+            </if>
+            <if test="cond.createdTo != null">
+                AND r.report_created_at &lt; (#{cond.createdTo}::date + INTERVAL '1 day')
+            </if>
+
+            <if test="cond.keyword != null and cond.keyword != ''">
+                AND (
+                LOWER(COALESCE(r.report_description, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR LOWER(COALESCE(u_rep.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR LOWER(COALESCE(u_tgt.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                )
+            </if>
+        </where>
+        GROUP BY
+        r.report_id, r.report_status, r.target_type, r.target_id,
+        r.reporter_id, u_rep.nickname, r.report_target_user_id,
+        u_tgt.nickname, r.report_created_at
+        ORDER BY r.report_created_at DESC, r.report_id DESC
+        LIMIT ${limit} OFFSET ${offset}
+    </select>
+
+    <select id="countReportList"
+            parameterType="com.goodsple.features.admin.report.dto.AdminReportSearchCond"
+            resultType="long">
+        SELECT COUNT(DISTINCT r.report_id)
+        FROM reports r
+        LEFT JOIN users u_rep ON u_rep.user_id = r.reporter_id
+        LEFT JOIN users u_tgt ON u_tgt.user_id = r.report_target_user_id
+        LEFT JOIN report_reason_mapping m ON m.report_id = r.report_id
+        LEFT JOIN report_reasons rr ON rr.report_reason_id = m.report_reason_id
+        <where>
+            <if test="cond.reportId != null">
+                AND r.report_id = #{cond.reportId}
+            </if>
+            <if test="cond.reporterId != null">
+                AND r.reporter_id = #{cond.reporterId}
+            </if>
+            <if test="cond.targetUserId != null">
+                AND r.report_target_user_id = #{cond.targetUserId}
+            </if>
+            <if test="cond.targetId != null">
+                AND r.target_id = #{cond.targetId}
+            </if>
+            <if test="cond.statuses != null and cond.statuses.size() &gt; 0">
+                AND r.report_status::text IN
+                <foreach collection="cond.statuses" item="st" open="(" separator="," close=")">
+                    #{st}
+                </foreach>
+            </if>
+            <if test="cond.targetTypes != null and cond.targetTypes.size() &gt; 0">
+                AND r.target_type::text IN
+                <foreach collection="cond.targetTypes" item="tt" open="(" separator="," close=")">
+                    #{tt}
+                </foreach>
+            </if>
+            <if test="cond.createdFrom != null">
+                AND r.report_created_at &gt;= #{cond.createdFrom}::date
+            </if>
+            <if test="cond.createdTo != null">
+                AND r.report_created_at &lt; (#{cond.createdTo}::date + INTERVAL '1 day')
+            </if>
+            <if test="cond.keyword != null and cond.keyword != ''">
+                AND (
+                LOWER(COALESCE(r.report_description, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR LOWER(COALESCE(u_rep.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR LOWER(COALESCE(u_tgt.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- ===================== 상세 ===================== -->
+    <resultMap id="AdminReportDetailMap" type="com.goodsple.features.admin.report.dto.AdminReportDetail">
+        <id     property="reportId"         column="report_id"/>
+        <result property="status"           column="status"/>
+        <result property="targetType"       column="target_type"/>
+        <result property="targetId"         column="target_id"/>
+        <result property="reporterId"       column="reporter_id"/>
+        <result property="reporterNickname" column="reporter_nickname"/>
+        <result property="targetUserId"     column="target_user_id"/>
+        <result property="targetNickname"   column="target_nickname"/>
+        <result property="description"      column="report_description"/>
+        <result property="actionTaken"      column="action_taken"/>
+        <result property="createdAt"        column="report_created_at"/>
+        <result property="processedAt"      column="processed_at"/>
+    </resultMap>
+
+    <select id="selectReportDetail" parameterType="long" resultMap="AdminReportDetailMap">
+        SELECT
+            r.report_id,
+            r.report_status::text   AS status,
+                r.target_type::text     AS target_type,
+                r.target_id,
+            r.reporter_id,
+            u_rep.nickname          AS reporter_nickname,
+            r.report_target_user_id AS target_user_id,
+            u_tgt.nickname          AS target_nickname,
+            r.report_description,
+            r.action_taken,
+            r.report_created_at,
+            r.processed_at
+        FROM reports r
+                 LEFT JOIN users u_rep ON u_rep.user_id = r.reporter_id
+                 LEFT JOIN users u_tgt ON u_tgt.user_id = r.report_target_user_id
+        WHERE r.report_id = #{reportId}
+    </select>
+
+    <select id="selectReasonsByReportId" parameterType="long"
+            resultType="com.goodsple.features.admin.report.dto.ReportReason">
+        SELECT
+            rr.report_reason_id AS reasonId,
+            rr.report_reason_text AS reasonText
+        FROM report_reason_mapping m
+                 JOIN report_reasons rr ON rr.report_reason_id = m.report_reason_id
+        WHERE m.report_id = #{reportId}
+        ORDER BY rr.report_reason_id
+    </select>
+
+    <!-- ===================== 상태 변경 ===================== -->
+    <update id="updateReportStatus">
+        UPDATE reports
+        SET
+            report_status = CAST(#{status} AS report_status_enum),
+            action_taken  = #{actionTaken},
+            processed_at  = CASE
+                                WHEN #{status} IN ('resolved','rejected') THEN NOW()
+                                ELSE NULL
+                END
+        WHERE report_id = #{reportId}
+    </update>
+
+</mapper>
