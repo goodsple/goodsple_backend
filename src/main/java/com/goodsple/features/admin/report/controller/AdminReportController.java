@@ -65,7 +65,10 @@ public class AdminReportController {
             @ApiResponse(responseCode = "403", description = "권한 없음"),
             @ApiResponse(responseCode = "404", description = "리소스를 찾을 수 없음")
     })
-    @PatchMapping("/{reportId}/status")
+    @RequestMapping(
+            value = "/{reportId}/status",
+            method = {RequestMethod.PATCH, RequestMethod.PUT}
+    )
     public ResponseEntity<Void> updateStatus(
             @PathVariable Long reportId,
             @RequestBody @Valid AdminReportStatusUpdate request

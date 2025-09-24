@@ -16,8 +16,10 @@
         <result property="targetUserId"       column="target_user_id"/>
         <result property="targetNickname"     column="target_nickname"/>
         <result property="createdAt"          column="created_at"/>
-        <!-- reasons는 아래 select에서 array_agg로 넘김 -->
-        <collection property="reasons" ofType="string" column="reasons"/>
+        <result property="reasonsText"        column="reasons_text"/>
+        <result property="description"        column="report_description"/>
+        <result property="actionTaken"        column="action_taken"/>
+        <result property="processedAt"        column="processed_at"/>
     </resultMap>
 
     <select id="selectReportList"
@@ -28,23 +30,25 @@
 
         SELECT
         r.report_id,
-        r.report_status::text   AS status,
-        r.target_type::text     AS target_type,
+        r.report_status::text          AS status,
+        r.target_type::text            AS target_type,
         r.target_id,
         r.reporter_id,
-        u_rep.nickname          AS reporter_nickname,
-        r.report_target_user_id AS target_user_id,
-        u_tgt.nickname          AS target_nickname,
-        r.report_created_at     AS created_at,
+        u_rep.nickname                 AS reporter_nickname,
+        r.report_target_user_id        AS target_user_id,
+        u_tgt.nickname                 AS target_nickname,
+        r.report_created_at::timestamp AS created_at,
+        r.report_description,
+        r.action_taken                 AS action_taken,
+        r.processed_at                 AS processed_at,
         COALESCE(
-        ARRAY_AGG(DISTINCT rr.report_reason_text)
-        FILTER (WHERE rr.report_reason_text IS NOT NULL),
-        '{}'
-        )                       AS reasons
+        string_agg(DISTINCT rr.report_reason_text, ', '),
+        ''
+        ) AS reasons_text
         FROM reports r
         LEFT JOIN users u_rep ON u_rep.user_id = r.reporter_id
         LEFT JOIN users u_tgt ON u_tgt.user_id = r.report_target_user_id
-        LEFT JOIN report_reason_mapping m ON m.report_id = r.report_id
+        LEFT JOIN report_reason_map m ON m.report_id = r.report_id
         LEFT JOIN report_reasons rr ON rr.report_reason_id = m.report_reason_id
         <where>
             <if test="cond.reportId != null">
@@ -60,7 +64,7 @@
                 AND r.target_id = #{cond.targetId}
             </if>
 
-            <!-- 상태/타입은 enum 컬럼을 text로 비교하면 파라미터 캐스팅 신경 안 써도 됨 -->
+            <!-- 상태/타입은 enum을 text로 비교 -->
             <if test="cond.statuses != null and cond.statuses.size() &gt; 0">
                 AND r.report_status::text IN
                 <foreach collection="cond.statuses" item="st" open="(" separator="," close=")">
@@ -84,16 +88,17 @@
             <if test="cond.keyword != null and cond.keyword != ''">
                 AND (
                 LOWER(COALESCE(r.report_description, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR LOWER(COALESCE(u_rep.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR LOWER(COALESCE(u_tgt.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR  LOWER(COALESCE(u_rep.nickname, ''))     LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR  LOWER(COALESCE(u_tgt.nickname, ''))     LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR  LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
                 )
             </if>
         </where>
         GROUP BY
         r.report_id, r.report_status, r.target_type, r.target_id,
         r.reporter_id, u_rep.nickname, r.report_target_user_id,
-        u_tgt.nickname, r.report_created_at
+        u_tgt.nickname, r.report_created_at,
+        r.report_description, r.action_taken, r.processed_at
         ORDER BY r.report_created_at DESC, r.report_id DESC
         LIMIT ${limit} OFFSET ${offset}
     </select>
@@ -105,7 +110,7 @@
         FROM reports r
         LEFT JOIN users u_rep ON u_rep.user_id = r.reporter_id
         LEFT JOIN users u_tgt ON u_tgt.user_id = r.report_target_user_id
-        LEFT JOIN report_reason_mapping m ON m.report_id = r.report_id
+        LEFT JOIN report_reason_map m ON m.report_id = r.report_id
         LEFT JOIN report_reasons rr ON rr.report_reason_id = m.report_reason_id
         <where>
             <if test="cond.reportId != null">
@@ -141,9 +146,9 @@
             <if test="cond.keyword != null and cond.keyword != ''">
                 AND (
                 LOWER(COALESCE(r.report_description, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR LOWER(COALESCE(u_rep.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR LOWER(COALESCE(u_tgt.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR  LOWER(COALESCE(u_rep.nickname, ''))     LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR  LOWER(COALESCE(u_tgt.nickname, ''))     LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                OR  LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
                 )
             </if>
         </where>
@@ -168,17 +173,17 @@
     <select id="selectReportDetail" parameterType="long" resultMap="AdminReportDetailMap">
         SELECT
             r.report_id,
-            r.report_status::text   AS status,
-                r.target_type::text     AS target_type,
+            r.report_status::text          AS status,
+                r.target_type::text            AS target_type,
                 r.target_id,
             r.reporter_id,
-            u_rep.nickname          AS reporter_nickname,
-            r.report_target_user_id AS target_user_id,
-            u_tgt.nickname          AS target_nickname,
+            u_rep.nickname                 AS reporter_nickname,
+            r.report_target_user_id        AS target_user_id,
+            u_tgt.nickname                 AS target_nickname,
             r.report_description,
             r.action_taken,
-            r.report_created_at,
-            r.processed_at
+            r.report_created_at::timestamp AS report_created_at,
+                r.processed_at::timestamp      AS processed_at
         FROM reports r
                  LEFT JOIN users u_rep ON u_rep.user_id = r.reporter_id
                  LEFT JOIN users u_tgt ON u_tgt.user_id = r.report_target_user_id
@@ -188,9 +193,9 @@
     <select id="selectReasonsByReportId" parameterType="long"
             resultType="com.goodsple.features.admin.report.dto.ReportReason">
         SELECT
-            rr.report_reason_id AS reasonId,
+            rr.report_reason_id  AS reasonId,
             rr.report_reason_text AS reasonText
-        FROM report_reason_mapping m
+        FROM report_reason_map m
                  JOIN report_reasons rr ON rr.report_reason_id = m.report_reason_id
         WHERE m.report_id = #{reportId}
         ORDER BY rr.report_reason_id
@@ -200,13 +205,15 @@
     <update id="updateReportStatus">
         UPDATE reports
         SET
-            report_status = CAST(#{status} AS report_status_enum),
-            action_taken  = #{actionTaken},
+            report_status = CAST(#{status, jdbcType=VARCHAR} AS report_status_enum),
+            action_taken  = CAST(NULLIF(LOWER(#{actionTaken, jdbcType=VARCHAR}), '') AS report_action_enum),
             processed_at  = CASE
-                                WHEN #{status} IN ('resolved','rejected') THEN NOW()
-                                ELSE NULL
+                                WHEN #{status, jdbcType=VARCHAR} = 'resolved'
+                                    THEN COALESCE(processed_at, NOW())
+                                WHEN #{status, jdbcType=VARCHAR} = 'pending'
+                                    THEN NULL
+                                ELSE processed_at
                 END
-        WHERE report_id = #{reportId}
+        WHERE report_id = #{reportId, jdbcType=BIGINT}
     </update>
-
 </mapper>

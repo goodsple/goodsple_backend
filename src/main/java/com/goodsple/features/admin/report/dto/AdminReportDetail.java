@@ -3,7 +3,7 @@ package com.goodsple.features.admin.report.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Builder
@@ -48,8 +48,8 @@ public class AdminReportDetail {
     private String actionTaken;
 
     @Schema(description = "신고 생성 시각", example = "2025-08-10T11:20:30")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Schema(description = "처리 시각", example = "2025-08-11T09:00:00")
-    private LocalDateTime processedAt;
+    private OffsetDateTime processedAt;
 }

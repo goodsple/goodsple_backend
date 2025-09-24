@@ -3,7 +3,7 @@ package com.goodsple.features.admin.report.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Builder
@@ -38,9 +38,18 @@ public class AdminReportListItem {
     @Schema(description = "피신고자 닉네임", example = "허니브레드")
     private String targetNickname;
 
-    @Schema(description = "신고 사유 텍스트 목록", example = "[\"부적절한 게시글 또는 사진\", \"불쾌한 행동 및 언행\"]")
-    private List<String> reasons;
+    @Schema(description = "신고 사유(콤마로 합쳐진 텍스트)", example = "부적절한 게시글 또는 사진, 사기 의심 거래")
+    private String reasonsText;
+
+    @Schema(description = "신고 설명 텍스트")
+    private String description;
 
     @Schema(description = "신고 생성 시각", example = "2025-08-10T11:20:30")
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
+
+    @Schema(description = "조치(DB 라벨: warning/rejected/suspend_3d/permanent_ban)")
+    private String actionTaken;
+
+    @Schema(description = "처리 시각")
+    private OffsetDateTime processedAt;
 }

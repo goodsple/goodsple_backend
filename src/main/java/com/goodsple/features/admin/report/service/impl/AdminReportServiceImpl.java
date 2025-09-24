@@ -54,11 +54,14 @@ public class AdminReportServiceImpl implements AdminReportService {
     public void updateStatus(Long reportId, AdminReportStatusUpdate request) {
         // (선택) 상태 유효성 간단 체크
         if (request.getStatus() == null ||
-                !Set.of("pending","processing","resolved","rejected").contains(request.getStatus())) {
+                !Set.of("pending","processing","resolved","rejected").contains(request.getStatus().toLowerCase())) {
             throw new IllegalArgumentException("Invalid status: " + request.getStatus());
         }
 
-        int updated = mapper.updateReportStatus(reportId, request.getStatus(), request.getActionTaken());
+        String status = request.getStatus().toLowerCase(); // 정규화
+        String actionTaken = request.getActionTaken();      // 대문자여도 OK (XML에서 lower 처리)
+
+        int updated = mapper.updateReportStatus(reportId, status, actionTaken);
         if (updated == 0) {
             throw new NoSuchElementException("Report not found: " + reportId);
         }
