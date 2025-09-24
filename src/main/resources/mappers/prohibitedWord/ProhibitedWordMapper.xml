@@ -27,4 +27,26 @@
         </foreach>
     </delete>
 
+    <!--  금칙어 중복 체크  -->
+    <select id="countByWord" resultType="int">
+        SELECT COUNT(*)
+        FROM prohibited_word
+        WHERE word = #{word}
+    </select>
+
+    <!--  금칙어 활성화/비활성화 토글  -->
+    <update id="toggleWordActive">
+        UPDATE prohibited_word
+        SET word_is_active = NOT word_is_active
+        WHERE word_id = #{id}
+    </update>
+
+    <!-- 활성화된 금칙어만 조회 -->
+    <select id="selectActiveWords" resultType="String">
+        SELECT word
+        FROM prohibited_word
+        WHERE word_is_active = true
+    </select>
+
+
 </mapper>
