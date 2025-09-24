@@ -44,13 +44,11 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<ReportReason> getAllReasons() {
-        return Arrays.stream(ReportReasonType.values())
-                .map(e -> new ReportReason(null, e.getDescription()))
-                .collect(Collectors.toList());
+        return reportMapper.selectAllReasons();
     }
 
-    @Override
-    public void addReason(ReportReason reason) {
-        reportMapper.insertReason(reason);
-    }
+//    @Override
+//    public void addReason(ReportReason reason) {
+//        reportMapper.insertReason(reason);
+//    }
 }
