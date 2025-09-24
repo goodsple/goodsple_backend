@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -18,4 +19,5 @@ public class Order {
     private Long userId; // 낙찰자 ID
     private BigDecimal orderAmount;
     private String orderStatus;
+    private OffsetDateTime orderPaymentDeadline;
 }

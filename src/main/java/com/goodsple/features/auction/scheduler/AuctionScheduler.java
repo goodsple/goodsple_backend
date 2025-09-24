@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.time.temporal.ChronoUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -127,6 +128,7 @@ public class AuctionScheduler {
                         .userId(winnerId)
                         .orderAmount(finalPrice) // orderFinalPrice -> orderAmount
                         .orderStatus("pending") // 초기 상태는 '결제 대기'
+                        .orderPaymentDeadline(OffsetDateTime.now().plus(48, ChronoUnit.HOURS))
                         .build();
                 auctionMapper.insertOrder(newOrder);
             }

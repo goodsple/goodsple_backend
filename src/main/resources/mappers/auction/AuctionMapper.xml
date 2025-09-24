@@ -364,11 +364,20 @@
         </foreach>
     </insert>
 
-    <!-- 경매 종료 후 새로운 주문을 생성하는 쿼리 -->
     <insert id="insertOrder" parameterType="com.goodsple.features.order.entity.Order">
-        INSERT INTO orders (auction_id, user_id, order_amount, order_status)
-        VALUES
-            (#{auctionId}, #{userId}, #{orderAmount}, #{orderStatus}::order_status_enum)
+        INSERT INTO orders (
+            auction_id,
+            user_id,
+            order_amount,
+            order_status,
+            order_payment_deadline -- [추가]
+        ) VALUES (
+                     #{auctionId},
+                     #{userId},
+                     #{orderAmount},
+                     #{orderStatus}::order_status_enum,
+                     #{orderPaymentDeadline} -- [추가]
+                 )
     </insert>
 
     <!-- 닉네임으로 사용자 ID를 조회하는 쿼리 -->
