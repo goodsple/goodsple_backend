@@ -146,7 +146,7 @@ public class AuctionScheduler {
     /**
      * 매 시간 정각에 실행되어 결제 기한이 만료된 주문을 처리합니다.
      */
-    @Scheduled(cron = "0 * * * * *") // 매시 0분 0초에 실행
+    @Scheduled(cron = "0 0 * * * *") // 매시 0분 0초에 실행
     @Transactional
     public void expireOverdueOrders() {
         log.info("결제 기한 만료 처리 스케줄러 실행...");

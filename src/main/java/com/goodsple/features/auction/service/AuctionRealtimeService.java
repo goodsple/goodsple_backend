@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -182,5 +183,11 @@ public class AuctionRealtimeService {
 
         // 아직 밴 기간이 유효하면 참여 불가능 (true)
         return true;
+    }
+
+    public void removeAuctionFromRedis(Long auctionId) {
+        String stateKey = keyManager.getAuctionStateKey(auctionId);
+        String bidsKey = keyManager.getAuctionBidsKey(auctionId);
+        redisTemplate.delete(List.of(stateKey, bidsKey));
     }
 }

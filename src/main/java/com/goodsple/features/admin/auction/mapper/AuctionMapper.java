@@ -97,7 +97,7 @@ public interface AuctionMapper {
      */
     void updateAuctionStatus(@Param("auctionId") Long auctionId, @Param("status") String status);
 
-    Optional<AuctionPageDataResponse> findAuctionPageDataById(Long auctionId);
+    Optional<AuctionPageDataResponse> findAuctionPageDataById(@Param("auctionId") Long auctionId, @Param("userId") Long userId);
 
     /**
      * Redis에 저장할 경매 초기 상태 정보를 DB에서 조회합니다.

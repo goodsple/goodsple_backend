@@ -25,4 +25,22 @@
         WHERE order_id = #{orderId}
     </update>
 
+    <insert id="insertShippingInfo">
+        INSERT INTO shipping_info (
+            order_id,
+            shipping_recipient_name,
+            shipping_recipient_phone,
+            shipping_zip_code,
+            shipping_address1,
+            shipping_memo
+        ) VALUES (
+                     #{orderId},
+                     #{info.name},
+                     #{info.phone},
+                     #{info.postalCode},
+                     #{info.address},
+                     #{info.message}
+                 )
+    </insert>
+
 </mapper>

@@ -251,6 +251,7 @@
                         select="findImageUrlsByAuctionId" column="auction_id"/>
         </association>
         <association property="status" javaType="com.goodsple.features.auction.dto.response.AuctionPageDataResponse$AuctionStatus">
+            <result property="auctionStatus" column="auction_status"/>
             <result property="startTime" column="auction_start_time"/>
             <result property="endTime" column="auction_end_time"/>
             <result property="startPrice" column="auction_start_price"/>
@@ -277,13 +278,16 @@
             a.auction_end_time,
             a.auction_start_price,
             a.auction_min_bid_unit,
-            COALESCE((SELECT MAX(b.bid_amount) FROM bids b WHERE b.auction_id = a.auction_id), a.auction_start_price) AS current_price,
-            (SELECT u.nickname FROM users u JOIN bids b ON u.user_id = b.user_id WHERE b.auction_id = a.auction_id ORDER BY b.bid_amount DESC LIMIT 1) AS top_bidder_nickname,
-        (SELECT u.is_banned_from_auction FROM users u WHERE u.user_id = (SELECT user_id FROM users LIMIT 1)) AS is_banned_from_auction -- TODO: 현재 로그인 유저 ID로 변경 필요
+            a.auction_status::text AS auction_status,
+        -- 현재 최고가는 Redis에 있을 수 있으므로, DB에서는 일단 시작가를 기본값으로 조회
+                a.auction_start_price AS current_price,
+            '없음' AS top_bidder_nickname, -- 최고 입찰자는 Redis에서 가져오므로 DB에서는 기본값 설정
+            -- 현재 로그인한 사용자의 밴 여부를 조회 (파라미터로 userId를 받아야 함)
+            (SELECT u.is_banned_from_auction FROM users u WHERE u.user_id = #{userId}) AS is_banned_from_auction
         FROM
             auctions a
         WHERE
-            a.auction_id = #{auctionId} AND a.auction_status = 'active'::auction_status_enum
+            a.auction_id = #{auctionId}
     </select>
 
     <!-- 서브 쿼리: 이미지 URL 목록 조회 -->

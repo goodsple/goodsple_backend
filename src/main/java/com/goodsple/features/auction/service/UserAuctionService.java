@@ -5,12 +5,15 @@
 package com.goodsple.features.auction.service;
 
 import com.goodsple.features.admin.auction.mapper.AuctionMapper;
+import com.goodsple.features.auction.dto.AuctionState;
 import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
 import com.goodsple.features.auction.dto.response.UserMainAuctionDto;
 import com.goodsple.features.auction.dto.response.UserMainPageResponseDto;
 import com.goodsple.features.auction.util.AuctionRedisKeyManager; // [추가] Redis 키 매니저 import
 import com.goodsple.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate; // [추가] RedisTemplate import
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,13 +22,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal; // [추가] BigDecimal import
-import java.util.List;
+import java.time.OffsetDateTime;
 import java.util.Map; // [추가] Map import
 import com.goodsple.features.auction.service.AuctionRealtimeService; // [추가] AuctionRealtimeService import
 
 @Service
 @RequiredArgsConstructor
 public class UserAuctionService {
+
+    private static final Logger log = LoggerFactory.getLogger(UserAuctionService.class);
 
     private final AuctionMapper auctionMapper;
     private final RedisTemplate<String, Object> redisTemplate; // [추가] RedisTemplate 의존성 주입
@@ -36,48 +41,56 @@ public class UserAuctionService {
 
     @Transactional
     public AuctionPageDataResponse getAuctionPageData(Long auctionId) {
-        // 1. 현재 로그인한 사용자 정보 가져오기
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!(principal instanceof CustomUserDetails userDetails)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
 
-        // 2. [수정] DB에서 경매 페이지의 '기본' 데이터를 먼저 조회합니다.
-        AuctionPageDataResponse response = auctionMapper.findAuctionPageDataById(auctionId)
+        AuctionPageDataResponse response = auctionMapper.findAuctionPageDataById(auctionId, userDetails.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "경매를 찾을 수 없습니다."));
 
-        // 3. [추가] Redis에서 '실시간' 데이터를 조회하여 DB 데이터에 덮어씁니다.
         String stateKey = keyManager.getAuctionStateKey(auctionId);
         Map<Object, Object> redisState = redisTemplate.opsForHash().entries(stateKey);
 
-        // Redis에 실시간 정보가 존재하면 (즉, 경매가 활성화된 상태이면)
-        if (!redisState.isEmpty()) {
-            AuctionPageDataResponse.AuctionStatus status = response.getStatus();
+        if (redisState.isEmpty()) {
+            String dbStatus = response.getStatus().getAuctionStatus(); // [수정] 이제 이 코드가 정상 동작합니다.
+            OffsetDateTime dbStartTime = response.getStatus().getStartTime();
 
-            // 현재가를 Redis 데이터로 덮어쓰기
-            Object currentPriceObj = redisState.get("currentPrice");
-            if (currentPriceObj != null) {
-                status.setCurrentPrice(new BigDecimal(currentPriceObj.toString()));
+            log.info("========== 디버깅 로그 ==========");
+            log.info("DB에서 조회된 상태 (dbStatus): {}", dbStatus);
+            log.info("DB에서 조회된 시작 시간 (dbStartTime): {}", dbStartTime);
+            log.info("현재 서버 시간 (OffsetDateTime.now()): {}", OffsetDateTime.now());
+            if (dbStartTime != null) {
+                log.info("시간 비교 결과 (isBefore): {}", dbStartTime.isBefore(OffsetDateTime.now()));
             }
+            log.info("==============================");
 
-            // 최고 입찰자 닉네임을 Redis 데이터로 덮어쓰기
-            Object topBidderObj = redisState.get("topBidderNickname");
-            if (topBidderObj != null) {
-                status.setHighestBidderNickname(topBidderObj.toString());
-            }
+            if ("scheduled".equalsIgnoreCase(dbStatus) && dbStartTime.isBefore(OffsetDateTime.now())) {
+                log.info("사용자 요청에 의해 경매 ID {}를 시작합니다.", auctionId);
+                auctionMapper.updateAuctionStatus(auctionId, "active");
+                AuctionState initialState = auctionMapper.findInitialAuctionStateById(auctionId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "경매 정보를 찾을 수 없습니다."));
+                auctionRealtimeService.startAuction(initialState);
 
-            // 종료 시간을 Redis 데이터로 덮어쓰기 (시간 연장 대응)
-            Object endTimeObj = redisState.get("endTime");
-            if (endTimeObj != null) {
-                status.setEndTime(endTimeObj.toString());
+                // [수정] 방금 Redis에 저장한 최신 정보를 response 객체에 직접 반영합니다.
+                response.getStatus().setAuctionStatus("active");
+                response.getStatus().setCurrentPrice(initialState.getCurrentPrice());
+                response.getStatus().setHighestBidderNickname("없음");
+                response.getStatus().setEndTime(initialState.getEndTime().toString());
+            } else {
+                log.warn("아직 시작되지 않았거나 이미 종료된 경매(ID: {})입니다.", auctionId);
             }
         }
 
-        // 4. [기존 로직] 응답 데이터에 현재 사용자 정보 추가
-        response.getCurrentUser().setNickname(userDetails.getNickname());
-        // isBanned 정보는 DB에서 가져온 값을 사용
+        // Redis 데이터로 응답 객체 업데이트 (if문 밖으로 이동)
+        if (!redisState.isEmpty()) {
+            AuctionPageDataResponse.AuctionStatus status = response.getStatus();
+            status.setCurrentPrice(new BigDecimal(redisState.get("currentPrice").toString()));
+            status.setHighestBidderNickname((String) redisState.get("topBidderNickname"));
+            status.setEndTime(redisState.get("endTime").toString());
+        }
 
-        // 5. 사용자의 최신 밴 상태를 확인하고, 만료 시 해제한 후 그 결과를 응답에 반영합니다.
+        response.getCurrentUser().setNickname(userDetails.getNickname());
         boolean isBanned = auctionRealtimeService.checkAndReleaseAuctionBan(userDetails.getUserId());
         response.getCurrentUser().setBanned(isBanned);
 
