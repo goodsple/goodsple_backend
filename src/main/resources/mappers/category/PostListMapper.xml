@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.postlist.mapper.PostListMapper">
+
+    <!-- 전체 글 조회 -->
+    <select id="findAllPosts" resultType="com.goodsple.features.postlist.dto.PostListDto">
+        SELECT
+            p.exchange_post_id AS exchangePostId,
+            p.user_id AS writer,
+            u.nickname AS writerNickname,
+            p.exchange_post_created_at AS exchangePostCreatedAt,
+            p.post_trade_status AS postTradeStatus,
+            p.exchange_post_title AS exchangePostTitle
+        FROM exchange_post p
+        JOIN users u ON p.user_id = u.user_id
+        ORDER BY exchange_post_created_at DESC
+    </select>
+
+    <!-- 1차 카테고리별 글 조회 -->
+    <select id="findPostsByCategory" parameterType="long" resultType="com.goodsple.features.postlist.dto.PostListDto">
+        SELECT
+            p.exchange_post_id AS exchangePostId,
+            p.user_id AS writer,
+            u.nickname AS writerNickname,
+            p.exchange_post_created_at AS exchangePostCreatedAt,
+            p.post_trade_status AS postTradeStatus,
+            p.exchange_post_title AS exchangePostTitle
+        FROM exchange_post p
+                 JOIN users u ON p.user_id = u.user_id
+                 JOIN third_cate t ON p.third_cate_id = t.third_cate_id
+                 JOIN second_cate s ON t.second_cate_id = s.second_cate_id
+                 JOIN first_cate f ON s.first_cate_id = f.first_cate_id
+        WHERE f.first_cate_id = #{categoryId}
+        ORDER BY p.exchange_post_created_at DESC
+    </select>
+</mapper>
