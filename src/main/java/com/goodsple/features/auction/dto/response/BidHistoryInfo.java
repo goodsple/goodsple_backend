@@ -21,6 +21,6 @@ public class BidHistoryInfo {
     private Long bidId;
     private Long userId;
     private String userNickname;
-    private BigDecimal bidAmount;
+    private BigDecimal price;
     private OffsetDateTime timestamp;
 }

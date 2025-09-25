@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.time.temporal.ChronoUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -110,7 +111,7 @@ public class AuctionScheduler {
                                 // LinkedHashMap을 BidHistoryInfo 클래스로 명시적으로 변환합니다.
                                 BidHistoryInfo info = objectMapper.convertValue(obj, BidHistoryInfo.class);
 
-                                return new BidLogDto(auctionId, info.getUserId(), info.getBidAmount(), info.getTimestamp());
+                                return new BidLogDto(auctionId, info.getUserId(), info.getPrice(), info.getTimestamp());
                             })
                             .collect(Collectors.toList());
                     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
@@ -127,6 +128,7 @@ public class AuctionScheduler {
                         .userId(winnerId)
                         .orderAmount(finalPrice) // orderFinalPrice -> orderAmount
                         .orderStatus("pending") // 초기 상태는 '결제 대기'
+                        .orderPaymentDeadline(OffsetDateTime.now().plus(48, ChronoUnit.HOURS))
                         .build();
                 auctionMapper.insertOrder(newOrder);
             }
@@ -138,6 +140,34 @@ public class AuctionScheduler {
             redisTemplate.delete(stateKey);
             redisTemplate.delete(keyManager.getAuctionBidsKey(auctionId));
             log.info("경매 ID {}의 Redis 데이터가 정리되었습니다.", auctionId);
+        }
+    }
+
+    /**
+     * 매 시간 정각에 실행되어 결제 기한이 만료된 주문을 처리합니다.
+     */
+    @Scheduled(cron = "0 0 * * * *") // 매시 0분 0초에 실행
+    @Transactional
+    public void expireOverdueOrders() {
+        log.info("결제 기한 만료 처리 스케줄러 실행...");
+
+        // 1. 결제 기한이 지났지만 아직 'pending' 상태인 주문 목록을 조회합니다.
+        List<Order> overdueOrders = auctionMapper.findOverdueOrders(OffsetDateTime.now());
+
+        if (overdueOrders.isEmpty()) {
+            log.info("기한이 만료된 주문이 없습니다.");
+            return;
+        }
+
+        for (Order order : overdueOrders) {
+            log.warn("주문 ID {} (사용자 ID: {})의 결제 기한이 만료되었습니다. 패널티를 부여합니다.", order.getOrderId(), order.getUserId());
+
+            // 2. 주문 상태를 'expired'로 변경합니다.
+            auctionMapper.updateOrderStatusToExpired(order.getOrderId());
+
+            // 3. 해당 사용자에게 72시간(3일)의 경매 참여 제한 패널티를 부여합니다.
+            OffsetDateTime banUntil = OffsetDateTime.now().plusHours(72);
+            auctionMapper.applyAuctionPenaltyToUser(order.getUserId(), banUntil);
         }
     }
 

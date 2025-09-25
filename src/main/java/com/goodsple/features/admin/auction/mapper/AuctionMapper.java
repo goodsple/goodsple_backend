@@ -14,6 +14,7 @@ import com.goodsple.features.auction.dto.AuctionState;
 import com.goodsple.features.auction.dto.BidLogDto;
 import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
 import com.goodsple.features.auction.dto.response.UserMainAuctionDto;
+import com.goodsple.features.auth.entity.User;
 import com.goodsple.features.order.entity.Order;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -87,7 +88,14 @@ public interface AuctionMapper {
      * @param auctionId 조회할 경매 ID
      * @return 입찰 기록 리스트
      */
-    List<BidHistoryInfo> findBidHistoryByAuctionId(Long auctionId);
+    List<com.goodsple.features.auction.dto.response.BidHistoryInfo> findBidHistoryByAuctionId(Long auctionId);
+
+    /**
+     * [관리자용] 특정 경매의 전체 입찰 기록을 조회합니다. (관리자 결과 페이지용)
+     * @param auctionId 조회할 경매 ID
+     * @return 입찰 기록 리스트
+     */
+    List<BidHistoryInfo> findAdminBidHistoryByAuctionId(Long auctionId);
 
     /**
      * 특정 경매의 상태를 변경합니다.
@@ -96,7 +104,7 @@ public interface AuctionMapper {
      */
     void updateAuctionStatus(@Param("auctionId") Long auctionId, @Param("status") String status);
 
-    Optional<AuctionPageDataResponse> findAuctionPageDataById(Long auctionId);
+    Optional<AuctionPageDataResponse> findAuctionPageDataById(@Param("auctionId") Long auctionId, @Param("userId") Long userId);
 
     /**
      * Redis에 저장할 경매 초기 상태 정보를 DB에서 조회합니다.
@@ -142,4 +150,30 @@ public interface AuctionMapper {
      * @return 최근 종료 경매 목록
      */
     List<UserMainAuctionDto> findRecentlyEndedAuctions(@Param("limit") int limit);
+
+    /**
+     * 결제 기한이 만료된 주문 목록을 조회합니다.
+     */
+    List<Order> findOverdueOrders(@Param("now") OffsetDateTime now);
+
+    /**
+     * 주문 상태를 'expired'로 변경합니다.
+     */
+    void updateOrderStatusToExpired(@Param("orderId") Long orderId);
+
+    /**
+     * 사용자에게 경매 참여 패널티를 부여합니다.
+     */
+    void applyAuctionPenaltyToUser(@Param("userId") Long userId, @Param("banUntil") OffsetDateTime banUntil);
+
+    /**
+     * 경매 참여 제한 상태를 확인하기 위해 사용자 정보를 조회합니다.
+     */
+    User findUserForAuctionBanCheck(@Param("userId") Long userId);
+
+    /**
+     * 사용자의 경매 참여 제한을 해제합니다.
+     */
+    void releaseAuctionBan(@Param("userId") Long userId);
+
 }
