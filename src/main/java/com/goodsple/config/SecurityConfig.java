@@ -94,12 +94,14 @@ public class SecurityConfig {
                         // 그 외 모든 요청은 JWT 인증 필요
                         .anyRequest().permitAll()
                 )
+
                 // 7. JWT 필터 등록 (인가 설정 후 실행되도록)
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
                         UsernamePasswordAuthenticationFilter.class
 //                        SecurityContextPersistenceFilter.class
                 );
+
 
         return http.build();
     }
