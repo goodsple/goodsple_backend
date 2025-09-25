@@ -49,4 +49,15 @@ public class AdminReportSearchCond {
 
     @Schema(description = "페이지 크기", example = "20")
     private Integer size;
+
+    /* ===== 검색 전처리용(서비스에서 세팅) ===== */
+
+    @Schema(description = "조치 필터(ENUM 라벨)", example = "[\"warning\",\"rejected\"]")
+    private List<String> actions;
+
+    @Schema(description = "조치 키워드 유추값 (warning|rejected|suspend_3d|permanent_ban)", example = "suspend_3d")
+    private String actionSearch;
+
+    @Schema(description = "키워드가 숫자면 ID 매칭용으로 사용 (report_id/target_id 비교)", example = "1234")
+    private Long keywordAsLong;
 }

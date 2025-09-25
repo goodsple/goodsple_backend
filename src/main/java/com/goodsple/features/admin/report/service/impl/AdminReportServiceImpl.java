@@ -7,10 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.*; // ★ Objects, Set 등
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +23,74 @@ public class AdminReportServiceImpl implements AdminReportService {
         int size = cond.getSize() == null ? 20 : cond.getSize();
         cond.setPage(page);
         cond.setSize(size);
+
+        // 날짜 역전 보정
+        if (cond.getCreatedFrom() != null && cond.getCreatedTo() != null
+                && cond.getCreatedFrom().isAfter(cond.getCreatedTo())) {
+            LocalDate tmp = cond.getCreatedFrom();
+            cond.setCreatedFrom(cond.getCreatedTo());
+            cond.setCreatedTo(tmp);
+        }
+
+        // 타입/상태 소문자 정규화 (+ MESSAGE -> chat_message 보정)
+        if (cond.getTargetTypes() != null) {
+            cond.setTargetTypes(
+                    cond.getTargetTypes().stream()
+                            .filter(s -> s != null && !s.isBlank())
+                            .map(String::toLowerCase)
+                            .map(s -> s.equals("message") ? "chat_message" : s)
+                            .toList()
+            );
+        }
+        if (cond.getStatuses() != null) {
+            cond.setStatuses(
+                    cond.getStatuses().stream()
+                            .filter(s -> s != null && !s.isBlank())
+                            .map(String::toLowerCase)
+                            .toList()
+            );
+        }
+
+        // ★ actions 정규화 (프론트에서 오는 조치 필터)
+        if (cond.getActions() != null) {
+            cond.setActions(
+                    cond.getActions().stream()
+                            .filter(Objects::nonNull)
+                            .map(String::trim)
+                            .map(String::toLowerCase)
+                            .filter(s -> Set.of("warning","rejected","suspend_3d","permanent_ban").contains(s))
+                            .distinct()
+                            .toList()
+            );
+        }
+
+        // ★ actions가 비어있을 때만 keyword로 조치 유추 (actionSearch)
+        cond.setActionSearch(null);
+        boolean hasActions = cond.getActions() != null && !cond.getActions().isEmpty();
+        if (!hasActions && cond.getKeyword() != null) {
+            String k = cond.getKeyword().trim().toLowerCase();
+            if (!k.isBlank()) {
+                if (k.contains("warning") || k.contains("경고")) {
+                    cond.setActionSearch("warning");
+                } else if (k.contains("dismiss") || k.contains("기각") || k.contains("rejected")) {
+                    cond.setActionSearch("rejected");
+                } else if (k.contains("3일") || k.contains("3d")) {
+                    cond.setActionSearch("suspend_3d");
+                } else if (k.contains("영구") || k.contains("perm") || k.contains("permanent")) {
+                    cond.setActionSearch("permanent_ban");
+                }
+            }
+        }
+
+        // 키워드가 숫자면 ID 검색에 사용(신고ID/타겟ID/신고자/피신고자)
+        cond.setKeywordAsLong(null);
+        if (cond.getKeyword() != null) {
+            String k = cond.getKeyword().trim();
+            if (!k.isBlank()) {
+                try { cond.setKeywordAsLong(Long.parseLong(k)); }
+                catch (NumberFormatException ignore) { /* not a number */ }
+            }
+        }
 
         long total = mapper.countReportList(cond);
         List<AdminReportListItem> items = total > 0
@@ -54,7 +120,8 @@ public class AdminReportServiceImpl implements AdminReportService {
     public void updateStatus(Long reportId, AdminReportStatusUpdate request) {
         // (선택) 상태 유효성 간단 체크
         if (request.getStatus() == null ||
-                !Set.of("pending","processing","resolved","rejected").contains(request.getStatus().toLowerCase())) {
+                !Set.of("pending","processing","resolved","rejected")
+                        .contains(request.getStatus().toLowerCase())) {
             throw new IllegalArgumentException("Invalid status: " + request.getStatus());
         }
 

@@ -30,21 +30,18 @@
 
         SELECT
         r.report_id,
-        r.report_status::text          AS status,
-        r.target_type::text            AS target_type,
+        r.report_status::text   AS status,
+        r.target_type::text     AS target_type,
         r.target_id,
         r.reporter_id,
-        u_rep.nickname                 AS reporter_nickname,
-        r.report_target_user_id        AS target_user_id,
-        u_tgt.nickname                 AS target_nickname,
+        u_rep.nickname          AS reporter_nickname,
+        r.report_target_user_id AS target_user_id,
+        u_tgt.nickname          AS target_nickname,
         r.report_created_at::timestamp AS created_at,
         r.report_description,
-        r.action_taken                 AS action_taken,
-        r.processed_at                 AS processed_at,
-        COALESCE(
-        string_agg(DISTINCT rr.report_reason_text, ', '),
-        ''
-        ) AS reasons_text
+        r.action_taken           AS action_taken,
+        r.processed_at           AS processed_at,
+        COALESCE(string_agg(DISTINCT rr.report_reason_text, ', '), '') AS reasons_text
         FROM reports r
         LEFT JOIN users u_rep ON u_rep.user_id = r.reporter_id
         LEFT JOIN users u_tgt ON u_tgt.user_id = r.report_target_user_id
@@ -54,23 +51,28 @@
             <if test="cond.reportId != null">
                 AND r.report_id = #{cond.reportId}
             </if>
+
             <if test="cond.reporterId != null">
                 AND r.reporter_id = #{cond.reporterId}
             </if>
+
             <if test="cond.targetUserId != null">
                 AND r.report_target_user_id = #{cond.targetUserId}
             </if>
+
             <if test="cond.targetId != null">
                 AND r.target_id = #{cond.targetId}
             </if>
 
-            <!-- 상태/타입은 enum을 text로 비교 -->
+            <!-- 상태 필터 (pending/processing/resolved/rejected) -->
             <if test="cond.statuses != null and cond.statuses.size() &gt; 0">
                 AND r.report_status::text IN
                 <foreach collection="cond.statuses" item="st" open="(" separator="," close=")">
                     #{st}
                 </foreach>
             </if>
+
+            <!-- 신고 유형 필터 (user/post/review/chat_message/event) -->
             <if test="cond.targetTypes != null and cond.targetTypes.size() &gt; 0">
                 AND r.target_type::text IN
                 <foreach collection="cond.targetTypes" item="tt" open="(" separator="," close=")">
@@ -78,6 +80,20 @@
                 </foreach>
             </if>
 
+            <!-- ★ actions 배열이 오면 IN 으로 필터 -->
+            <if test="cond.actions != null and cond.actions.size() &gt; 0">
+                AND r.action_taken::text IN
+                <foreach collection="cond.actions" item="ac" open="(" separator="," close=")">
+                    #{ac}
+                </foreach>
+            </if>
+
+            <!-- ★ actions가 비어있을 때만 actionSearch(fallback) 사용 -->
+            <if test="(cond.actions == null or cond.actions.size() == 0) and cond.actionSearch != null and cond.actionSearch != ''">
+                AND r.action_taken::text = #{cond.actionSearch}
+            </if>
+
+            <!-- 신고일(날짜만) -->
             <if test="cond.createdFrom != null">
                 AND r.report_created_at &gt;= #{cond.createdFrom}::date
             </if>
@@ -85,12 +101,25 @@
                 AND r.report_created_at &lt; (#{cond.createdTo}::date + INTERVAL '1 day')
             </if>
 
-            <if test="cond.keyword != null and cond.keyword != ''">
+            <!-- 키워드 텍스트/숫자(ID) 통합 검색 -->
+            <if test="(cond.keyword != null and cond.keyword != '') or cond.keywordAsLong != null">
                 AND (
-                LOWER(COALESCE(r.report_description, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR  LOWER(COALESCE(u_rep.nickname, ''))     LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR  LOWER(COALESCE(u_tgt.nickname, ''))     LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR  LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                <!-- 텍스트 검색: 설명/신고자닉/피신고자닉/사유텍스트 -->
+                <if test="cond.keyword != null and cond.keyword != ''">
+                    LOWER(COALESCE(r.report_description, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(COALESCE(u_rep.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(COALESCE(u_tgt.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                </if>
+
+                <!-- 숫자 키워드: ID 매칭 -->
+                <if test="cond.keywordAsLong != null">
+                    <if test="cond.keyword != null and cond.keyword != ''"> OR </if>
+                    r.report_id = #{cond.keywordAsLong}
+                    OR r.target_id = #{cond.keywordAsLong}
+                    OR r.reporter_id = #{cond.keywordAsLong}
+                    OR r.report_target_user_id = #{cond.keywordAsLong}
+                </if>
                 )
             </if>
         </where>
@@ -116,39 +145,73 @@
             <if test="cond.reportId != null">
                 AND r.report_id = #{cond.reportId}
             </if>
+
             <if test="cond.reporterId != null">
                 AND r.reporter_id = #{cond.reporterId}
             </if>
+
             <if test="cond.targetUserId != null">
                 AND r.report_target_user_id = #{cond.targetUserId}
             </if>
+
             <if test="cond.targetId != null">
                 AND r.target_id = #{cond.targetId}
             </if>
+
+            <!-- 상태 필터 (pending/processing/resolved/rejected) -->
             <if test="cond.statuses != null and cond.statuses.size() &gt; 0">
                 AND r.report_status::text IN
                 <foreach collection="cond.statuses" item="st" open="(" separator="," close=")">
                     #{st}
                 </foreach>
             </if>
+
+            <!-- 신고 유형 필터 (user/post/review/chat_message/event) -->
             <if test="cond.targetTypes != null and cond.targetTypes.size() &gt; 0">
                 AND r.target_type::text IN
                 <foreach collection="cond.targetTypes" item="tt" open="(" separator="," close=")">
                     #{tt}
                 </foreach>
             </if>
+
+            <!-- 신고일(날짜만) -->
             <if test="cond.createdFrom != null">
                 AND r.report_created_at &gt;= #{cond.createdFrom}::date
             </if>
             <if test="cond.createdTo != null">
                 AND r.report_created_at &lt; (#{cond.createdTo}::date + INTERVAL '1 day')
             </if>
-            <if test="cond.keyword != null and cond.keyword != ''">
+
+            <!-- ★ actions 배열이 오면 IN 으로 필터 -->
+            <if test="cond.actions != null and cond.actions.size() &gt; 0">
+                AND r.action_taken::text IN
+                <foreach collection="cond.actions" item="ac" open="(" separator="," close=")">
+                    #{ac}
+                </foreach>
+            </if>
+
+            <!-- ★ actions가 비어있을 때만 actionSearch(fallback) 사용 -->
+            <if test="(cond.actions == null or cond.actions.size() == 0) and cond.actionSearch != null and cond.actionSearch != ''">
+                AND r.action_taken::text = #{cond.actionSearch}
+            </if>
+
+            <!-- 키워드 텍스트/숫자(ID) 통합 검색 -->
+            <if test="(cond.keyword != null and cond.keyword != '') or cond.keywordAsLong != null">
                 AND (
-                LOWER(COALESCE(r.report_description, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR  LOWER(COALESCE(u_rep.nickname, ''))     LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR  LOWER(COALESCE(u_tgt.nickname, ''))     LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
-                OR  LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                <if test="cond.keyword != null and cond.keyword != ''">
+                    LOWER(COALESCE(r.report_description, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(COALESCE(u_rep.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(COALESCE(u_tgt.nickname, ''))   LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(COALESCE(rr.report_reason_text, '')) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                </if>
+
+                <if test="cond.keywordAsLong != null">
+                    <if test="cond.keyword != null and cond.keyword != ''"> OR </if>
+                    r.report_id = #{cond.keywordAsLong}
+                    OR r.target_id = #{cond.keywordAsLong}
+                    OR r.reporter_id = #{cond.keywordAsLong}
+                    OR r.report_target_user_id = #{cond.keywordAsLong}
+                </if>
                 )
             </if>
         </where>
@@ -208,11 +271,11 @@
             report_status = CAST(#{status, jdbcType=VARCHAR} AS report_status_enum),
             action_taken  = CAST(NULLIF(LOWER(#{actionTaken, jdbcType=VARCHAR}), '') AS report_action_enum),
             processed_at  = CASE
-                                WHEN #{status, jdbcType=VARCHAR} = 'resolved'
+                                WHEN #{status, jdbcType=VARCHAR} IN ('resolved','rejected')
                                     THEN COALESCE(processed_at, NOW())
                                 WHEN #{status, jdbcType=VARCHAR} = 'pending'
                                     THEN NULL
-                                ELSE processed_at
+                                ELSE processed_at  -- processing 등은 유지
                 END
         WHERE report_id = #{reportId, jdbcType=BIGINT}
     </update>
