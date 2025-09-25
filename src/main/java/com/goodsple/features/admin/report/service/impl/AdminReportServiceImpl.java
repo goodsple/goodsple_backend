@@ -34,14 +34,28 @@ public class AdminReportServiceImpl implements AdminReportService {
 
         // 타입/상태 소문자 정규화 (+ MESSAGE -> chat_message 보정)
         if (cond.getTargetTypes() != null) {
-            cond.setTargetTypes(
-                    cond.getTargetTypes().stream()
-                            .filter(s -> s != null && !s.isBlank())
-                            .map(String::toLowerCase)
-                            .map(s -> s.equals("message") ? "chat_message" : s)
-                            .toList()
-            );
+            var expanded = new LinkedHashSet<String>(); // 중복 제거 + 순서 보존
+            for (String s : cond.getTargetTypes()) {
+                if (s == null || s.isBlank()) continue;
+                String v = s.trim().toLowerCase();
+                switch (v) {
+                    case "message":
+                        // 메시지 필터 선택 시, chat(메시지 신고) + user(프로필/회원 신고) 모두 포함
+                        expanded.add("chat");
+                        expanded.add("user");
+                        break;
+                    case "chat":
+                    case "chat_message": // 혹시 옛 값이 올 수도 있으니 안전망
+                        expanded.add("chat");
+                        expanded.add("user");
+                        break;
+                    default:
+                        expanded.add(v);
+                }
+            }
+            cond.setTargetTypes(new java.util.ArrayList<>(expanded));
         }
+
         if (cond.getStatuses() != null) {
             cond.setStatuses(
                     cond.getStatuses().stream()
