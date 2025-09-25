@@ -60,9 +60,20 @@ public class AuctionRealtimeService {
         boolean isBanned = checkAndReleaseAuctionBan(userDetails.getUserId());
         if (isBanned) {
             log.warn("경매 참여가 제한된 사용자(ID: {})의 입찰 시도.", userDetails.getUserId());
-            // TODO: 사용자에게 '참여가 제한되었다'는 피드백을 WebSocket으로 보내주면 더 좋습니다.
-            // 예: messagingTemplate.convertAndSendToUser(userDetails.getUsername(), "/queue/errors", "경매 참여가 제한된 상태입니다.");
-            return; // 입찰 처리를 중단합니다.
+
+            // [수정] 사용자에게만 전송할 에러 메시지 DTO(Map)를 생성합니다.
+            Map<String, String> payload = Map.of(
+                    "type", "AUCTION_BAN_ERROR", // 프론트가 식별할 수 있는 새로운 타입
+                    "message", "경매 참여가 제한된 상태입니다. 입찰할 수 없습니다."
+            );
+
+            // [수정] 특정 사용자에게만 메시지를 보냅니다.
+            // 첫 번째 인자: 사용자의 이름(principal.getName(), 여기서는 loginId)
+            // 두 번째 인자: 메시지를 받을 프론트엔드의 개인 큐(queue) 주소
+            // 세 번째 인자: 전송할 데이터
+            messagingTemplate.convertAndSendToUser(userDetails.getUsername(), "/queue/errors", payload);
+
+            return; // 입찰 처리 중단
         }
         //
 
