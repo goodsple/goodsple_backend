@@ -144,6 +144,34 @@ public class AuctionScheduler {
     }
 
     /**
+     * 매 시간 정각에 실행되어 결제 기한이 만료된 주문을 처리합니다.
+     */
+    @Scheduled(cron = "0 * * * * *") // 매시 0분 0초에 실행
+    @Transactional
+    public void expireOverdueOrders() {
+        log.info("결제 기한 만료 처리 스케줄러 실행...");
+
+        // 1. 결제 기한이 지났지만 아직 'pending' 상태인 주문 목록을 조회합니다.
+        List<Order> overdueOrders = auctionMapper.findOverdueOrders(OffsetDateTime.now());
+
+        if (overdueOrders.isEmpty()) {
+            log.info("기한이 만료된 주문이 없습니다.");
+            return;
+        }
+
+        for (Order order : overdueOrders) {
+            log.warn("주문 ID {} (사용자 ID: {})의 결제 기한이 만료되었습니다. 패널티를 부여합니다.", order.getOrderId(), order.getUserId());
+
+            // 2. 주문 상태를 'expired'로 변경합니다.
+            auctionMapper.updateOrderStatusToExpired(order.getOrderId());
+
+            // 3. 해당 사용자에게 72시간(3일)의 경매 참여 제한 패널티를 부여합니다.
+            OffsetDateTime banUntil = OffsetDateTime.now().plusHours(72);
+            auctionMapper.applyAuctionPenaltyToUser(order.getUserId(), banUntil);
+        }
+    }
+
+    /**
      * [추가] Redis에서 최종 낙찰자의 닉네임을 조회하는 헬퍼(helper) 메소드
      */
     private String getFinalWinnerNicknameFromRedis(Long auctionId) {

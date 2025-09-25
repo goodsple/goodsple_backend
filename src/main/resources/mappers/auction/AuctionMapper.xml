@@ -453,4 +453,43 @@
         ORDER BY a.auction_end_time DESC
             LIMIT #{limit}
     </select>
+
+    <select id="findOverdueOrders" resultType="com.goodsple.features.order.entity.Order">
+        SELECT order_id, user_id
+        FROM orders
+        WHERE order_status = 'pending'::order_status_enum
+          AND order_payment_deadline &lt;= #{now}
+    </select>
+
+    <update id="updateOrderStatusToExpired">
+        UPDATE orders
+        SET order_status = 'expired'::order_status_enum,
+            order_updated_at = now()
+        WHERE order_id = #{orderId}
+    </update>
+
+    <update id="applyAuctionPenaltyToUser">
+        UPDATE users
+        SET is_banned_from_auction = true,
+            auction_ban_until = #{banUntil}
+        WHERE user_id = #{userId}
+    </update>
+
+    <select id="findUserForAuctionBanCheck" resultType="com.goodsple.features.auth.entity.User">
+        SELECT
+            user_id as userId,
+            is_banned_from_auction as isBannedFromAuction,
+            auction_ban_until as auctionBanUntil
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <update id="releaseAuctionBan">
+        UPDATE users
+        SET
+            is_banned_from_auction = false,
+            auction_ban_until = null
+        WHERE
+            user_id = #{userId}
+    </update>
 </mapper>

@@ -4,15 +4,16 @@
  */
 package com.goodsple.features.order.entity;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor      // [추가] 빈 생성자를 만들어줍니다.
+@AllArgsConstructor   // [추가] 모든 필드를 받는 생성자를 만들어줍니다.
 public class Order {
     private Long orderId;
     private Long auctionId;

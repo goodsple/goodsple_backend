@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal; // [추가] BigDecimal import
 import java.util.List;
 import java.util.Map; // [추가] Map import
+import com.goodsple.features.auction.service.AuctionRealtimeService; // [추가] AuctionRealtimeService import
 
 @Service
 @RequiredArgsConstructor
@@ -31,8 +32,9 @@ public class UserAuctionService {
     private final AuctionRedisKeyManager keyManager;           // [추가] AuctionRedisKeyManager 의존성 주입
     private static final int UPCOMING_AUCTION_LIMIT = 5;
     private static final int RECENTLY_ENDED_AUCTION_LIMIT = 5;
+    private final AuctionRealtimeService auctionRealtimeService; // [추가] 의존성 주입
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuctionPageDataResponse getAuctionPageData(Long auctionId) {
         // 1. 현재 로그인한 사용자 정보 가져오기
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -74,6 +76,10 @@ public class UserAuctionService {
         // 4. [기존 로직] 응답 데이터에 현재 사용자 정보 추가
         response.getCurrentUser().setNickname(userDetails.getNickname());
         // isBanned 정보는 DB에서 가져온 값을 사용
+
+        // 5. 사용자의 최신 밴 상태를 확인하고, 만료 시 해제한 후 그 결과를 응답에 반영합니다.
+        boolean isBanned = auctionRealtimeService.checkAndReleaseAuctionBan(userDetails.getUserId());
+        response.getCurrentUser().setBanned(isBanned);
 
         return response;
     }
