@@ -235,7 +235,7 @@
             b.bid_id AS bidId,
             u.user_id AS userId, -- userId를 추가로 조회합니다.
             u.nickname AS userNickname,
-            b.bid_amount AS bidAmount,
+            b.bid_amount AS price,
             b.bid_created_at AS timestamp
         FROM
             bids b
