@@ -126,7 +126,7 @@ public class AuctionRealtimeService {
                 .bidId(System.currentTimeMillis()) // 임시 ID
                 .userId(userDetails.getUserId()) // userId 추가!
                 .userNickname(userDetails.getNickname())
-                .bidAmount(bidRequest.getAmount())
+                .price(bidRequest.getAmount())
                 .timestamp(OffsetDateTime.now())
                 .build();
         redisTemplate.opsForZSet().add(bidsKey, newBid, System.currentTimeMillis());

@@ -176,7 +176,7 @@
         <!-- select 속성을 이용해 별도의 쿼리를 호출하여 채웁니다. -->
         <!-- column="auction_id"는 메인 쿼리 결과의 auction_id 값을 서브 쿼리의 파라미터로 넘기라는 의미입니다. -->
         <collection property="bidHistory"
-                    select="findBidHistoryByAuctionId"
+                    select="findAdminBidHistoryByAuctionId"
                     column="auction_id"
                     ofType="com.goodsple.features.admin.auction.dto.response.BidHistoryInfo"/>
     </resultMap>
@@ -211,6 +211,22 @@
             shipping_info si ON o.order_id = si.order_id
         WHERE
             a.auction_id = #{auctionId}
+    </select>
+
+    <!-- 관리자용 입찰 내역 조회 쿼리 (프론트엔드 타입에 맞춤) -->
+    <select id="findAdminBidHistoryByAuctionId" resultType="com.goodsple.features.admin.auction.dto.response.BidHistoryInfo">
+        SELECT
+            b.bid_created_at AS time,
+        u.nickname AS bidder,
+        b.bid_amount AS price
+        FROM
+            bids b
+            JOIN
+            users u ON b.user_id = u.user_id
+        WHERE
+            b.auction_id = #{auctionId}
+        ORDER BY
+            b.bid_created_at DESC
     </select>
 
     <!-- 입찰 기록만 조회하는 새로운 서브 쿼리 (수정) -->

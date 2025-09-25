@@ -111,7 +111,7 @@ public class AuctionScheduler {
                                 // LinkedHashMap을 BidHistoryInfo 클래스로 명시적으로 변환합니다.
                                 BidHistoryInfo info = objectMapper.convertValue(obj, BidHistoryInfo.class);
 
-                                return new BidLogDto(auctionId, info.getUserId(), info.getBidAmount(), info.getTimestamp());
+                                return new BidLogDto(auctionId, info.getUserId(), info.getPrice(), info.getTimestamp());
                             })
                             .collect(Collectors.toList());
                     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲

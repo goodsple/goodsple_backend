@@ -88,7 +88,14 @@ public interface AuctionMapper {
      * @param auctionId 조회할 경매 ID
      * @return 입찰 기록 리스트
      */
-    List<BidHistoryInfo> findBidHistoryByAuctionId(Long auctionId);
+    List<com.goodsple.features.auction.dto.response.BidHistoryInfo> findBidHistoryByAuctionId(Long auctionId);
+
+    /**
+     * [관리자용] 특정 경매의 전체 입찰 기록을 조회합니다. (관리자 결과 페이지용)
+     * @param auctionId 조회할 경매 ID
+     * @return 입찰 기록 리스트
+     */
+    List<BidHistoryInfo> findAdminBidHistoryByAuctionId(Long auctionId);
 
     /**
      * 특정 경매의 상태를 변경합니다.
@@ -168,4 +175,5 @@ public interface AuctionMapper {
      * 사용자의 경매 참여 제한을 해제합니다.
      */
     void releaseAuctionBan(@Param("userId") Long userId);
+
 }
