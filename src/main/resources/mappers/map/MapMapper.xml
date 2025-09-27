@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.map.mapper.MapMapper">
+
+    <select id="findGoodsInBounds" resultType="com.goodsple.features.map.dto.response.MapGoodsResponse">
+        SELECT
+            p.exchange_post_id AS id,
+            p.exchange_post_title AS name,
+            p.post_trade_type AS tradeType,
+            ST_Y(p.location::geometry) AS lat, -- geography를 geometry로 명시적 형변환
+            ST_X(p.location::geometry) AS lng, -- geography를 geometry로 명시적 형변환
+            (SELECT pi.post_image_url
+             FROM exchange_post_image pi
+             WHERE pi.exchange_post_id = p.exchange_post_id
+             ORDER BY pi.post_sort_order
+                LIMIT 1) AS imageUrl
+        FROM
+            exchange_post p
+        WHERE
+        -- [수정] geography 타입을 geometry로 명시적으로 형변환하여 비교합니다.
+        -- 이렇게 하면 타입 불일치로 인한 조회 실패를 방지할 수 있습니다.
+            ST_Intersects(
+            p.location::geometry,
+            ST_SetSRID(ST_MakeEnvelope(#{swLng}, #{swLat}, #{neLng}, #{neLat}), 4326)
+            )
+        -- [추가] 조회 성능 및 정확도를 위해 location이 NULL이 아닌 데이터만 조회합니다.
+          AND p.location IS NOT NULL
+    </select>
+
+</mapper>

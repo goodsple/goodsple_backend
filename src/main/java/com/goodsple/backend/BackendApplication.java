@@ -29,7 +29,8 @@ import org.springframework.web.client.RestTemplate;
     "com.goodsple.features.noticelist.mapper",
     "com.goodsple.features.payment.mapper",
     "com.goodsple.features.admin.report.mapper",
-    "com.goodsple.features.postlist.mapper"
+    "com.goodsple.features.postlist.mapper",
+        "com.goodsple.features.map.mapper"
 
 })
 
