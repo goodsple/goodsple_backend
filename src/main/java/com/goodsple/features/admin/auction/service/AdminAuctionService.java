@@ -17,6 +17,8 @@ import com.goodsple.features.auction.dto.AuctionState;
 import com.goodsple.features.auction.service.AuctionRealtimeService;
 import com.goodsple.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,9 +30,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static io.lettuce.core.pubsub.PubSubOutput.Type.message;
+
 @Service
 @RequiredArgsConstructor
 public class AdminAuctionService {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminAuctionService.class); // [추가]
 
     private final AuctionMapper auctionMapper;
     private final AuctionRealtimeService auctionRealtimeService;
@@ -84,7 +90,9 @@ public class AdminAuctionService {
         CustomUserDetails userDetails = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Long adminUserId = userDetails.getUserId();
 
-        // 4. DTO를 Auction 엔티티로 변환
+        // 4. 시작 시간에 따라 초기 상태를 결정합니다.
+        final String initialStatus = request.startTime.isAfter(OffsetDateTime.now()) ? "scheduled" : "active";
+
         Auction auction = Auction.builder()
                 .userId(adminUserId)
                 .auctionTitle(request.productName)
@@ -93,7 +101,7 @@ public class AdminAuctionService {
                 .auctionMinBidUnit(request.minBidUnit)
                 .auctionStartTime(request.startTime)
                 .auctionEndTime(request.endTime)
-                .auctionStatus("scheduled") // 생성 시 기본 상태는 '예정'
+                .auctionStatus(initialStatus) // 결정된 초기 상태 사용
                 .build();
 
         // 5. 경매 정보 저장 (useGeneratedKeys에 의해 auction 객체에 auctionId가 채워짐)
@@ -105,6 +113,22 @@ public class AdminAuctionService {
             for (String url : request.imageUrls) {
                 auctionMapper.insertAuctionImage(newAuctionId, url);
             }
+        }
+
+        // 7. 만약 즉시 시작 상태('active')라면, Redis에 데이터를 등록합니다.
+        if ("active".equals(initialStatus)) {
+            // [수정] DB를 다시 조회하는 대신, 이미 가지고 있는 정보로 AuctionState 객체를 직접 생성합니다.
+            AuctionState initialState = new AuctionState(
+                    newAuctionId,
+                    request.startPrice,
+                    request.minBidUnit,
+                    "없음", // 최초 입찰자는 '없음'
+                    -1L,   // 최초 입찰자 ID는 -1
+                    request.endTime
+            );
+
+            auctionRealtimeService.startAuction(initialState);
+            log.info("생성된 경매 ID {}를 즉시 시작합니다.", newAuctionId);
         }
 
         return newAuctionId;
@@ -183,52 +207,31 @@ public class AdminAuctionService {
     }
 
     @Transactional
-    public void updateAuctionStatus(Long auctionId, String newStatus) { // [수정] 변수명 명확화 (status -> newStatus)
-        // 1. 수정할 경매가 존재하는지 확인
+    public void updateAuctionStatus(Long auctionId, String newStatus) {
         Auction auction = auctionMapper.findAuctionForUpdate(auctionId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "해당 경매를 찾을 수 없습니다. ID: " + auctionId));
 
-        // 2. [추가] 이미 같은 상태이면 아무 작업도 하지 않고 리턴 (불필요한 DB 업데이트 및 알림 방지)
         if (auction.getAuctionStatus().equalsIgnoreCase(newStatus)) {
             return;
         }
 
-        // 3. 유효한 상태 값인지 확인하는 로직 (선택 사항이지만 권장)
-        // 예: Enum.valueOf(AuctionStatusEnum.class, newStatus.toUpperCase());
-
-        // 4. 상태 업데이트 쿼리 실행
         auctionMapper.updateAuctionStatus(auctionId, newStatus);
 
-        // 5. [추가] 상태 변경에 따른 후속 조치: WebSocket으로 참여자에게 알림 전송
-        String message;
-        String type;
+        final String statusLower = newStatus.toLowerCase();
 
-        // newStatus 값에 따라 메시지와 타입을 결정합니다.
-        // 프론트엔드와 약속된 타입(예: AUCTION_CANCELLED, AUCTION_STOPPED)을 사용합니다.
-        switch (newStatus.toLowerCase()) {
-            case "cancelled":
-                message = "경매가 관리자에 의해 취소되었습니다.";
-                type = "AUCTION_CANCELLED";
-                break;
-            // '중지' 상태가 있다면 여기에 추가할 수 있습니다.
-            // case "stopped":
-            //     message = "경매가 관리자에 의해 일시 중지되었습니다.";
-            //     type = "AUCTION_STOPPED";
-            //     break;
-            default:
-                // 다른 상태 변경(예: scheduled -> active)은 스케줄러가 담당하므로
-                // 여기서는 별도의 알림을 보내지 않거나, 필요 시 추가할 수 있습니다.
-                return;
+        if ("cancelled".equals(statusLower)) {
+            Map<String, String> payload = Map.of("type", "AUCTION_CANCELLED", "message", "경매가 관리자에 의해 중지되었습니다.");
+            messagingTemplate.convertAndSend("/topic/auctions/" + auctionId, payload);
+
+            auctionRealtimeService.removeAuctionFromRedis(auctionId);
+            log.info("중지된 경매 ID {}의 Redis 데이터를 삭제합니다.", auctionId);
+
+        } else if ("active".equals(statusLower)) {
+            AuctionState initialState = auctionMapper.findInitialAuctionStateById(auctionId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "경매 정보를 찾을 수 없습니다. ID: " + auctionId));
+            auctionRealtimeService.startAuction(initialState);
+            log.info("경매 ID {}를 관리자가 재개합니다.", auctionId);
         }
-
-        // 알림 메시지를 담을 DTO(Map) 생성
-        Map<String, String> payload = Map.of(
-                "type", type,
-                "message", message
-        );
-
-        // 해당 경매의 토픽을 구독 중인 모든 클라이언트에게 메시지 전송
-        messagingTemplate.convertAndSend("/topic/auctions/" + auctionId, payload);
     }
 
     @Transactional(readOnly = true)

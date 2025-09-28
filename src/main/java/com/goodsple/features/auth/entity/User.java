@@ -42,6 +42,7 @@ public class User {
 
     private String kakaoId;
     private Boolean isBannedFromAuction = false;
+    private OffsetDateTime auctionBanUntil;
 
     @Builder
     private User(
@@ -62,7 +63,8 @@ public class User {
             OffsetDateTime userUpdatedAt,
             LoginType loginType,
             String kakaoId,
-            Boolean isBannedFromAuction
+            Boolean isBannedFromAuction,
+            OffsetDateTime auctionBanUntil // [추가]
     ) {
         this.userId = userId;
         this.loginId = loginId;
@@ -82,5 +84,6 @@ public class User {
         this.loginType           = loginType           != null ? loginType           : LoginType.LOCAL;
         this.kakaoId             = kakaoId;
         this.isBannedFromAuction = isBannedFromAuction != null ? isBannedFromAuction : Boolean.FALSE;
+        this.auctionBanUntil = auctionBanUntil; // [추가]
     }
 }

@@ -1,6 +1,7 @@
 package com.goodsple.features.category.controller;
 
 import com.goodsple.features.category.entity.ThirdCate;
+import com.goodsple.features.category.service.SecondCateService;
 import com.goodsple.features.category.service.ThirdCateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,7 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name="ThirdCate", description="3차 카테고리")
 public class ThirdCateController {
-    
+
+    private final SecondCateService secondCateService;
     private final ThirdCateService thirdCateService;
 
     // 3차 카테 등록
@@ -30,12 +32,16 @@ public class ThirdCateController {
             @ApiResponse(responseCode = "500", description = "서버 오류가 발생했습니다.")
     })
     @PostMapping
-    public ResponseEntity<Void> createThirdCate(
-            @RequestBody ThirdCate ThirdCate)
-    {
-        thirdCateService.createThirdCate(ThirdCate);
+    public ResponseEntity<Void> createThirdCate(@RequestBody ThirdCate thirdCate) {
+        // 프론트에서 secondCateId를 직접 전달받도록 변경
+        if (thirdCate.getSecondCateId() == null) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        thirdCateService.createThirdCate(thirdCate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
 
     // 3차 카테 전체조회
     @Operation(summary = "3차 카테고리 전체조회", description = "3차 카테고리 전체를 조회합니다")
@@ -44,8 +50,7 @@ public class ThirdCateController {
             @ApiResponse(responseCode = "500", description = "서버 오류가 발생했습니다.")
     })
     @GetMapping("/all")
-    public ResponseEntity<List<ThirdCate>> getAllThirdCates()
-    {
+    public ResponseEntity<List<ThirdCate>> getAllThirdCates() {
         List<ThirdCate> cates = thirdCateService.getAllThirdCate();
         return ResponseEntity.ok(cates);
     }
@@ -56,8 +61,7 @@ public class ThirdCateController {
             @ApiResponse(responseCode = "500", description = "서버 오류가 발생했습니다.")
     })
     @GetMapping("/{secondCateId}")
-    public ResponseEntity<List<ThirdCate>> getAllThirdCatesBySecondCateId(@PathVariable Long secondCateId)
-    {
+    public ResponseEntity<List<ThirdCate>> getAllThirdCatesBySecondCateId(@PathVariable Long secondCateId) {
         List<ThirdCate> cates = thirdCateService.getAllThirdCateBySecondCateId(secondCateId);
         return ResponseEntity.ok(cates);
     }

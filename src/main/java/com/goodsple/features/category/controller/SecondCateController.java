@@ -18,6 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name="SecondCate", description="2차 카테고리")
 public class SecondCateController {
+
     private final SecondCateService secondCateService;
 
     // 2차 카테 등록
@@ -29,11 +30,9 @@ public class SecondCateController {
             @ApiResponse(responseCode = "500", description = "서버 오류가 발생했습니다.")
     })
     @PostMapping
-    public ResponseEntity<Void> createSecondCate(
-            @RequestBody SecondCate SecondCate)
-    {
-        secondCateService.createSecondCate(SecondCate);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+    public ResponseEntity<SecondCate> createSecondCate(@RequestBody SecondCate secondCate) {
+        SecondCate saved = secondCateService.createSecondCate(secondCate);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     // 2차 카테 전체조회

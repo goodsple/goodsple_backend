@@ -100,6 +100,15 @@ public class AuthController {
         if (raw == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type 누락");
         String k = raw.trim().toUpperCase();
         switch (k) {
+
+            //완수 추가 시작
+            case "LOGIN_ID":
+            case "LOGINID":
+                return CheckType.LOGIN_ID;
+            case "EMAIL":
+                return CheckType.EMAIL;
+            //완수 추가 끝
+
             case "NICKNAME":      return CheckType.NICKNAME;
             case "PHONE_NUMBER":
             case "PHONENUMBER":

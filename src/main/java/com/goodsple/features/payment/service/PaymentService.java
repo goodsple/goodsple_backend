@@ -40,11 +40,24 @@ public class PaymentService {
 
     @Transactional
     public void confirmPayment(Long userId, PaymentConfirmRequest request) {
+
+        // [추가] 들어온 데이터 로그 남기기 (디버깅에 유용)
+        log.info("결제 승인 요청 수신: orderId='{}', tossOrderId='{}', paymentKey='{}'",
+                request.getOrderId(), request.getTossOrderId(), request.getPaymentKey());
+
+        Long orderIdAsLong;
+        try {
+            orderIdAsLong = Long.valueOf(request.getOrderId());
+        } catch (NumberFormatException e) {
+            log.error("유효하지 않은 숫자 형식의 orderId 입니다: {}", request.getOrderId(), e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "잘못된 주문 ID 형식입니다.");
+        }
+
         // 1. DB에서 주문 정보 조회 및 검증
-        PaymentInfoResponse orderInfo = paymentMapper.findPaymentInfoByOrderId(userId, Long.valueOf(request.getOrderId()))
+        PaymentInfoResponse orderInfo = paymentMapper.findPaymentInfoByOrderId(userId, orderIdAsLong)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "주문 정보가 존재하지 않습니다."));
 
-        // 2. 실제 결제 금액과 DB에 저장된 주문 금액이 일치하는지 검증 (매우 중요)
+        // 2. 실제 결제 금액과 DB에 저장된 주문 금액이 일치하는지 검증
         if (request.getAmount().compareTo(orderInfo.getAmount()) != 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "주문 금액이 일치하지 않습니다.");
         }
@@ -69,14 +82,16 @@ public class PaymentService {
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 // 6. 결제 성공 시, 우리 DB에 관련 정보 저장
-                // 6-1. orders 테이블 상태 'paid'로 변경
-                paymentMapper.updateOrderStatus(Long.valueOf(request.getOrderId()), "paid");
 
-                // 6-2. payments 테이블에 결제 기록 저장 (pg_transaction_id 등)
-                // (구현 생략 - 필요시 추가)
+                // 6-1. orders 테이블 상태 'paid'로 변경 (기존과 동일)
+                paymentMapper.updateOrderStatus(orderIdAsLong, "paid");
 
-                // 6-3. shipping_info 테이블에 배송 정보 저장
-                // (구현 생략 - 필요시 추가)
+                // 6-2. shipping_info 테이블에 배송 정보 저장
+                paymentMapper.insertShippingInfo(orderIdAsLong, request.getShippingInfo());
+                log.info("주문 ID {}에 대한 배송 정보가 저장되었습니다.", orderIdAsLong);
+                //
+
+                // TODO: 6-3. payments 테이블에 결제 기록 저장 (필요 시 추가)
 
             } else {
                 // 토스페이먼츠가 200 OK가 아닌 다른 응답을 줬을 경우 (예: 이미 처리된 결제)

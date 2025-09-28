@@ -6,7 +6,8 @@ import java.util.List;
 
 public interface SecondCateService {
 
-    void createSecondCate(SecondCate SecondCate);
+    SecondCate createSecondCate(SecondCate secondCate); // void → SecondCate
+//    void createSecondCate(SecondCate SecondCate);
     List<SecondCate> getAllSecondCate();
     List<SecondCate> getAllSecondCateByFirstCateId(Long id);
     SecondCate getSecondCateById(Long id);

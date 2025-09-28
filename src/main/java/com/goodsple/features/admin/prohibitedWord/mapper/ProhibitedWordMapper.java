@@ -14,4 +14,12 @@ public interface ProhibitedWordMapper {
     int insertWord(@Param("word") String word);
 
     int deleteWords(@Param("ids") List<Long> ids);
+
+    int countByWord(@Param("word") String word);
+
+    int toggleWordActive(@Param("id") Long id);
+
+    List<String> selectActiveWords();
+
+
 }

@@ -21,8 +21,13 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import com.goodsple.features.admin.auction.mapper.AuctionMapper; // [추가] AuctionMapper import
+import com.goodsple.features.auth.entity.User; // [추가] User 엔티티 import
+import org.springframework.transaction.annotation.Transactional; // [추가] Transactional import
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +37,7 @@ public class AuctionRealtimeService {
     private final SimpMessagingTemplate messagingTemplate;
     private final RedisTemplate<String, Object> redisTemplate;
     private final AuctionRedisKeyManager keyManager;
+    private final AuctionMapper auctionMapper; // [추가] AuctionMapper 의존성 주입
     // private final ProhibitedWordService prohibitedWordService; // TODO: 금지어 기능 연동 시 주석 해제
 
     // ... (startAuction 메소드는 기존과 동일) ...
@@ -50,6 +56,28 @@ public class AuctionRealtimeService {
 
     // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ processBid 메소드 전체를 아래 내용으로 교체합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     public void processBid(Long auctionId, CustomUserDetails userDetails, BidRequest bidRequest) {
+
+        // 1. 입찰 시도 시 사용자의 패널티 상태를 먼저 확인합니다.
+        boolean isBanned = checkAndReleaseAuctionBan(userDetails.getUserId());
+        if (isBanned) {
+            log.warn("경매 참여가 제한된 사용자(ID: {})의 입찰 시도.", userDetails.getUserId());
+
+            // [수정] 사용자에게만 전송할 에러 메시지 DTO(Map)를 생성합니다.
+            Map<String, String> payload = Map.of(
+                    "type", "AUCTION_BAN_ERROR", // 프론트가 식별할 수 있는 새로운 타입
+                    "message", "경매 참여가 제한된 상태입니다. 입찰할 수 없습니다."
+            );
+
+            // [수정] 특정 사용자에게만 메시지를 보냅니다.
+            // 첫 번째 인자: 사용자의 이름(principal.getName(), 여기서는 loginId)
+            // 두 번째 인자: 메시지를 받을 프론트엔드의 개인 큐(queue) 주소
+            // 세 번째 인자: 전송할 데이터
+            messagingTemplate.convertAndSendToUser(userDetails.getUsername(), "/queue/errors", payload);
+
+            return; // 입찰 처리 중단
+        }
+        //
+
         String stateKey = keyManager.getAuctionStateKey(auctionId);
         HashOperations<String, Object, Object> hashOps = redisTemplate.opsForHash();
 
@@ -98,7 +126,7 @@ public class AuctionRealtimeService {
                 .bidId(System.currentTimeMillis()) // 임시 ID
                 .userId(userDetails.getUserId()) // userId 추가!
                 .userNickname(userDetails.getNickname())
-                .bidAmount(bidRequest.getAmount())
+                .price(bidRequest.getAmount())
                 .timestamp(OffsetDateTime.now())
                 .build();
         redisTemplate.opsForZSet().add(bidsKey, newBid, System.currentTimeMillis());
@@ -130,5 +158,36 @@ public class AuctionRealtimeService {
                 .build();
 
         messagingTemplate.convertAndSend("/topic/auctions/" + auctionId, chatResponse);
+    }
+
+    /**
+     * 사용자의 경매 참여 제한 상태를 확인하고, 만료되었다면 해제하는 공통 메소드
+     * @param userId 확인할 사용자 ID
+     * @return 현재 참여 제한 상태이면 true, 아니면 false
+     */
+    @Transactional
+    public boolean checkAndReleaseAuctionBan(Long userId) {
+        User user = auctionMapper.findUserForAuctionBanCheck(userId);
+
+        // 사용자가 없거나, 밴 상태가 아니면 즉시 false 반환
+        if (user == null || !user.getIsBannedFromAuction()) {
+            return false;
+        }
+
+        // 밴 상태이지만, 만료 시간이 지났다면 밴을 해제합니다.
+        if (user.getAuctionBanUntil() != null && user.getAuctionBanUntil().isBefore(OffsetDateTime.now())) {
+            auctionMapper.releaseAuctionBan(userId);
+            log.info("사용자 ID {}의 경매 참여 제한이 만료되어 자동으로 해제되었습니다.", userId);
+            return false; // 밴이 해제되었으므로 참여 가능 (false)
+        }
+
+        // 아직 밴 기간이 유효하면 참여 불가능 (true)
+        return true;
+    }
+
+    public void removeAuctionFromRedis(Long auctionId) {
+        String stateKey = keyManager.getAuctionStateKey(auctionId);
+        String bidsKey = keyManager.getAuctionBidsKey(auctionId);
+        redisTemplate.delete(List.of(stateKey, bidsKey));
     }
 }
