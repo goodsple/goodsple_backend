@@ -26,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
     "com.goodsple.features.exchangedetail.mapper",
     "com.goodsple.features.mybids.mapper",
     "com.goodsple.features.myexchange.mapper",
+    "com.goodsple.features.search.mapper",
     "com.goodsple.features.noticelist.mapper",
     "com.goodsple.features.payment.mapper",
     "com.goodsple.features.admin.report.mapper",
