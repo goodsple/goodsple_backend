@@ -48,6 +48,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    implementation 'net.postgis:postgis-jdbc:2023.1.0'
+    implementation 'net.postgis:postgis-geometry:2023.1.0'
+
 
     // WebSocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'

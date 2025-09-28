@@ -25,6 +25,10 @@ public class ProhibitedWordService {
     // 금칙어 추가
     @Transactional
     public void addWord(ProhibitedWordRequest request) {
+        if (mapper.countByWord(request.getWord()) > 0) {
+            throw new IllegalArgumentException("이미 등록된 금칙어입니다: " + request.getWord());
+        }
+
         mapper.insertWord(request.getWord());
     }
 
@@ -32,5 +36,19 @@ public class ProhibitedWordService {
     @Transactional
     public void deleteWords(List<Long> ids) {
         mapper.deleteWords(ids);
+    }
+
+    // 활성/비활성 토글
+    @Transactional
+    public void toggleWord(Long id) {
+        int updated = mapper.toggleWordActive(id);
+        if (updated == 0) {
+            throw new IllegalArgumentException("존재하지 않는 금칙어 ID: " + id);
+        }
+    }
+
+    // 활성화 금칙어 조회
+    public List<String> getActiveWords() {
+        return mapper.selectActiveWords();
     }
 }
