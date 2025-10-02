@@ -51,6 +51,9 @@ public class ExchangePostDto {
 //  @Size(min = 1, message = "이미지 URL은 최소 하나 이상 필요합니다.")
   private List<String> imageUrls;
 
+  private Double latitude;
+  private Double longitude;
+
 
 
 }
