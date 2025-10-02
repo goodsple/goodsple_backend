@@ -9,11 +9,14 @@
         INSERT INTO exchange_post (
                                    user_id, third_cate_id, exchange_post_title, post_description,
                                    post_location_code, post_location_name, post_hope_region,
-                                   post_trade_type, delivery_price_normal, delivery_price_half, half_delivery_type)
+                                   post_trade_type, delivery_price_normal, delivery_price_half, half_delivery_type, location)
         VALUES (#{userId}, #{post.thirdCateId}, #{post.exchangePostTitle}, #{post.postDescription},
                 #{post.postLocationCode}, #{post.postLocationName},
                 #{post.postHopeRegion}, #{post.postTradeType}, #{post.deliveryPriceNormal},
-                #{post.deliveryPriceHalf}, #{post.halfDeliveryType})
+                #{post.deliveryPriceHalf}, #{post.halfDeliveryType},
+               -- 2. PostGIS 형식에 맞게 경도(lng), 위도(lat) 값을 추가합니다.
+            ST_SetSRID(ST_MakePoint(#{post.longitude}, #{post.latitude}), 4326)
+            )
     </insert>
 
     <insert id="insertExchangePostImage">
