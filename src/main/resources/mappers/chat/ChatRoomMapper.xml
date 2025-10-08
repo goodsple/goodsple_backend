@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.chat.mapper.ChatRoomMapper">
+    <resultMap id="RoomMap" type="com.goodsple.features.chat.entity.ChatRoom">
+        <id property="chatRoomId" column="chat_room_id"/>
+        <result property="chatRoomCreatedAt" column="chat_room_created_at"/>
+        <result property="exchangePostId" column="exchange_post_id"/>
+        <result property="user1Id" column="user1_id"/>
+        <result property="user2Id" column="user2_id"/>
+    </resultMap>
+
+    <select id="findPair" resultMap="RoomMap">
+        SELECT * FROM chat_room
+        WHERE ((user1_id=#{a} AND user2_id=#{b}) OR (user1_id=#{b} AND user2_id=#{a}))
+          AND ((#{postId} IS NULL AND exchange_post_id IS NULL) OR exchange_post_id=#{postId})
+            LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="com.goodsple.features.chat.entity.ChatRoom"
+            useGeneratedKeys="true" keyProperty="chatRoomId">
+        INSERT INTO chat_room (exchange_post_id, user1_id, user2_id)
+        VALUES (#{exchangePostId}, #{user1Id}, #{user2Id})
+    </insert>
+</mapper>

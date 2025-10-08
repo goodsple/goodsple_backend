@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.chat.mapper.ChatParticipantMapper">
+    <resultMap id="PartMap" type="com.goodsple.features.chat.entity.ChatParticipant">
+        <id property="chatRoomId" column="chat_room_id"/>
+        <id property="userId" column="user_id"/>
+        <result property="lastReadMessageId" column="last_read_message_id"/>
+        <result property="joinedAt" column="joined_at"/>
+        <result property="leftAt" column="left_at"/>
+    </resultMap>
+
+    <insert id="upsert">
+        <![CDATA[
+        INSERT INTO chat_participant (chat_room_id, user_id)
+        VALUES (#{roomId}, #{userId})
+            ON CONFLICT (chat_room_id, user_id) DO NOTHING
+        ]]>
+    </insert>
+
+    <select id="findOne" resultMap="PartMap">
+        <![CDATA[
+        SELECT * FROM chat_participant
+        WHERE chat_room_id = #{roomId} AND user_id = #{userId}
+        ]]>
+    </select>
+
+    <select id="findPeer" resultMap="PartMap">
+        <![CDATA[
+        SELECT * FROM chat_participant
+        WHERE chat_room_id = #{roomId} AND user_id <> #{me}
+            LIMIT 1
+        ]]>
+    </select>
+
+    <update id="bumpCursor">
+        <![CDATA[
+        UPDATE chat_participant
+        SET last_read_message_id = GREATEST(COALESCE(last_read_message_id, 0), #{lastId})
+        WHERE chat_room_id = #{roomId} AND user_id = #{userId}
+        ]]>
+    </update>
+</mapper>
