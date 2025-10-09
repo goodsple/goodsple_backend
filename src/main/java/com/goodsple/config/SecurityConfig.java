@@ -87,9 +87,9 @@ public class SecurityConfig {
 
                         // 채팅 관련
                         .requestMatchers(HttpMethod.GET, "/api/chat/history/**").permitAll() // GET 요청 테스트 허용
-                        .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
-
-                        .requestMatchers("/api/main/**").permitAll()
+//                        .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
+                        .requestMatchers("/ws-stomp/**", "/ws/**").permitAll()
+                                .requestMatchers("/api/main/**").permitAll()
 
                         // 그 외 모든 요청은 JWT 인증 필요
                         .anyRequest().permitAll()
