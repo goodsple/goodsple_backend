@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://54.180.125.111:5432/goodsple
+    url: jdbc:postgresql://54.180.142.86:5432/goodsple
     driver-class-name: org.postgresql.Driver
     username: goodsple
     password: goodsple
@@ -61,7 +61,7 @@ storage:
 
 aws:
   s3:
-    bucket: goodsple-0814
+    bucket: goodsple-0814-ws
     region: ap-northeast-2
     allowed-types: profile,post,product,event,review,banner,auction
 
