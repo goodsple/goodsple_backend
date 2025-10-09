@@ -2,6 +2,8 @@ package com.goodsple.features.chat.controller;
 
 import com.goodsple.features.chat.dto.CreateRoomReq;
 import com.goodsple.features.chat.dto.MessageRes;
+import com.goodsple.features.chat.dto.RoomSummaryRes;
+import com.goodsple.features.chat.dto.SendMessageReq;
 import com.goodsple.features.chat.entity.ChatMessage;
 import com.goodsple.features.chat.service.ChatService;
 import com.goodsple.security.CurrentUser;
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -97,6 +100,59 @@ public class ChatController {
         );
     }
 
+    @Operation(
+            summary = "내 채팅방 요약 리스트",
+            description = "내가 참여 중인 모든 채팅방의 요약(상대 프로필, 마지막 메시지, 안읽음 수, 정렬기준 시간)을 반환합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = RoomSummaryRes.class)))),
+            @ApiResponse(responseCode = "401", description = "인증 필요",
+                    content = @Content(schema = @Schema(implementation = ErrorRes.class)))
+    })
+    @GetMapping("/rooms/summary")
+    public List<RoomSummaryRes> summaries(
+            @Parameter(description = "페이지 크기(최대 100)", example = "50")
+            @RequestParam(defaultValue = "50") int size,
+            @Parameter(description = "페이지 번호(0부터)", example = "0")
+            @RequestParam(defaultValue = "0") int page
+    ) {
+        Long me = auth.userId();
+        int limit = Math.max(1, Math.min(100, size));
+        int offset = Math.max(0, page) * limit;
+        return chatService.listSummaries(me, limit, offset);
+    }
+
+    @Operation(
+            summary = "메시지 전송",
+            description = "내가 참여 중인 채팅방에 텍스트 메시지를 전송합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(schema = @Schema(implementation = MessageRes.class))),
+            @ApiResponse(responseCode = "400", description = "요청 파라미터 오류",
+                    content = @Content(schema = @Schema(implementation = ErrorRes.class))),
+            @ApiResponse(responseCode = "401", description = "인증 필요",
+                    content = @Content(schema = @Schema(implementation = ErrorRes.class))),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음(방 비참여자)",
+                    content = @Content(schema = @Schema(implementation = ErrorRes.class)))
+    })
+    @PostMapping("/messages")
+    public MessageRes sendMessage(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "전송할 방/텍스트",
+                    content = @Content(schema = @Schema(implementation = SendMessageReq.class))
+            )
+            @Valid @RequestBody SendMessageReq req
+    ) {
+        Long me = auth.userId();
+        // 서비스는 ChatMessage 엔티티를 반환한다고 가정 (없으면 messageId만 반환해도 무방)
+        com.goodsple.features.chat.entity.ChatMessage saved = chatService.sendMessage(me, req.roomId(), req.text());
+        return toRes(saved);
+    }
+
+
     // ===== 문서 스키마용 작은 레코드들 =====
 
     @Schema(description = "roomId 응답")
@@ -118,4 +174,5 @@ public class ChatController {
             @Schema(description = "에러 코드", example = "CHAT-403") String code,
             @Schema(description = "메시지", example = "이 방의 참여자가 아닙니다.") String message
     ) {}
+
 }

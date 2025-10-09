@@ -1,41 +1,49 @@
 package com.goodsple.security;
 
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
-/**
- * 현재 로그인 사용자 userId 를 돌려주는 어댑터.
- * ChatController.Auth, ChatWsController.Auth 둘 다 구현해서 자동 주입되게 한다.
- */
 @Component
 public class AuthFacade implements CurrentUser {
 
     @Override
     public Long userId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getPrincipal() == null) {
-            throw new IllegalStateException("Unauthenticated");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null) {
+            throw new InsufficientAuthenticationException("Not authenticated");
         }
 
-        Object principal = authentication.getPrincipal();
+        Object p = auth.getPrincipal();
 
-        // ① 커스텀 프린시펄 사용 시 (추천: CustomUserDetails에 userId 필드가 있어야 함)
-        if (principal instanceof CustomUserDetails u) {
-            return u.getUserId();
+        // 1) 우리 커스텀 프린시펄만으로 해결 (getUser() 필요 없음)
+        if (p instanceof CustomUserDetails cud) {
+            return cud.getUserId();
         }
 
-        // ② JWT 필터가 claims(Map)를 principal로 넣는 경우
-        if (principal instanceof java.util.Map<?, ?> claims) {
+        // 2) 스프링 기본 UserDetails(username에 id가 들어있는 경우만)
+        if (p instanceof org.springframework.security.core.userdetails.User ud) {
+            try { return Long.valueOf(ud.getUsername()); } catch (NumberFormatException ignored) {}
+        }
+
+        // 3) Map 형태의 클레임을 principal로 쓰는 구현 방어
+        if (p instanceof java.util.Map<?, ?> claims) {
             Object v = claims.get("userId");
             if (v != null) return Long.valueOf(v.toString());
+            Object sub = claims.get("sub");
+            if (sub != null) try { return Long.valueOf(sub.toString()); } catch (NumberFormatException ignored) {}
         }
 
-        // ③ username(이메일)만 있는 경우 -> 필요시 UserService로 변환하도록 확장
-        if (principal instanceof String username) {
-            // TODO: userService.findIdByEmail(username)
+        // 4) String principal (예: "anonymousUser" 또는 "25")
+        if (p instanceof String s) {
+            if ("anonymousUser".equalsIgnoreCase(s)) {
+                throw new InsufficientAuthenticationException("Anonymous user");
+            }
+            try { return Long.valueOf(s); } catch (NumberFormatException ignored) {}
+            try { return Long.valueOf(auth.getName()); } catch (NumberFormatException ignored) {}
         }
 
-        throw new IllegalStateException("Unsupported principal type: " + principal.getClass());
+        throw new IllegalStateException("Unsupported principal type: " + p.getClass());
     }
 }

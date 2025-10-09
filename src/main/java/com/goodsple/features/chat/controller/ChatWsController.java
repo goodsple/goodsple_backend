@@ -15,7 +15,7 @@ import java.util.Map;
 
 /**
  * STOMP WebSocket 컨트롤러
- * publish:  /app/chat/send, /app/chat/read
+ * publish:   /app/chat/send, /app/chat/read
  * subscribe: /topic/chat.{roomId}
  */
 @Controller
@@ -30,7 +30,9 @@ public class ChatWsController {
     @MessageMapping("/chat/send")
     public void send(SendReq req) {
         Long me = auth.userId();
-        ChatMessage saved = chatService.send(req.roomId(), me, req.content());
+
+        // 서비스 시그니처에 맞게 호출 (content -> text)
+        ChatMessage saved = chatService.sendMessage(me, req.roomId(), req.content());
 
         tmpl.convertAndSend("/topic/chat." + req.roomId(),
                 Map.of(
@@ -58,9 +60,9 @@ public class ChatWsController {
                 Map.of(
                         "type", "message:read",
                         "data", Map.of(
-                                "roomId",             req.roomId(),
-                                "userId",             me,
-                                "lastReadMessageId",  req.lastReadMessageId()
+                                "roomId",            req.roomId(),
+                                "userId",            me,
+                                "lastReadMessageId", req.lastReadMessageId()
                         )
                 )
         );
