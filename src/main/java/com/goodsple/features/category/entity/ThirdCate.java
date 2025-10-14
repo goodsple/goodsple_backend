@@ -12,4 +12,6 @@ public class ThirdCate {
     private String cateName;
     private Long secondCateId;
     private String subText;
+    private String visibility;
+
 }

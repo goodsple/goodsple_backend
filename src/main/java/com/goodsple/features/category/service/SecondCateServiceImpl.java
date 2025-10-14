@@ -12,47 +12,39 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecondCateServiceImpl implements SecondCateService{
 
-    private final SecondCateMapper secondCateMapper;
-
-//    @Override
-//    @Transactional
-//    public void createSecondCate(SecondCate secondCate) {
-//        secondCateMapper.insertCate(secondCate);
-//    }
+    private final SecondCateMapper mapper;
 
     @Override
     @Transactional
     public SecondCate createSecondCate(SecondCate secondCate) {
-        secondCateMapper.insertCate(secondCate);
-        return secondCate; // DB 저장 후 ID가 들어간 객체 반환
-    }
-
-
-    @Override
-    public List<SecondCate> getAllSecondCate() {
-        return secondCateMapper.getAllSecondCate();
-    }
-
-    @Override
-    public List<SecondCate> getAllSecondCateByFirstCateId(Long id) {
-        return secondCateMapper.getAllSecondCateByFirstCateId(id);
-    }
-
-    @Override
-    public SecondCate getSecondCateById(Long id) {
-        return secondCateMapper.getSecondCateById(id);
+        mapper.insertCate(secondCate);
+        return secondCate;
     }
 
     @Override
     @Transactional
-    public void updateSecondCate(SecondCate secondCate)
-    {
-        secondCateMapper.updateCate(secondCate);
+    public void updateSecondCate(SecondCate secondCate) {
+        mapper.updateCate(secondCate);
     }
 
     @Override
+    @Transactional
     public void deleteSecondCate(Long id) {
-        secondCateMapper.deleteCateById(id);
+        mapper.deleteCateById(id);
     }
 
+    @Override
+    public List<SecondCate> getAllSecondCate() {
+        return mapper.getAllSecondCate();
+    }
+
+    @Override
+    public List<SecondCate> getAllSecondCateByFirstCateId(Long firstCateId) {
+        return mapper.getAllSecondCateByFirstCateId(firstCateId);
+    }
+
+    @Override
+    public SecondCate getSecondCateById(Long id) {
+        return mapper.getSecondCateById(id);
+    }
 }

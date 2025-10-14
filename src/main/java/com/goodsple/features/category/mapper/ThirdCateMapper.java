@@ -21,10 +21,10 @@ public interface ThirdCateMapper {
     @Options(useGeneratedKeys = true, keyProperty = "thirdCateId")
     void insertCate(ThirdCate thirdCate);
 
-    @Update("UPDATE third_cate SET cate_name = #{cateName} WHERE third_cate_id = #{thirdCateId}")
+    @Update("UPDATE third_cate SET cate_name = #{cateName}, sub_text = #{subText}, visibility = #{visibility} WHERE third_cate_id = #{thirdCateId}")
     void updateCate(ThirdCate thirdCate);
 
     @Delete("DELETE FROM third_cate WHERE third_cate_id = #{thirdCateId}")
-    void deleteCateById(@Param("thirdCateId") Long id);
+    void deleteCateById(@Param("thirdCateId") Long thirdCateId);
 
 }

@@ -12,4 +12,5 @@ import lombok.Setter;
 public class FirstCate {
     private Long firstCateId;
     private String cateName;
+    private String visibility;
 }

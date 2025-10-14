@@ -21,18 +21,23 @@ public class SecondCateController {
 
     private final SecondCateService secondCateService;
 
-    // 2차 카테 등록
-    @Operation(summary = "2차 카테고리 등록", description = "2차 카테고리를 등록합니다")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "2차 카테고리가 성공적으로 등록되었습니다."),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청입니다."),
-            @ApiResponse(responseCode = "401", description = "인증 오류입니다."),
-            @ApiResponse(responseCode = "500", description = "서버 오류가 발생했습니다.")
-    })
     @PostMapping
-    public ResponseEntity<SecondCate> createSecondCate(@RequestBody SecondCate secondCate) {
+    public ResponseEntity<SecondCate> create(@RequestBody SecondCate secondCate) {
         SecondCate saved = secondCateService.createSecondCate(secondCate);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Void> update(@PathVariable Long id, @RequestBody SecondCate secondCate) {
+        secondCate.setSecondCateId(id);
+        secondCateService.updateSecondCate(secondCate);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        secondCateService.deleteSecondCate(id);
+        return ResponseEntity.noContent().build();
     }
 
     // 2차 카테 전체조회
@@ -48,16 +53,7 @@ public class SecondCateController {
         return ResponseEntity.ok(cates);
     }
 
-    @Operation(summary = "2차 카테고리 부분조회", description = "2차 카테고리 일부를 조회합니다")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "2차 카테고리 일부 목록이 성공적으로 조회되었습니다."),
-            @ApiResponse(responseCode = "500", description = "서버 오류가 발생했습니다.")
-    })
-    @GetMapping("/{firstCateId}")
-    public ResponseEntity<List<SecondCate>> getAllSecondCatesByFirstCateId(@PathVariable Long firstCateId)
-    {
-        List<SecondCate> cates = secondCateService.getAllSecondCateByFirstCateId(firstCateId);
-        return ResponseEntity.ok(cates);
-    }
-
 }
+
+
+
