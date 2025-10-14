@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/category/first")
@@ -49,4 +50,16 @@ public class FirstCateController {
         List<FirstCate> cates = firstCateService.getAllFirstCate();
         return ResponseEntity.ok(cates);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateFirstCategory(
+        @PathVariable Long id,
+        @RequestBody Map<String, String> payload) {
+        String subText = payload.get("subText");
+        // 1차 카테고리 메모 업데이트
+        firstCateService.updateSubText(id, subText);
+        return ResponseEntity.ok().build();
+    }
+
+
 }
