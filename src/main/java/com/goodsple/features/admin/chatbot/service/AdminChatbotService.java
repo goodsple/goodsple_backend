@@ -3,6 +3,7 @@ package com.goodsple.features.admin.chatbot.service;
 
 import com.goodsple.features.admin.chatbot.dto.request.KnowledgeBaseCreateRequest;
 import com.goodsple.features.admin.chatbot.dto.request.KnowledgeBaseForwardRequest;
+import com.goodsple.features.admin.chatbot.dto.request.KnowledgeBaseUpdateForwardRequest;
 import com.goodsple.features.admin.chatbot.dto.request.KnowledgeBaseUpdateRequest;
 import com.goodsple.features.admin.chatbot.dto.response.KnowledgeBaseResponse;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,12 @@ public class AdminChatbotService {
     // 3. 항목 수정
     public KnowledgeBaseResponse updateKnowledge(Long id, KnowledgeBaseUpdateRequest request) {
         String url = pythonApiBaseUrl + "/knowledge/" + id;
-        HttpEntity<KnowledgeBaseUpdateRequest> requestEntity = new HttpEntity<>(request);
+
+        // 1. 프론트에서 받은 DTO를, 파이썬 통신 전용 '번역 DTO'로 변환합니다.
+        KnowledgeBaseUpdateForwardRequest forwardRequest = KnowledgeBaseUpdateForwardRequest.from(request);
+
+        // 2. '번역된' DTO를 담아서 Python 서버에 PUT 요청을 보냅니다.
+        HttpEntity<KnowledgeBaseUpdateForwardRequest> requestEntity = new HttpEntity<>(forwardRequest);
         return restTemplate.exchange(url, HttpMethod.PUT, requestEntity, KnowledgeBaseResponse.class).getBody();
     }
 
