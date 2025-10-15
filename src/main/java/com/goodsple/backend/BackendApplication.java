@@ -68,10 +68,10 @@ public class BackendApplication {
     SpringApplication.run(BackendApplication.class, args);
   }
 
-  @Bean
-  public RestTemplate restTemplate() {
-    return new RestTemplate();
-  }
+//  @Bean
+//  public RestTemplate restTemplate() {
+//    return new RestTemplate();
+//  }
 }
 
 //http://localhost:8080/swagger-ui.html 스웨거 확인 주소.
