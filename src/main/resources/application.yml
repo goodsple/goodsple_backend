@@ -87,3 +87,7 @@ payment:
     # 이 키를 사용하면 실제 돈이 나가지 않습니다.
     secret-key: test_sk_pP2YxJ4K87qKNmzvR22zVRGZwXLO
     # 나중에 실제 운영으로 전환할 때 이 키만 실제 키로 바꿔주면 됩니다.
+
+# AI 챗봇 Python 서버 API 설정
+chatbot-api:
+  url: http://127.0.0.1:8000/api
