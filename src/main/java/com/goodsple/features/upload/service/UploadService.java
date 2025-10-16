@@ -125,7 +125,7 @@ public class UploadService {
                     s3Key,
                     file.getInputStream(),
                     metadata
-            ).withCannedAcl(CannedAccessControlList.PublicRead);
+            );
 
             s3Client.putObject(putObjectRequest);
 
