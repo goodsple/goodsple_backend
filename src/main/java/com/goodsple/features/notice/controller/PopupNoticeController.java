@@ -35,4 +35,16 @@ public class PopupNoticeController {
     }
   }
 
+  // 공지사항 상세보기 (일반 조회)
+  @GetMapping("/{noticeId}")
+  public ResponseEntity<NoticeDto> getNoticeById(@PathVariable Long noticeId) {
+    NoticeDto notice = noticeService.getNotice(noticeId);
+    if (notice != null) {
+      return ResponseEntity.ok(notice);
+    } else {
+      return ResponseEntity.notFound().build();
+    }
+  }
+
+
 }
