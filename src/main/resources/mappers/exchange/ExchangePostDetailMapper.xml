@@ -15,6 +15,7 @@
         <result property="tradeType" column="post_trade_type"/>
         <result property="createdAt" column="exchange_post_created_at"/>
         <result property="writerId" column="user_id"/>
+        <result property="viewCount" column="view_count"/>
         <association property="writer" javaType="com.goodsple.features.exchangedetail.dto.PostWriterDto">
             <result property="id" column="user_id"/>
             <result property="nickname" column="nickname"/>
@@ -27,6 +28,13 @@
             <result property="halfDeliveryType" column="half_delivery_type"/>
         </association>
     </resultMap>
+
+    <!-- 게시글 조회 시 조회수 증가 -->
+    <update id="incrementViewCount">
+        UPDATE exchange_post
+        SET view_count = view_count + 1
+        WHERE exchange_post_id = #{postId}
+    </update>
 
     <!-- 게시글 상세 조회 -->
     <select id="selectPostDetailById" resultMap="postDetailMap">
@@ -43,7 +51,8 @@
                p.exchange_post_created_at,
                p.user_id,
                u.nickname,
-               u.profile_image
+               u.profile_image,
+               p.view_count
         FROM exchange_post p
                  JOIN users u ON u.user_id = p.user_id
                  LEFT JOIN third_cate tc ON tc.third_cate_id = p.third_cate_id

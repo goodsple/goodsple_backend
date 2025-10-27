@@ -14,6 +14,11 @@ public class ExchangePostDetailService {
   private final ExchangePostDetailMapper mapper;
 
   public PostDetailDto getPostDetail(Long postId) {
+
+    // 1. 조회수 증가
+    mapper.incrementViewCount(postId);
+
+    // 2. 게시글 상세 조회
     PostDetailDto post = mapper.selectPostDetailById(postId);
     if (post != null) {
       List<String> images = mapper.findImageUrlsByPostId(postId);

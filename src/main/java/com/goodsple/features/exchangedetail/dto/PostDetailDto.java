@@ -28,9 +28,6 @@ public class PostDetailDto {
   private OffsetDateTime createdAt;
 
   private Boolean isWriter;
-//  private int likes;
-//  private int views;
-//  private int queueCount;
-
+  private Integer viewCount;
 
 }
