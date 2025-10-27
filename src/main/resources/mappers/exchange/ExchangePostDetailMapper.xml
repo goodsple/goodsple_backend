@@ -4,19 +4,23 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.goodsple.features.exchangedetail.mapper.ExchangePostDetailMapper">
+
     <resultMap id="postDetailMap" type="com.goodsple.features.exchangedetail.dto.PostDetailDto">
         <id property="postId" column="exchange_post_id"/>
         <result property="title" column="exchange_post_title"/>
+        <result property="category" column="category"/>
         <result property="description" column="post_description"/>
         <result property="location" column="post_hope_region"/>
         <result property="status" column="post_trade_status"/>
         <result property="tradeType" column="post_trade_type"/>
         <result property="createdAt" column="exchange_post_created_at"/>
-        <result property="writerId" column="user_id"/>  <association property="writer" javaType="com.goodsple.features.exchangedetail.dto.PostWriterDto">
-        <result property="id" column="user_id"/>
-        <result property="nickname" column="nickname"/>
-        <result property="profileImageUrl" column="profile_image"/>
-    </association>
+        <result property="writerId" column="user_id"/>
+        <result property="viewCount" column="view_count"/>
+        <association property="writer" javaType="com.goodsple.features.exchangedetail.dto.PostWriterDto">
+            <result property="id" column="user_id"/>
+            <result property="nickname" column="nickname"/>
+            <result property="profileImageUrl" column="profile_image"/>
+        </association>
 
         <association property="delivery" javaType="com.goodsple.features.exchangedetail.dto.DeliveryInfo">
             <result property="normal" column="delivery_price_normal"/>
@@ -25,31 +29,42 @@
         </association>
     </resultMap>
 
+    <!-- 게시글 조회 시 조회수 증가 -->
+    <update id="incrementViewCount">
+        UPDATE exchange_post
+        SET view_count = view_count + 1
+        WHERE exchange_post_id = #{postId}
+    </update>
+
     <!-- 게시글 상세 조회 -->
     <select id="selectPostDetailById" resultMap="postDetailMap">
-        SELECT
-            p.exchange_post_id,
-            p.exchange_post_title,
-            p.post_description,
-            p.post_hope_region,
-            p.post_trade_status,
-            p.post_trade_type,
-            p.delivery_price_normal,
-            p.delivery_price_half,
-            p.half_delivery_type,
-            p.exchange_post_created_at,
-            p.user_id,
-            u.nickname,
-            u.profile_image
+        SELECT p.exchange_post_id,
+               p.exchange_post_title,
+               CONCAT_WS(' > ', fc.cate_name, sc.cate_name, tc.cate_name) AS category,
+               p.post_description,
+               p.post_hope_region,
+               p.post_trade_status,
+               p.post_trade_type,
+               p.delivery_price_normal,
+               p.delivery_price_half,
+               p.half_delivery_type,
+               p.exchange_post_created_at,
+               p.user_id,
+               u.nickname,
+               u.profile_image,
+               p.view_count
         FROM exchange_post p
                  JOIN users u ON u.user_id = p.user_id
+                 LEFT JOIN third_cate tc ON tc.third_cate_id = p.third_cate_id
+                 LEFT JOIN second_cate sc ON sc.second_cate_id = tc.second_cate_id
+                 LEFT JOIN first_cate fc ON fc.first_cate_id = sc.first_cate_id
         WHERE p.exchange_post_id = #{postId}
     </select>
 
     <!-- 거래 상태 변경 -->
     <update id="updatePostStatus">
         UPDATE exchange_post
-        SET post_trade_status = #{status},
+        SET post_trade_status        = #{status},
             exchange_post_updated_at = now()
         WHERE exchange_post_id = #{postId}
     </update>
