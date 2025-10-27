@@ -21,9 +21,9 @@ public class PopularSearchServiceImpl implements PopularSearchService {
   @Override
   public List<PopularKeywordDTO> getTopKeywords(int limit) {
     // Redis에서 점수 순으로 top N 키워드 가져오기
-    List<String> top = redisTemplate.opsForZSet()
-        .reverseRange(REDIS_KEY, 0, limit - 1)
-        .stream().toList();
+//    List<String> top = redisTemplate.opsForZSet()
+//        .reverseRange(REDIS_KEY, 0, limit - 1)
+//        .stream().toList();
 
     // DB에서 해당 키워드 정보 조회
     return mapper.selectTopKeywords(limit);
@@ -32,7 +32,7 @@ public class PopularSearchServiceImpl implements PopularSearchService {
   @Override
   public void recordSearch(String keyword) {
     // Redis ZSet 점수 증가
-    redisTemplate.opsForZSet().incrementScore(REDIS_KEY, keyword, 1);
+//    redisTemplate.opsForZSet().incrementScore(REDIS_KEY, keyword, 1);
 
     // DB 업데이트
     int updated = mapper.incrementSearchCount(keyword);
