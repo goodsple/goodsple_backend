@@ -23,6 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Transactional
 public class ChatServiceImpl implements ChatService {
+
     private final ChatRoomMapper roomMapper;
     private final ChatMessageMapper messageMapper;
     private final ChatParticipantMapper participantMapper;
@@ -37,9 +38,10 @@ public class ChatServiceImpl implements ChatService {
                             .user1Id(me)
                             .user2Id(peer)
                             .build();
-                    roomMapper.insert(r); // useGeneratedKeys=true 또는 RETURNING
+                    roomMapper.insert(r);
                     return r;
                 });
+
         participantMapper.upsert(room.getChatRoomId(), me);
         participantMapper.upsert(room.getChatRoomId(), peer);
         return room.getChatRoomId();
@@ -52,7 +54,6 @@ public class ChatServiceImpl implements ChatService {
         return messageMapper.page(roomId, beforeId, safeLimit);
     }
 
-    // 컨트롤러와 맞춘 “유일한” 전송 메서드
     @Override
     public ChatMessage sendMessage(Long me, Long roomId, String text) {
         if (roomId == null) throw new IllegalArgumentException("roomId required");
@@ -70,7 +71,7 @@ public class ChatServiceImpl implements ChatService {
                 .senderId(me)
                 .message(normalized)
                 .build();
-        messageMapper.insert(m); // 생성 PK/시간 세팅 (XML에서 처리)
+        messageMapper.insert(m);
         return m;
     }
 
@@ -92,7 +93,10 @@ public class ChatServiceImpl implements ChatService {
     @Override
     @Transactional(readOnly = true)
     public List<RoomSummaryRes> listSummaries(Long me, int limit, int offset) {
-        List<RoomSummaryRow> rows = summaryMapper.findSummaries(me, limit, offset);
+        int safeLimit  = (limit <= 0 || limit > 100) ? 50 : limit;
+        int safeOffset = Math.max(0, offset);
+
+        List<RoomSummaryRow> rows = summaryMapper.findSummaries(me, safeLimit, safeOffset);
         return rows.stream().map(r -> {
             RoomSummaryRes.Peer peer = new RoomSummaryRes.Peer(
                     r.getPeerUserId(), r.getPeerNickname(), r.getPeerAvatar(),
@@ -111,4 +115,14 @@ public class ChatServiceImpl implements ChatService {
             );
         }).toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Long findPeerId(Long roomId, Long me) {
+        return participantMapper.findPeer(roomId, me)
+                .map(ChatParticipant::getUserId)
+                .orElse(null);
+    }
+
+
 }

@@ -21,15 +21,20 @@
 
     <select id="findSummaries" resultMap="RoomSummaryRowMap">
         WITH my_rooms AS (
-            SELECT p.chat_room_id AS room_id
-            FROM chat_participant p
-            WHERE p.user_id = #{me}
+            SELECT
+                cr.chat_room_id AS room_id,
+                CASE
+                    WHEN cr.user1_id = #{me} THEN cr.user2_id
+                    ELSE cr.user1_id
+                    END AS peer_user_id
+            FROM chat_room cr
+            WHERE cr.user1_id = #{me} OR cr.user2_id = #{me}
         ),
              last_msg AS (
                  SELECT
                      m.chat_room_id AS room_id,
-                     m.message_id AS last_message_id,
-                     m.message AS last_text,
+                     m.message_id   AS last_message_id,
+                     m.message      AS last_text,
                      m.chat_message_created_at AS last_created_at,
                      ROW_NUMBER() OVER (PARTITION BY m.chat_room_id ORDER BY m.message_id DESC) AS rn
                  FROM chat_message m
@@ -49,18 +54,6 @@
                  WHERE m.message_id > COALESCE(p.last_read_message_id, 0)
                    AND m.sender_id != #{me}
         GROUP BY m.chat_room_id
-            ),
-            peer_pick AS (
-        SELECT
-            cp.chat_room_id AS room_id,
-            cp.user_id AS peer_user_id,
-            ROW_NUMBER() OVER (PARTITION BY cp.chat_room_id ORDER BY cp.user_id) rn
-        FROM chat_participant cp
-            JOIN my_rooms r ON r.room_id = cp.chat_room_id
-        WHERE cp.user_id != #{me}
-            ),
-            peer_1 AS (
-        SELECT room_id, peer_user_id FROM peer_pick WHERE rn = 1
             )
         SELECT
             r.room_id,
@@ -75,11 +68,11 @@
             COALESCE(ud.unread_count, 0) AS unread_count,
             COALESCE(lm.last_created_at, NOW()) AS updated_at
         FROM my_rooms r
-                 LEFT JOIN peer_1 pp     ON pp.room_id = r.room_id
-                 LEFT JOIN users u       ON u.user_id = pp.peer_user_id
+                 LEFT JOIN users u       ON u.user_id = r.peer_user_id
                  LEFT JOIN last_msg_1 lm ON lm.room_id = r.room_id
                  LEFT JOIN unread ud     ON ud.room_id = r.room_id
         ORDER BY updated_at DESC
             LIMIT #{limit} OFFSET #{offset}
     </select>
+
 </mapper>

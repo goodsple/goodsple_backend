@@ -65,4 +65,7 @@ public interface ChatService {
      * @param offset 시작 오프셋
      */
     List<RoomSummaryRes> listSummaries(Long me, int limit, int offset);
+
+    Long findPeerId(Long roomId, Long me);
+
 }
