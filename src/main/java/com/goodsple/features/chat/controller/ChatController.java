@@ -175,4 +175,18 @@ public class ChatController {
             @Schema(description = "메시지", example = "이 방의 참여자가 아닙니다.") String message
     ) {}
 
+    @PostMapping("/read")
+    public Map<String, Object> read(@RequestBody Map<String, Long> body) {
+        Long me = auth.userId();
+        Long roomId = body.get("roomId");
+        Long lastReadMessageId = body.get("lastReadMessageId"); // ← 키 이름 중요
+
+        if (roomId == null || lastReadMessageId == null) {
+            throw new IllegalArgumentException("roomId and lastReadMessageId are required");
+        }
+
+        chatService.read(roomId, me, lastReadMessageId);
+        return Map.of("ok", true);
+    }
+
 }
