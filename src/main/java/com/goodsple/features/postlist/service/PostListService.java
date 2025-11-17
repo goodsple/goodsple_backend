@@ -10,4 +10,7 @@ public interface PostListService {
 
   List<PostListDto> getPostsByCategory(Long categoryId);
 
+  List<PostListDto> getPostsByCategoryFilter(List<Long> secondIds, List<Long> thirdIds);
+
+
 }

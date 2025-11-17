@@ -1,13 +1,11 @@
 package com.goodsple.features.postlist.controller;
 
+import com.goodsple.features.postlist.dto.CategoryFilterRequest;
 import com.goodsple.features.postlist.dto.PostListDto;
 import com.goodsple.features.postlist.service.PostListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -35,4 +33,21 @@ public class PostListController {
   public ResponseEntity<List<PostListDto>> getPostsByCategory(@RequestParam Long categoryId) {
     return ResponseEntity.ok(postListService.getPostsByCategory(categoryId));
   }
+
+  // 2차/3차 카테고리 필터
+  @PostMapping("/filter")
+  public ResponseEntity<List<PostListDto>> getPostsByCategoryFilter(
+      @RequestBody CategoryFilterRequest filterRequest
+  ) {
+    return ResponseEntity.ok(
+        postListService.getPostsByCategoryFilter(
+            filterRequest.getSecondIds(),
+            filterRequest.getThirdIds()
+        )
+    );
+
+
+  }
 }
+
+
