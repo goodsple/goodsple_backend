@@ -11,6 +11,9 @@ public interface ExchangePostDetailMapper {
 
   PostDetailDto selectPostDetailById(@Param("postId") Long postId);
 
+  // 조회수 증가
+  void incrementViewCount(@Param("postId") Long postId);
+
   void updatePostStatus(@Param("postId") Long postId, @Param("status") String status);
 
   List<String> findImageUrlsByPostId(@Param("postId") Long postId);

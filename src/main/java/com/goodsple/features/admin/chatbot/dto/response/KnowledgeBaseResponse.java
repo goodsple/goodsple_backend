@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter // Setter 추가
@@ -41,9 +42,9 @@ public class KnowledgeBaseResponse {
 
     @JsonProperty("knowledge_created_at")
     @JsonAlias({"knowledgeCreatedAt", "knowledge_created_at"})
-    private LocalDateTime knowledgeCreatedAt;
+    private OffsetDateTime knowledgeCreatedAt;
 
     @JsonProperty("knowledge_updated_at")
     @JsonAlias({"knowledgeUpdatedAt", "knowledge_updated_at"})
-    private LocalDateTime knowledgeUpdatedAt;
+    private OffsetDateTime knowledgeUpdatedAt;
 }

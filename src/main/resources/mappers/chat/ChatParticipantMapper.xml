@@ -28,12 +28,18 @@
     </select>
 
     <select id="findPeer" resultMap="PartMap">
-        <![CDATA[
-        SELECT * FROM chat_participant
-        WHERE chat_room_id = #{roomId} AND user_id <> #{me}
+  <![CDATA[
+        SELECT *
+        FROM chat_participant
+        WHERE chat_room_id = #{roomId}
+          AND user_id <> #{me}
+          AND (left_at IS NULL)              -- 현재 참여자만 (있으면 권장)
+        ORDER BY joined_at ASC               -- 결정적 결과 보장용 (컬럼명 맞게)
             LIMIT 1
         ]]>
-    </select>
+</select>
+
+
 
     <update id="bumpCursor">
         <![CDATA[
