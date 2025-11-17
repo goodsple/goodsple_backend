@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class CategoryFilterRequest {
+public class PostFilterDto {
 
   private List<Long> secondIds;
   private List<Long> thirdIds;

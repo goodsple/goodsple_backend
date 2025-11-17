@@ -7,27 +7,25 @@
 
     <!-- 전체 글 조회 -->
     <select id="findAllPosts" resultType="com.goodsple.features.postlist.dto.PostListDto">
-        SELECT
-            p.exchange_post_id AS exchangePostId,
-            p.user_id AS writer,
-            u.nickname AS writerNickname,
-            p.exchange_post_created_at AS exchangePostCreatedAt,
-            p.post_trade_status AS postTradeStatus,
-            p.exchange_post_title AS exchangePostTitle
+        SELECT p.exchange_post_id         AS exchangePostId,
+               p.user_id                  AS writer,
+               u.nickname                 AS writerNickname,
+               p.exchange_post_created_at AS exchangePostCreatedAt,
+               p.post_trade_status        AS postTradeStatus,
+               p.exchange_post_title      AS exchangePostTitle
         FROM exchange_post p
-        JOIN users u ON p.user_id = u.user_id
+                 JOIN users u ON p.user_id = u.user_id
         ORDER BY exchange_post_created_at DESC
     </select>
 
     <!-- 1차 카테고리별 글 조회 -->
     <select id="findPostsByCategory" parameterType="long" resultType="com.goodsple.features.postlist.dto.PostListDto">
-        SELECT
-            p.exchange_post_id AS exchangePostId,
-            p.user_id AS writer,
-            u.nickname AS writerNickname,
-            p.exchange_post_created_at AS exchangePostCreatedAt,
-            p.post_trade_status AS postTradeStatus,
-            p.exchange_post_title AS exchangePostTitle
+        SELECT p.exchange_post_id         AS exchangePostId,
+               p.user_id                  AS writer,
+               u.nickname                 AS writerNickname,
+               p.exchange_post_created_at AS exchangePostCreatedAt,
+               p.post_trade_status        AS postTradeStatus,
+               p.exchange_post_title      AS exchangePostTitle
         FROM exchange_post p
                  JOIN users u ON p.user_id = u.user_id
                  JOIN third_cate t ON p.third_cate_id = t.third_cate_id
@@ -39,33 +37,31 @@
 
 
     <!-- 2차/3차 카테고리 필터링 -->
-    <select id="findPostsByCategoryFilter" parameterType="map" resultType="com.goodsple.features.postlist.dto.PostListDto">
-        SELECT
-        p.exchange_post_id AS exchangePostId,
+    <select id="findPostsBySecondAndThird" parameterType="com.goodsple.features.postlist.dto.PostFilterDto"
+            resultType="com.goodsple.features.postlist.dto.PostListDto">
+        SELECT p.exchange_post_id,
         p.user_id AS writer,
         u.nickname AS writerNickname,
-        p.exchange_post_created_at AS exchangePostCreatedAt,
-        p.post_trade_status AS postTradeStatus,
-        p.exchange_post_title AS exchangePostTitle
+        p.exchange_post_created_at,
+        p.post_trade_status,
+        p.exchange_post_title
         FROM exchange_post p
-        JOIN users u ON p.user_id = u.user_id
-        JOIN third_cate t ON p.third_cate_id = t.third_cate_id
-        JOIN second_cate s ON t.second_cate_id = s.second_cate_id
-        JOIN first_cate f ON s.first_cate_id = f.first_cate_id
-        <where>
-            <if test="secondIds != null">
-                AND s.second_cate_id IN
-                <foreach collection="secondIds" item="id" open="(" separator="," close=")">
-                    #{id}
-                </foreach>
-            </if>
-            <if test="thirdIds != null">
-                AND t.third_cate_id IN
-                <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
-                    #{id}
-                </foreach>
-            </if>
-        </where>
+        LEFT JOIN third_cate t ON p.third_cate_id = t.third_cate_id
+        LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id
+        LEFT JOIN users u ON p.user_id = u.user_id
+        WHERE 1=1
+        <if test="filter.secondIds != null and !filter.secondIds.isEmpty()">
+            AND s.second_cate_id IN
+            <foreach collection="filter.secondIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+        <if test="filter.thirdIds != null and !filter.thirdIds.isEmpty()">
+            AND p.third_cate_id IN
+            <foreach collection="filter.thirdIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
         ORDER BY p.exchange_post_created_at DESC
     </select>
 

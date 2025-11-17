@@ -1,5 +1,6 @@
 package com.goodsple.features.postlist.service.Impl;
 
+import com.goodsple.features.postlist.dto.PostFilterDto;
 import com.goodsple.features.postlist.dto.PostListDto;
 import com.goodsple.features.postlist.mapper.PostListMapper;
 import com.goodsple.features.postlist.service.PostListService;
@@ -25,13 +26,10 @@ public class PostListServiceImpl implements PostListService {
     return postListMapper.findPostsByCategory(categoryId);
   }
 
+  // 2차/3차 카테고리 필터링
   @Override
-  public List<PostListDto> getPostsByCategoryFilter(List<Long> secondIds, List<Long> thirdIds) {
-    // 2차 전체 선택 시 secondIds를 null로 보내서 쿼리에서 무시하도록
-    if (secondIds != null && secondIds.contains(0L)) {
-      secondIds = null;
-    }
-    return postListMapper.findPostsByCategoryFilter(secondIds, thirdIds);
+  public List<PostListDto> getPostsBySecondAndThird(PostFilterDto filterDto) {
+    return postListMapper.findPostsBySecondAndThird(filterDto);
   }
 
 

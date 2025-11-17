@@ -1,6 +1,6 @@
 package com.goodsple.features.postlist.controller;
 
-import com.goodsple.features.postlist.dto.CategoryFilterRequest;
+import com.goodsple.features.postlist.dto.PostFilterDto;
 import com.goodsple.features.postlist.dto.PostListDto;
 import com.goodsple.features.postlist.service.PostListService;
 import lombok.RequiredArgsConstructor;
@@ -36,18 +36,11 @@ public class PostListController {
 
   // 2차/3차 카테고리 필터
   @PostMapping("/filter")
-  public ResponseEntity<List<PostListDto>> getPostsByCategoryFilter(
-      @RequestBody CategoryFilterRequest filterRequest
-  ) {
-    return ResponseEntity.ok(
-        postListService.getPostsByCategoryFilter(
-            filterRequest.getSecondIds(),
-            filterRequest.getThirdIds()
-        )
-    );
-
-
+  public ResponseEntity<List<PostListDto>> filterPosts(@RequestBody PostFilterDto filterDto) {
+    List<PostListDto> filteredPosts = postListService.getPostsBySecondAndThird(filterDto);
+    return ResponseEntity.ok(filteredPosts);
   }
+
 }
 
 
