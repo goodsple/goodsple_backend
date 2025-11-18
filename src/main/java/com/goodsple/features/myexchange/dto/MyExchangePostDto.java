@@ -20,5 +20,6 @@ import lombok.NoArgsConstructor;
     private String postLocationName;      // post_location_name
     private Integer deliveryPriceNormal;  // delivery_price_normal
     private Integer deliveryPriceHalf;    // delivery_price_half
+    private String imageUrl;
 
 }
