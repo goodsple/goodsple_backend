@@ -9,8 +9,10 @@ public interface FirstCateService {
 
     void createFirstCate(FirstCate firstCate);
     List<FirstCate> getAllFirstCate();
-    FirstCate getFirstCateById(Long id);
-    void updateFirstCate(FirstCate firstCate);
-    void deleteFirstCate(Long id);
+    boolean updateSubText(Long id, String subText);
+
+//    FirstCate getFirstCateById(Long id);
+//    void updateFirstCate(FirstCate firstCate);
+//    void deleteFirstCate(Long id);
 
 }

@@ -27,6 +27,6 @@ public interface ReportService {
     /**
      * 신고 사유 등록
      */
-    void addReason(ReportReason reason);
+//    void addReason(ReportReason reason);
 
 }

@@ -24,21 +24,32 @@ public class FirstCateServiceImpl implements FirstCateService{
         return firstCateMapper.getAllFirstCate();
     }
 
-    @Override
-    public FirstCate getFirstCateById(Long id) {
-        return firstCateMapper.getFirstCateById(id);
-    }
+//    @Override
+//    public FirstCate getFirstCateById(Long id) {
+//        return firstCateMapper.getFirstCateById(id);
+//    }
+//
+//    @Override
+//    @Transactional
+//    public void updateFirstCate(FirstCate firstCate)
+//    {
+//        firstCateMapper.updateCate(firstCate);
+//    }
+//
+//    @Override
+//    public void deleteFirstCate(Long id) {
+//        firstCateMapper.deleteCateById(id);
+//    }
 
     @Override
     @Transactional
-    public void updateFirstCate(FirstCate firstCate)
-    {
-        firstCateMapper.updateCate(firstCate);
+    public boolean updateSubText(Long id, String subText) {
+        FirstCate cate = firstCateMapper.getFirstCateById(id);
+        if (cate == null) return false;
+        cate.setSubText(subText);
+        firstCateMapper.updateCate(cate); // 이름 등은 그대로, subText만 바뀜
+        return true;
     }
 
-    @Override
-    public void deleteFirstCate(Long id) {
-        firstCateMapper.deleteCateById(id);
-    }
 
 }

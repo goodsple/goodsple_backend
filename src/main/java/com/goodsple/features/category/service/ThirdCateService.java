@@ -6,11 +6,11 @@ import java.util.List;
 
 public interface ThirdCateService {
 
-    void createThirdCate(ThirdCate ThirdCate);
-    List<ThirdCate> getAllThirdCate();
-    List<ThirdCate> getAllThirdCateBySecondCateId(Long id);
-    ThirdCate getThirdCateById(Long id);
-    void updateThirdCate(ThirdCate ThirdCate);
+    ThirdCate createThirdCate(ThirdCate thirdCate);
+    void updateThirdCate(ThirdCate thirdCate);
     void deleteThirdCate(Long id);
 
+    List<ThirdCate> getAllThirdCate();
+    List<ThirdCate> getAllThirdCateBySecondCateId(Long secondCateId);
+    ThirdCate getThirdCateById(Long id);
 }

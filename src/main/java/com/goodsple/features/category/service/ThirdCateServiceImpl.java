@@ -16,8 +16,21 @@ public class ThirdCateServiceImpl implements ThirdCateService {
 
     @Override
     @Transactional
-    public void createThirdCate(ThirdCate ThirdCate) {
-        thirdCateMapper.insertCate(ThirdCate);
+    public ThirdCate createThirdCate(ThirdCate thirdCate) {
+        thirdCateMapper.insertCate(thirdCate);
+        return thirdCate;
+    }
+
+    @Override
+    @Transactional
+    public void updateThirdCate(ThirdCate thirdCate) {
+        thirdCateMapper.updateCate(thirdCate);
+    }
+
+    @Override
+    @Transactional
+    public void deleteThirdCate(Long id) {
+        thirdCateMapper.deleteCateById(id);
     }
 
     @Override
@@ -26,24 +39,12 @@ public class ThirdCateServiceImpl implements ThirdCateService {
     }
 
     @Override
-    public List<ThirdCate> getAllThirdCateBySecondCateId(Long id) {
-        return thirdCateMapper.getAllThirdCateBySecondCateId(id);
+    public List<ThirdCate> getAllThirdCateBySecondCateId(Long secondCateId) {
+        return thirdCateMapper.getAllThirdCateBySecondCateId(secondCateId);
     }
 
     @Override
     public ThirdCate getThirdCateById(Long id) {
         return thirdCateMapper.getThirdCateById(id);
-    }
-
-    @Override
-    @Transactional
-    public void updateThirdCate(ThirdCate ThirdCate) {
-        thirdCateMapper.updateCate(ThirdCate);
-    }
-
-    @Override
-    @Transactional
-    public void deleteThirdCate(Long id) {
-        thirdCateMapper.deleteCateById(id);
     }
 }

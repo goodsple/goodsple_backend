@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.chat.mapper.ChatMessageMapper">
+    <resultMap id="MsgMap" type="com.goodsple.features.chat.entity.ChatMessage">
+        <id property="messageId" column="message_id"/>
+        <result property="message" column="message"/>
+        <result property="chatMessageCreatedAt" column="chat_message_created_at"/>
+        <result property="chatRoomId" column="chat_room_id"/>
+        <result property="senderId" column="sender_id"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.goodsple.features.chat.entity.ChatMessage"
+            useGeneratedKeys="true" keyProperty="messageId">
+        INSERT INTO chat_message (message, chat_room_id, sender_id)
+        VALUES (#{message}, #{chatRoomId}, #{senderId})
+    </insert>
+
+    <select id="page" resultMap="MsgMap">
+        SELECT * FROM chat_message
+        WHERE chat_room_id = #{roomId}
+        <if test="beforeId != null">
+            AND message_id &lt; #{beforeId}
+        </if>
+        ORDER BY message_id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="lastId" resultType="long">
+        SELECT MAX(message_id) FROM chat_message WHERE chat_room_id = #{roomId}
+    </select>
+</mapper>

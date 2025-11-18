@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.category.user.mapper.UserCategoryMapper">
+
+    <!-- 2차 카테고리 목록 -->
+    <select id="findSecondCategories" parameterType="long"
+            resultType="com.goodsple.features.category.user.dto.UserSecondCategoryDto">
+        SELECT second_cate_id AS id,
+               cate_name      AS name
+        FROM second_cate
+        WHERE first_cate_id = #{firstCateId}
+          AND visibility = 'public'
+        ORDER BY second_cate_id
+    </select>
+
+    <!-- 3차 카테고리 목록 -->
+    <select id="findThirdCategories" parameterType="long"
+            resultType="com.goodsple.features.category.user.dto.UserThirdCategoryDto">
+        SELECT third_cate_id  AS id,
+               cate_name      AS name,
+               second_cate_id AS secondId
+        FROM third_cate
+        WHERE second_cate_id = #{secondCateId}
+          AND visibility = 'public'
+        ORDER BY third_cate_id
+    </select>
+
+    <!-- 전체 3차 카테고리 목록 -->
+    <select id="findAllThirdCategories" resultType="com.goodsple.features.category.user.dto.UserThirdCategoryDto">
+        SELECT third_cate_id  AS id,
+               cate_name      AS name,
+               second_cate_id AS secondId
+        FROM third_cate
+        WHERE visibility = 'public'
+        ORDER BY third_cate_id
+    </select>
+
+
+</mapper>

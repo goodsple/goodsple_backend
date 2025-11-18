@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.mybids.mapper.MyBidsMapper">
+
+    <select id="countWonAuctionsByUserId" resultType="long">
+        SELECT count(*)
+        FROM orders o
+        WHERE o.user_id = #{userId}
+    </select>
+
+    <select id="findWonAuctionsByUserId" resultType="com.goodsple.features.mybids.dto.response.MyBidsResponse">
+        SELECT
+            o.order_id AS orderId,  -- [추가] orders 테이블의 ID를 orderId로 선택합니다.
+            a.auction_id AS auctionId,
+            a.auction_title AS productName,
+            (SELECT ai.auction_image_url FROM auction_images ai WHERE ai.auction_id = a.auction_id LIMIT 1) AS imageUrl,
+            a.auction_end_time AS auctionEndTime,
+            o.order_amount AS finalPrice,
+            o.order_status::text AS paymentStatus,
+            o.order_payment_deadline AS paymentDueDate
+        FROM
+            orders o
+            JOIN
+            auctions a ON o.auction_id = a.auction_id
+        WHERE
+            o.user_id = #{userId}
+        ORDER BY
+            o.order_created_at DESC
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+</mapper>

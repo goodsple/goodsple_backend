@@ -13,4 +13,6 @@ public class SecondCate {
     private Long secondCateId;
     private String cateName;
     private Long firstCateId;
+    private String subText;
+    private String visibility;
 }

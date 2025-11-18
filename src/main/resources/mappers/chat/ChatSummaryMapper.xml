@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.chat.mapper.ChatSummaryMapper">
+
+    <resultMap id="RoomSummaryRowMap" type="com.goodsple.features.chat.vo.RoomSummaryRow">
+        <result property="roomId"        column="room_id"/>
+        <result property="peerUserId"    column="peer_user_id"/>
+        <result property="peerNickname"  column="peer_nickname"/>
+        <result property="peerAvatar"    column="peer_avatar"/>
+        <result property="peerVerified"  column="peer_verified"/>
+        <result property="peerLevelText" column="peer_level_text"/>
+        <result property="lastMessageId" column="last_message_id"/>
+        <result property="lastText"      column="last_text"/>
+        <result property="lastCreatedAt" column="last_created_at"/>
+        <result property="unreadCount"   column="unread_count"/>
+        <result property="updatedAt"     column="updated_at"/>
+    </resultMap>
+
+    <select id="findSummaries" resultMap="RoomSummaryRowMap">
+        WITH my_rooms AS (
+            SELECT
+                cr.chat_room_id AS room_id,
+                CASE
+                    WHEN cr.user1_id = #{me} THEN cr.user2_id
+                    ELSE cr.user1_id
+                    END AS peer_user_id
+            FROM chat_room cr
+            WHERE cr.user1_id = #{me} OR cr.user2_id = #{me}
+        ),
+             last_msg AS (
+                 SELECT
+                     m.chat_room_id AS room_id,
+                     m.message_id   AS last_message_id,
+                     m.message      AS last_text,
+                     m.chat_message_created_at AS last_created_at,
+                     ROW_NUMBER() OVER (PARTITION BY m.chat_room_id ORDER BY m.message_id DESC) AS rn
+                 FROM chat_message m
+                          JOIN my_rooms r ON r.room_id = m.chat_room_id
+             ),
+             last_msg_1 AS (
+                 SELECT room_id, last_message_id, last_text, last_created_at
+                 FROM last_msg
+                 WHERE rn = 1
+             ),
+             unread AS (
+                 SELECT m.chat_room_id AS room_id, COUNT(*) AS unread_count
+                 FROM chat_message m
+                          JOIN chat_participant p
+                               ON p.chat_room_id = m.chat_room_id
+                                   AND p.user_id = #{me}
+                 WHERE m.message_id > COALESCE(p.last_read_message_id, 0)
+                   AND m.sender_id != #{me}
+        GROUP BY m.chat_room_id
+            )
+        SELECT
+            r.room_id,
+            u.user_id            AS peer_user_id,
+            u.nickname           AS peer_nickname,
+            u.profile_image      AS peer_avatar,
+            false                AS peer_verified,
+            CAST(u.role AS TEXT) AS peer_level_text,
+            lm.last_message_id,
+            lm.last_text,
+            lm.last_created_at,
+            COALESCE(ud.unread_count, 0) AS unread_count,
+            COALESCE(lm.last_created_at, NOW()) AS updated_at
+        FROM my_rooms r
+                 LEFT JOIN users u       ON u.user_id = r.peer_user_id
+                 LEFT JOIN last_msg_1 lm ON lm.room_id = r.room_id
+                 LEFT JOIN unread ud     ON ud.room_id = r.room_id
+        ORDER BY updated_at DESC
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+</mapper>

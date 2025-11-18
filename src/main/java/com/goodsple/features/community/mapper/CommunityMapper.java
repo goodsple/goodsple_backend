@@ -3,8 +3,10 @@ package com.goodsple.features.community.mapper;
 import com.goodsple.features.community.dto.Community;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Mapper
@@ -13,6 +15,7 @@ public interface CommunityMapper {
     // 게시글 삽입
     void insertPost(@Param("userId") Long userId,
                     @Param("roomId") String roomId,
+                    @Param("type") String type,
                     @Param("content") String content,
                     @Param("createdAt") Instant createdAt);
 
@@ -23,4 +26,12 @@ public interface CommunityMapper {
 
     // 유저 정보 조회
     Community findUser(@Param("userId") Long userId);
+
+    // 이번 달 MEGAPHONE 사용 횟수 조회
+    int countMegaphoneThisMonth(@Param("userId") Long userId, @Param("date") LocalDate date);
+
+    // 최신 확성기 메시지 1개 조회
+    List<Community> selectLatestMegaphone(@Param("limit") int limit);
+
 }
+

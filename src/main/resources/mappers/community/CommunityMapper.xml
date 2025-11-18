@@ -5,20 +5,19 @@
 
 <mapper namespace="com.goodsple.features.community.mapper.CommunityMapper">
 
-    <!-- 1) 게시글 삽입 -->
     <insert id="insertPost">
-        INSERT INTO community(user_id, comm_room_id, content, comm_created_at)
-        VALUES (#{userId}, #{roomId}, #{content}, #{createdAt})
+        INSERT INTO community(user_id, comm_room_id, type, content, comm_created_at)
+        VALUES (#{userId}, #{roomId}, #{type},#{content}, #{createdAt})
     </insert>
 
-    <!-- 2) 최근 게시글 조회 -->
     <select id="selectRecent" resultType="com.goodsple.features.community.dto.Community">
         SELECT
         c.community_id       AS communityId,
         c.user_id            AS userId,
-        c.comm_room_id       AS roomId,
+        c.comm_room_id       AS commRoomId,
+        c.type               AS type,
         c.content            AS content,
-        c.comm_created_at    AS createdAt,
+        c.comm_created_at    AS commCreatedAt,
         u.nickname           AS nickname,
         u.profile_image      AS userProfile
         FROM community c
@@ -27,7 +26,7 @@
         <if test="before != null">
             AND c.comm_created_at &lt; #{before}
         </if>
-        ORDER BY c.comm_created_at DESC
+        ORDER BY c.comm_created_at ASC
         LIMIT #{limit}
     </select>
 
@@ -39,6 +38,34 @@
             profile_image AS userProfile
         FROM users
         WHERE user_id = #{userId}
+    </select>
+
+    <!-- 이번 달 MEGAPHONE 사용 횟수 조회 -->
+    <select id="countMegaphoneThisMonth" resultType="int">
+        SELECT COUNT(*)
+        FROM community
+        WHERE user_id = #{userId}
+          AND type = 'MEGAPHONE'
+          AND EXTRACT(YEAR FROM comm_created_at) = #{date.year}
+          AND EXTRACT(MONTH FROM comm_created_at) = #{date.monthValue}
+    </select>
+
+    <!-- 최신 확성기 메시지 1개 조회 -->
+    <select id="selectLatestMegaphone" resultType="com.goodsple.features.community.dto.Community">
+        SELECT
+            c.community_id       AS communityId,
+            c.user_id            AS userId,
+            c.comm_room_id       AS commRoomId,
+            c.type               AS type,
+            c.content            AS content,
+            c.comm_created_at    AS commCreatedAt,
+            u.nickname           AS nickname,
+            u.profile_image      AS userProfile
+        FROM community c
+                 JOIN users u ON u.user_id = c.user_id
+        WHERE c.type = 'MEGAPHONE'
+        ORDER BY c.comm_created_at DESC
+            LIMIT #{limit}
     </select>
 
 </mapper>

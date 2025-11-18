@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 내 거래글 페이지 (글 목록, 거래상태 변경 -->
+<mapper namespace="com.goodsple.features.myexchange.mapper.MyExchangePostMapper">
+
+
+    <select id="selectMyExchangePosts" resultType="com.goodsple.features.myexchange.dto.MyExchangePostDto">
+        SELECT
+        p.exchange_post_id        AS exchangePostId,
+        p.exchange_post_title     AS exchangePostTitle,
+        p.post_trade_status       AS postTradeStatus,
+        p.post_trade_type         AS postTradeType,
+        TO_CHAR(p.exchange_post_updated_at, 'YYYY.MM.DD HH24:MI') AS updatedAt,
+        p.post_location_name      AS postLocationName,
+        p.delivery_price_normal   AS deliveryPriceNormal,
+        p.delivery_price_half     AS deliveryPriceHalf,
+
+        <!-- 내 거래글 페이지_대표 사진 불러오기-->
+        (
+        SELECT img.post_image_url
+        FROM exchange_post_image img
+        WHERE img.exchange_post_id = p.exchange_post_id
+        ORDER BY img.post_sort_order ASC, img.post_image_created_at ASC
+        LIMIT 1
+        ) AS imageUrl
+
+        FROM exchange_post p
+        WHERE p.user_id = #{userId}
+        <if test="status != null">
+            AND p.post_trade_status = #{status}
+        </if>
+        ORDER BY p.exchange_post_updated_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <!-- 내 거래글 개수 -->
+    <select id="countMyExchangePosts" resultType="int">
+        SELECT COUNT(*)
+        FROM exchange_post p
+        WHERE p.user_id = #{userId}
+        <if test="status != null and status != ''">
+            AND p.post_trade_status = #{status}
+        </if>
+    </select>
+
+    <!-- 거래상태 변경 -->
+    <update id="updatePostStatus">
+        UPDATE exchange_post
+        SET post_trade_status = #{status},
+            exchange_post_updated_at = NOW()
+        WHERE exchange_post_id = #{postId}
+          AND user_id = #{userId}
+    </update>
+
+<!--    &lt;!&ndash; 거래글 수정 &ndash;&gt;-->
+<!--    <update id="updatePost">-->
+<!--        UPDATE exchange_post-->
+<!--        SET exchange_post_title   = #{dto.exchangePostTitle},-->
+<!--            exchange_post_content = #{dto.exchangePostContent},-->
+<!--            post_trade_type       = #{dto.postTradeType},-->
+<!--            post_location_name    = #{dto.location},-->
+<!--            delivery_price_normal = #{dto.deliveryFee},-->
+<!--            image_url             = #{dto.imageUrl},-->
+<!--            exchange_post_updated_at = NOW()-->
+<!--        WHERE exchange_post_id = #{postId}-->
+<!--          AND user_id = #{userId}-->
+<!--    </update>-->
+
+<!--    &lt;!&ndash; 거래글 삭제 &ndash;&gt;-->
+<!--    <delete id="deletePost">-->
+<!--        DELETE FROM exchange_post-->
+<!--        WHERE exchange_post_id = #{postId}-->
+<!--          AND user_id = #{userId}-->
+<!--    </delete>-->
+
+
+</mapper>

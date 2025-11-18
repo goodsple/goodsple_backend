@@ -19,7 +19,7 @@ public class LocationService {
 
   private final RestTemplate restTemplate = new RestTemplate();
 
-  @Value("${KAKAO_REST_API_KEY}") // 환경변수 이름과 동일하게
+  @Value("${KAKAO_REST_API_KEY:}")   // 환경변수 이름과 동일하게
   private String restApiKey;
 
 

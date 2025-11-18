@@ -5,22 +5,24 @@
 
 <mapper namespace="com.goodsple.features.report.mapper.ReportMapper">
 
-    <!-- Report ResultMap -->
+    <!-- ===== Report ===== -->
     <resultMap id="ReportResultMap" type="com.goodsple.features.report.dto.request.Report">
         <id     property="reportId"            column="report_id"/>
-        <result property="reporterId"         column="reporter_id"/>
-        <result property="reportTargetUserId" column="report_target_user_id"/>
-        <result property="targetType"         column="target_type"/>
-        <result property="targetId"           column="target_id"/>
-        <result property="reportStatus"       column="report_status"/>
-        <result property="actionTaken"        column="action_taken"/>
-        <result property="reportCreatedAt"    column="report_created_at"/>
-        <result property="processedAt"        column="processed_at"/>
-        <result property="reportDescription"  column="report_description"/>
+        <result property="reporterId"          column="reporter_id"/>
+        <result property="reportTargetUserId"  column="report_target_user_id"/>
+        <result property="targetType"          column="target_type"/>
+        <result property="targetId"            column="target_id"/>
+        <result property="reportStatus"        column="report_status"/>
+        <result property="actionTaken"         column="action_taken"/>
+        <result property="reportCreatedAt"     column="report_created_at"/>
+        <result property="processedAt"         column="processed_at"/>
+        <result property="reportDescription"   column="report_description"/>
     </resultMap>
 
-    <!-- Insert Report -->
-    <insert id="insertReport" parameterType="com.goodsple.features.report.dto.request.Report">
+    <!-- Report INSERT: 생성된 report_id를 Report.reportId에 채움 -->
+    <insert id="insertReport"
+            parameterType="com.goodsple.features.report.dto.request.Report"
+            useGeneratedKeys="true" keyProperty="reportId" keyColumn="report_id">
         INSERT INTO reports (
             reporter_id,
             report_target_user_id,
@@ -34,74 +36,68 @@
         ) VALUES (
                      #{reporterId},
                      #{reportTargetUserId},
-                     #{targetType},
-                     #{targetId},
-                     #{reportStatus},
+                     CAST(#{targetType,javaType=String} AS report_target_enum),
+                     #{targetId,jdbcType=BIGINT},
+                     COALESCE(#{reportStatus,javaType=String}::report_status_enum, 'pending'::report_status_enum),
                      #{actionTaken},
-                     #{reportCreatedAt},
+                     COALESCE(#{reportCreatedAt}, NOW()),
                      #{processedAt},
                      #{reportDescription}
                  )
     </insert>
 
-    <!-- Select Report by ID -->
     <select id="selectReportById" parameterType="long" resultMap="ReportResultMap">
         SELECT
-            report_id,
-            reporter_id,
-            report_target_user_id,
-            target_type,
-            target_id,
-            report_status,
-            action_taken,
-            report_created_at,
-            processed_at,
-            report_description
+        report_id,
+        reporter_id,
+        report_target_user_id,
+        target_type,
+        target_id,
+        report_status,
+        action_taken,
+        report_created_at,
+        processed_at,
+        report_description
         FROM reports
-        WHERE report_id = #{reportId}
+        WHERE report_id = #{reportId}  <!-- 인터페이스 메서드에 @Param("reportId")가 있어야 함 -->
     </select>
 
-    <!-- ReportReason ResultMap -->
+
+    <!-- ===== Report Reason (마스터) ===== -->
     <resultMap id="ReportReasonResultMap" type="com.goodsple.features.report.dto.request.ReportReason">
         <id     property="reportReasonId"   column="report_reason_id"/>
         <result property="reportReasonText" column="report_reason_text"/>
     </resultMap>
 
-    <!-- Insert Reason -->
-    <insert id="insertReason" parameterType="com.goodsple.features.report.dto.request.ReportReason">
-        INSERT INTO report_reasons (
-            report_reason_id,
-            report_reason_text
-        ) VALUES (
-                     #{reportReasonId},
-                     #{reportReasonText}
-                 )
+    <!-- Reason INSERT: PK는 DB가 생성, 중복 텍스트는 무시 -->
+    <insert id="insertReason"
+            parameterType="com.goodsple.features.report.dto.request.ReportReason"
+            useGeneratedKeys="true" keyProperty="reportReasonId" keyColumn="report_reason_id">
+        INSERT INTO report_reasons (report_reason_text)
+        VALUES (#{reportReasonText})
+            ON CONFLICT (report_reason_text) DO NOTHING
     </insert>
 
-    <!-- Select All Reasons -->
     <select id="selectAllReasons" resultMap="ReportReasonResultMap">
-        SELECT
-            report_reason_id,
-            report_reason_text
+        SELECT report_reason_id, report_reason_text
         FROM report_reasons
+        ORDER BY report_reason_id
     </select>
 
-    <!-- Insert Reason Mapping -->
-    <insert id="insertReasonMapping" parameterType="com.goodsple.features.report.dto.request.ReportReasonMapping">
-        INSERT INTO report_reason_mapping (
-            report_id,
-            report_reason_id
-        ) VALUES (
-                     #{reportId},
-                     #{reportReasonId}
-                 )
+
+    <!-- ===== Report-Reason Mapping ===== -->
+    <insert id="insertReasonMapping"
+            parameterType="com.goodsple.features.report.dto.request.ReportReasonMapping">
+        INSERT INTO report_reason_map (report_id, report_reason_id)
+        VALUES (#{reportId}, #{reportReasonId})
+            ON CONFLICT (report_id, report_reason_id) DO NOTHING
     </insert>
 
-    <!-- Select Reason IDs by Report -->
     <select id="selectReasonIdsByReport" parameterType="long" resultType="long">
         SELECT report_reason_id
-        FROM report_reason_mapping
+        FROM report_reason_map
         WHERE report_id = #{reportId}
+        ORDER BY report_reason_id
     </select>
 
 </mapper>

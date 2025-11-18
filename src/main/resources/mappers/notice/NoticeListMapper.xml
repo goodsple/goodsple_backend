@@ -3,8 +3,8 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.goodsple.features.notice.mapper.NoticeListMapper">
-    <select id="selectNoticeList" resultType="com.goodsple.features.notice.dto.NoticeListDto">
+<mapper namespace="com.goodsple.features.admin.notice.mapper.NoticeListMapper">
+    <select id="selectNoticeList" resultType="com.goodsple.features.admin.notice.dto.NoticeListDto">
         SELECT
         n.notice_id,
         n.notice_title,

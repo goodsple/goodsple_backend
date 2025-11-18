@@ -12,6 +12,7 @@ public class Community {
     private Long communityId;
     private Long userId;
     private String commRoomId;       // K-POP | MOVIE | GAME | ANIMATION
+    private String type;             // GENERAL | MEGAPHONE
     private String content;
     private String commCreatedAt;
 

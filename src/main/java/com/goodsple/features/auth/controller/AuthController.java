@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Slf4j
 public class AuthController {
 
     // 프론트 주소
@@ -68,14 +70,53 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청"),
             @ApiResponse(responseCode = "500", description = "서버 오류")
     })
+//    @GetMapping("/check")
+//    public  ResponseEntity<Map<String,Boolean>>checkDuplicate(
+//            @RequestParam("type") CheckType checkType,
+//            @RequestParam("value") String value) {
+//
+//        boolean available = userService.isAvailable(checkType, value);
+//        Map<String, Boolean> result = new HashMap<>();
+//        result.put("available", available);
+//        return ResponseEntity.ok(result);
+//    }
     @GetMapping("/check")
-    public  ResponseEntity<Map<String,Boolean>>checkDuplicate(
-            @RequestParam("type") CheckType checkType,
-            @RequestParam("value") String value) {
-        boolean available = userService.isAvailable(checkType, value);
-        Map<String, Boolean> result = new HashMap<>();
-        result.put("available", available);
-        return ResponseEntity.ok(result);
+    public ResponseEntity<Map<String, Boolean>> checkDuplicate(
+            @RequestParam("type") String type,
+            @RequestParam("value") String value
+    ) {
+        log.info("[/auth/check] raw type='{}', raw value='{}'", type, value);
+
+        CheckType checkType = parseCheckType(type); // 아래 메서드
+        String normalizedValue = checkType == CheckType.PHONE_NUMBER
+                ? value.replaceAll("\\D", "")  // 숫자만
+                : value.trim();
+
+        boolean available = userService.isAvailable(checkType, normalizedValue);
+        return ResponseEntity.ok(Map.of("available", available));
+    }
+
+    private CheckType parseCheckType(String raw) {
+        if (raw == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "type 누락");
+        String k = raw.trim().toUpperCase();
+        switch (k) {
+
+            //완수 추가 시작
+            case "LOGIN_ID":
+            case "LOGINID":
+                return CheckType.LOGIN_ID;
+            case "EMAIL":
+                return CheckType.EMAIL;
+            //완수 추가 끝
+
+            case "NICKNAME":      return CheckType.NICKNAME;
+            case "PHONE_NUMBER":
+            case "PHONENUMBER":
+            case "PHONE":         return CheckType.PHONE_NUMBER;
+            // 필요하면 EMAIL/LOGIN_ID도 허용 가능
+            default:
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "지원하지 않는 type: " + raw);
+        }
     }
 
     @Operation(summary = "로컬 로그인", description = "사용자 로그인 후 액세스 토큰과 리프레시 토큰을 반환합니다.")

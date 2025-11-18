@@ -87,18 +87,21 @@ public class SecurityConfig {
 
                         // 채팅 관련
                         .requestMatchers(HttpMethod.GET, "/api/chat/history/**").permitAll() // GET 요청 테스트 허용
-                        .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
-
+//                        .requestMatchers("/ws/**").permitAll() // WebSocket 핸드셰이크 허용
+                        .requestMatchers("/ws-stomp/**", "/ws/**").permitAll()
+                                .requestMatchers("/api/main/**").permitAll()
 
                         // 그 외 모든 요청은 JWT 인증 필요
                         .anyRequest().permitAll()
                 )
+
                 // 7. JWT 필터 등록 (인가 설정 후 실행되도록)
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider),
                         UsernamePasswordAuthenticationFilter.class
 //                        SecurityContextPersistenceFilter.class
                 );
+
 
         return http.build();
     }
@@ -150,11 +153,6 @@ public class SecurityConfig {
                                 Authentication auth = jwtProvider.getAuthentication(token);
                                 accessor.setUser(auth);
                             }
-                        }
-                        case DISCONNECT -> {
-                            // 필요 시 처리
-                        }
-                        default -> {
                         }
                     }
                 }

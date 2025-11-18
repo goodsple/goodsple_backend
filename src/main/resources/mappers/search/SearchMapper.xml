@@ -1,0 +1,27 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.goodsple.features.search.mapper.SearchMapper">
+
+    <select id="searchPosts" parameterType="string" resultType="com.goodsple.features.search.dto.SearchPostResponse">
+        SELECT
+            ep.exchange_post_id AS exchangePostId,
+            ep.exchange_post_title AS exchangePostTitle,
+            ep.post_location_name AS postLocationName,
+            ep.post_hope_region AS postHopeRegion,
+            ep.post_trade_type AS postTradeType,
+            ep.exchange_post_created_at AS exchangePostCreatedAt,
+            ep.post_trade_status AS postTradeStatus,
+            ep.user_id AS userId,
+            epi.post_image_url AS postImageUrl
+        FROM exchange_post ep
+        LEFT JOIN exchange_post_image epi
+            ON ep.exchange_post_id = epi.exchange_post_id
+            AND epi.post_sort_order = 1
+        WHERE ep.exchange_post_title ILIKE CONCAT('%', #{keyword}, '%')
+            OR ep.post_location_name ILIKE CONCAT('%', #{keyword}, '%')
+            OR ep.post_hope_region ILIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY ep.exchange_post_created_at DESC
+    </select>
+
+
+</mapper>

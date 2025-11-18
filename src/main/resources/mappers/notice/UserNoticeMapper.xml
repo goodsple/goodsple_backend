@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.noticelist.mapper.UserNoticeMapper">
+    <select id="selectNotices" resultType="com.goodsple.features.noticelist.dto.UserNoticeDto">
+        SELECT
+        notice_id AS noticeId,
+        notice_title AS noticeTitle,
+        notice_content AS noticeContent,
+        (notice_created_at AT TIME ZONE 'UTC') AS noticeCreatedAt,
+        (notice_updated_at AT TIME ZONE 'UTC') AS noticeUpdatedAt
+--       notice_created_at AS noticeCreatedAt,
+--        notice_updated_at AS noticeUpdatedAt
+        FROM notice
+        ORDER BY notice_created_at DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countNotices" resultType="int">
+        SELECT COUNT(*) FROM notice
+    </select>
+
+</mapper>
