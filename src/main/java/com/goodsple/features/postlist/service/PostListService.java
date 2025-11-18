@@ -11,7 +11,8 @@ public interface PostListService {
 
   List<PostListDto> getPostsByCategory(Long categoryId);
 
-  // 2차/3차 필터
   List<PostListDto> getPostsBySecondAndThird(PostFilterDto filterDto);
+
+  List<Long> getSecondIdsByThirdIds(List<Long> thirdIds);
 
 }
