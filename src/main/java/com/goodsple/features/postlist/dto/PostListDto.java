@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
 
+// 게시글 조회용 DTO
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
