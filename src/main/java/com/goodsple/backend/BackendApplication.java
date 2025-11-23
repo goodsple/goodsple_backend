@@ -34,7 +34,8 @@ import org.springframework.web.client.RestTemplate;
     "com.goodsple.features.map.mapper",
     "com.goodsple.features.chat.mapper",
     "com.goodsple.features.category.user.mapper",
-    "com.goodsple.features.popular.mapper"
+    "com.goodsple.features.popular.mapper",
+    "com.goodsple.features.chatbot.mapper"
 })
 
 
