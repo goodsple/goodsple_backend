@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/dto/request/AuctionCreateRequest.java
- * 설명: 신규 경매 생성을 위한 요청 데이터를 담는 DTO입니다.
- */
 package com.goodsple.features.admin.auction.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;

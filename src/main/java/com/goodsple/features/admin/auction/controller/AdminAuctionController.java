@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/controller/AdminAuctionController.java
- * 설명: 관리자용 경매 관리 API의 엔드포인트를 정의하는 컨트롤러입니다.
- */
 package com.goodsple.features.admin.auction.controller;
 
 import com.goodsple.common.dto.PagedResponse;
@@ -35,7 +31,7 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/admin/auctions")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')") // 이 컨트롤러의 모든 API는 ADMIN 권한 필요
+@PreAuthorize("hasRole('ADMIN')")
 public class AdminAuctionController {
 
     private final AdminAuctionService adminAuctionService;
@@ -54,7 +50,6 @@ public class AdminAuctionController {
             @Parameter(description = "검색 시작 날짜 (YYYY-MM-DD)", in = ParameterIn.QUERY) @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate startDate,
             @Parameter(description = "검색 종료 날짜 (YYYY-MM-DD)", in = ParameterIn.QUERY) @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate endDate
     ) {
-        // DTO 대신, 직접 받은 파라미터로 SearchRequest 객체를 생성합니다.
         AuctionSearchRequest searchRequest = new AuctionSearchRequest();
         searchRequest.setPage(page);
         searchRequest.setSize(size);
@@ -140,7 +135,6 @@ public class AdminAuctionController {
         return ResponseEntity.ok(response);
     }
 
-    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ 아래 테스트용 API를 추가합니다. ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
     @Operation(summary = "[테스트용] 경매 실시간 시작", description = "특정 경매를 '진행중' 상태로 바꾸고 Redis에 실시간 데이터를 초기화합니다.")
     @PostMapping("/{auctionId}/start-realtime")
     public ResponseEntity<Void> startAuctionRealtime(

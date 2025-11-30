@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/util/AuctionRedisKeyManager.java
- * 설명: 라이브 경매에 사용되는 Redis 키를 생성하고 관리하는 유틸리티 클래스입니다.
- */
 package com.goodsple.features.auction.util;
 
 import org.springframework.stereotype.Component;

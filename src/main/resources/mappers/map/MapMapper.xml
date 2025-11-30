@@ -8,8 +8,8 @@
             p.exchange_post_id AS id,
             p.exchange_post_title AS name,
             p.post_trade_type AS tradeType,
-            ST_Y(p.location::geometry) AS lat, -- geography를 geometry로 명시적 형변환
-            ST_X(p.location::geometry) AS lng, -- geography를 geometry로 명시적 형변환
+            ST_Y(p.location::geometry) AS lat,
+            ST_X(p.location::geometry) AS lng,
             (SELECT pi.post_image_url
              FROM exchange_post_image pi
              WHERE pi.exchange_post_id = p.exchange_post_id
@@ -18,13 +18,10 @@
         FROM
             exchange_post p
         WHERE
-        -- [수정] geography 타입을 geometry로 명시적으로 형변환하여 비교합니다.
-        -- 이렇게 하면 타입 불일치로 인한 조회 실패를 방지할 수 있습니다.
             ST_Intersects(
             p.location::geometry,
             ST_SetSRID(ST_MakeEnvelope(#{swLng}, #{swLat}, #{neLng}, #{neLat}), 4326)
             )
-        -- [추가] 조회 성능 및 정확도를 위해 location이 NULL이 아닌 데이터만 조회합니다.
           AND p.location IS NOT NULL
     </select>
 

@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/dto/BidLogDto.java
- * 설명: Redis의 입찰 기록을 DB에 저장하기 위한 DTO입니다.
- */
 package com.goodsple.features.auction.dto;
 
 import lombok.AllArgsConstructor;

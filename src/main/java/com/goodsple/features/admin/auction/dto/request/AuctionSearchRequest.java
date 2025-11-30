@@ -1,18 +1,13 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/dto/request/AuctionSearchRequest.java
- * 설명: 경매 목록 검색 조건을 담는 DTO입니다.
- */
 package com.goodsple.features.admin.auction.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDate;
 
 @Schema(description = "경매 목록 검색 조건 DTO")
-@Getter // 3. @Getter 추가
-@Setter // 4. @Setter 추가
+@Getter
+@Setter
 public class AuctionSearchRequest {
     @Schema(description = "페이지 번호 (0부터 시작)", example = "0")
     private int page = 0;

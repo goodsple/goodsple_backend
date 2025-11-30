@@ -6,7 +6,7 @@ import java.time.OffsetDateTime;
 
 @Data
 public class MyBidsResponse {
-    private Long orderId; // [추가] orderId 필드를 추가합니다.
+    private Long orderId;
     private Long auctionId;
     private String productName;
     private String imageUrl;

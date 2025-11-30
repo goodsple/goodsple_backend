@@ -16,7 +16,6 @@ public class MapService {
 
     @Transactional(readOnly = true)
     public List<MapGoodsResponse> getGoodsInBounds(double swLat, double swLng, double neLat, double neLng) {
-        // 컨트롤러에서 받은 파라미터를 그대로 매퍼 메소드로 전달합니다.
         return mapMapper.findGoodsInBounds(swLng, swLat, neLng, neLat);
     }
 }

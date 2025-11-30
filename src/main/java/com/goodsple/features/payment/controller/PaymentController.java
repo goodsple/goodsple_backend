@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "06. 결제 (Payment)", description = "결제 관련 API")
 @RestController
-@RequestMapping("/api") // 공통 경로 사용
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class PaymentController {
 

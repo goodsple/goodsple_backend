@@ -24,11 +24,6 @@ public class ChatbotController {
         return chatService.handle(req);
     }
 
-//    @GetMapping("/intents")
-//    public List<String> getFaqIntents() {
-//        return chatService.getFaqIntents();
-//    }
-
     // FAQ Intent 목록 조회
     @GetMapping("/intents")
     public ResponseEntity<List<String>> getFaqIntents() {

@@ -1,6 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/controller/AuctionRealtimeController.java
- */
 package com.goodsple.features.auction.controller;
 
 import com.goodsple.features.auction.dto.request.BidRequest;
@@ -41,7 +38,6 @@ public class AuctionRealtimeController {
 
         CustomUserDetails userDetails = (CustomUserDetails) ((UsernamePasswordAuthenticationToken) principal).getPrincipal();
 
-        // 서비스가 직접 메시지를 브로드캐스트하도록 호출합니다.
         auctionRealtimeService.broadcastChatMessage(auctionId, userDetails, chatRequest);
     }
 }

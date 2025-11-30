@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/dto/request/AuctionStatusUpdateRequest.java
- * 설명: 경매 상태 변경을 위한 요청 DTO입니다.
- */
 package com.goodsple.features.admin.auction.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

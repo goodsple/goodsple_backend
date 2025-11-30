@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/mapper/AuctionMapper.java
- * 설명: 경매 관련 데이터베이스 쿼리를 호출하는 MyBatis 매퍼 인터페이스입니다.
- */
 package com.goodsple.features.admin.auction.mapper;
 
 import com.goodsple.features.admin.auction.dto.request.AuctionSearchRequest;
@@ -47,9 +43,6 @@ public interface AuctionMapper {
     void insertAuction(Auction auction);
     void insertAuctionImage(@Param("auctionId") Long auctionId, @Param("imageUrl") String imageUrl);
     int checkOverlappingAuction(@Param("startTime") OffsetDateTime startTime, @Param("endTime") OffsetDateTime endTime);
-    // Optional<AuctionAdminDetailResponse> findAuctionDetailById(Long auctionId);
-    // void updateAuction(Auction auction);
-    // void updateAuctionStatus(@Param("auctionId") Long auctionId, @Param("status") String status);
     /**
      * 수정 페이지에 필요한 경매 상세 정보와 이미지 목록을 조회합니다.
      * @param auctionId 조회할 경매 ID

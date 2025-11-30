@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "05. 나의 입찰/낙찰 (MyBids)", description = "나의 입찰/낙찰 내역 조회 API")
 @RestController
-@RequestMapping("/api/my-bids") // API 경로도 명확하게 분리
+@RequestMapping("/api/my-bids")
 @RequiredArgsConstructor
 public class MyBidsController {
 
@@ -30,7 +30,7 @@ public class MyBidsController {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "401", description = "로그인 필요"),
     })
-    @GetMapping("/won-auctions") // /api/my-bids/won-auctions
+    @GetMapping("/won-auctions")
     public ResponseEntity<PagedResponse<MyBidsResponse>> getMyWonAuctions(
             Authentication authentication,
             @PageableDefault(size = 6) Pageable pageable) {

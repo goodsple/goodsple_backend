@@ -19,7 +19,7 @@ public class ChatbotService {
     private final RestTemplate restTemplate;
     private final ChatbotMapper chatbotMapper;
 
-    @Value("${chatbot-api.url}") // ex) http://127.0.0.1:8000/api
+    @Value("${chatbot-api.url}")
     private String pythonBase;
 
     public ChatbotResponse handle(ChatbotRequest req) {
@@ -38,7 +38,6 @@ public class ChatbotService {
     }
 
 
-    // -------------------------------------------------------
     public List<String> getFaqIntents() {
         return chatbotMapper.findFaqIntents();
     }

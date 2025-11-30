@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/dto/AuctionState.java
- * 설명: Redis에 저장될 라이브 경매의 실시간 상태 정보를 나타내는 DTO입니다.
- */
 package com.goodsple.features.auction.dto;
 
 import lombok.AllArgsConstructor;

@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/controller/AuctionController.java
- * 설명: 사용자용 경매 조회 API를 제공하는 컨트롤러입니다.
- */
 package com.goodsple.features.auction.controller;
 
 import com.goodsple.features.auction.dto.response.AuctionPageDataResponse;
@@ -21,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "03. 경매 (User)", description = "사용자용 경매 조회 및 참여 API")
 @RestController
-@RequestMapping("/api/auctions") // 관리자용(/api/admin/auctions)과 경로가 다릅니다.
+@RequestMapping("/api/auctions")
 @RequiredArgsConstructor
 public class AuctionController {
 

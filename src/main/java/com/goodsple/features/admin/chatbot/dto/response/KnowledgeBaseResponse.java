@@ -7,15 +7,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 @Getter
-@Setter // Setter 추가
+@Setter
 @NoArgsConstructor
-@JsonIgnoreProperties(ignoreUnknown = true) // Python 서버가 보내는 필드 중 여기서 정의하지 않은 것은 무시
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class KnowledgeBaseResponse {
-    // '보낼 때'는 snake_case, '받을 때'는 둘 다 허용
     @JsonProperty("knowledge_id")
     @JsonAlias({"knowledgeId", "knowledge_id"})
     private Long knowledgeId;

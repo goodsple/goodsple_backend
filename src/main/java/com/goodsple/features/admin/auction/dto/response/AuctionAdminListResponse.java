@@ -1,10 +1,5 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/dto/response/AuctionAdminListResponse.java
- * 설명: 관리자용 경매 목록의 각 항목을 나타내는 DTO입니다.
- */
 package com.goodsple.features.admin.auction.dto.response;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;

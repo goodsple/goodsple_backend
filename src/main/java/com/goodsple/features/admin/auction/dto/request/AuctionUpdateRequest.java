@@ -1,7 +1,3 @@
-/**
- * 파일 경로: src/main/java/com/goodsple/features/auction/dto/request/AuctionUpdateRequest.java
- * 설명: 경매 정보 수정을 위한 DTO입니다. 생성 DTO와 구조가 동일합니다.
- */
 package com.goodsple.features.admin.auction.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,7 +8,6 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-// AuctionCreateRequest를 상속받지 않고 별도로 정의하여 @Future 제거
 @Schema(description = "경매 정보 수정 요청 DTO")
 public class AuctionUpdateRequest {
     @Schema(description = "상품명", requiredMode = Schema.RequiredMode.REQUIRED, example = "한정판 아이유 LP 바이닐")
