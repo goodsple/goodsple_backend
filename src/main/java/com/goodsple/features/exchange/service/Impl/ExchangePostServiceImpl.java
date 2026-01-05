@@ -97,13 +97,6 @@ public class ExchangePostServiceImpl implements ExchangePostService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "게시글을 수정할 권한이 없습니다.");
     }
 
-    // 기존 이미지 URL을 DB에서 조회
-    List<String> existingImageUrls = exchangePostMapper.findImageUrlsByPostId(postId);
-
-    // S3에서 기존 이미지 삭제
-    if (existingImageUrls != null && !existingImageUrls.isEmpty()) {
-      imageUploadService.deleteImagesFromS3(existingImageUrls);
-    }
 
     Map<String, Object> param = new HashMap<>();
     param.put("postId", postId);
