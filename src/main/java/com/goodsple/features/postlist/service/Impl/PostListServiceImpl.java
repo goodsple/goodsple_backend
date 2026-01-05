@@ -29,23 +29,51 @@ public class PostListServiceImpl implements PostListService {
 
   @Override
   public List<PostListDto> getPostsBySecondAndThird(PostFilterDto filterDto) {
+
     List<Long> secondIds = filterDto.getSecondIds();
     List<Long> thirdIds = filterDto.getThirdIds();
 
-    // 3차만 선택한 경우 2차 전체를 가져오기
-    if ((secondIds == null || secondIds.isEmpty()) && thirdIds != null && !thirdIds.isEmpty()) {
-      secondIds = postListMapper.findSecondIdsByThirdIds(thirdIds);
+    // 1️⃣ 3차가 선택된 경우
+    if (thirdIds != null && !thirdIds.isEmpty()) {
+
+      // 1-1. 같은 이름의 모든 3차 확장 (EXO 전체)
+      List<Long> expandedThirdIds =
+          postListMapper.findThirdIdsBySameName(thirdIds);
+
+      // 1-2. 🔥 2차도 같이 선택된 경우 → 교집합
+      if (secondIds != null && !secondIds.isEmpty()) {
+        List<Long> thirdIdsBySecond =
+            postListMapper.findThirdIdsBySecondIds(secondIds);
+
+        expandedThirdIds.retainAll(thirdIdsBySecond);
+      }
+
+      // 교집합 결과가 없으면 빈 리스트
+      if (expandedThirdIds.isEmpty()) {
+        return List.of();
+      }
+
+      filterDto.setThirdIds(expandedThirdIds);
+      return postListMapper.findPostsBySecondAndThird(filterDto);
     }
 
-    // 2차만 선택했거나, 3차만 선택했거나, 둘 다 선택한 경우 모두 처리
-    return postListMapper.findPostsBySecondAndThird(secondIds, thirdIds);
+    // 2️⃣ 3차 없고 2차만 선택
+    if (secondIds != null && !secondIds.isEmpty()) {
+
+      List<Long> thirdIdsBySecond =
+          postListMapper.findThirdIdsBySecondIds(secondIds);
+
+      if (thirdIdsBySecond.isEmpty()) {
+        return List.of();
+      }
+
+      filterDto.setThirdIds(thirdIdsBySecond);
+      return postListMapper.findPostsBySecondAndThird(filterDto);
+    }
+
+    // 3️⃣ 아무 필터도 없으면 전체
+    return postListMapper.findAllPosts();
   }
 
-  @Override
-  public List<Long> getSecondIdsByThirdIds(List<Long> thirdIds) {
-    List<Long> secondIds = postListMapper.findSecondIdsByThirdIds(thirdIds);
-    if (secondIds == null) secondIds = new ArrayList<>();
-    return secondIds;
-  }
 
 }

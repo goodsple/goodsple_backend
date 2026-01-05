@@ -33,6 +33,16 @@
         ORDER BY p.exchange_post_created_at DESC
     </select>
 
+    <!-- 같은 이름의 모든 3차 ID 조회 -->
+    <select id="findThirdIdsBySameName" resultType="long">
+        SELECT t2.third_cate_id
+        FROM third_cate t1
+        JOIN third_cate t2 ON t1.cate_name = t2.cate_name
+        WHERE t1.third_cate_id IN
+        <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 
     <!-- 🔹 3차 선택 시 연결된 모든 2차 ID 조회 -->
     <select id="findSecondIdsByThirdNames" parameterType="map" resultType="long">
@@ -45,231 +55,51 @@
         </foreach>
     </select>
 
+
+
     <!-- 🔹 2차/3차 카테고리 기준 글 조회 -->
     <select id="findPostsBySecondAndThird" parameterType="com.goodsple.features.postlist.dto.PostFilterDto"
             resultType="com.goodsple.features.postlist.dto.PostListDto">
-        SELECT p.exchange_post_id         AS exchangePostId,
+        SELECT DISTINCT
+        p.exchange_post_id         AS exchangePostId,
         p.user_id                  AS writer,
         u.nickname                 AS writerNickname,
         p.exchange_post_created_at AS exchangePostCreatedAt,
         p.post_trade_status        AS postTradeStatus,
         p.exchange_post_title      AS exchangePostTitle
         FROM exchange_post p
-        LEFT JOIN third_cate t ON p.third_cate_id = t.third_cate_id
-        LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id
-        LEFT JOIN users u ON p.user_id = u.user_id
-        WHERE 1=1
-        <if test="thirdIds != null and !thirdIds.isEmpty()">
-            AND p.third_cate_id IN
-            <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-        </if>
-        <if test="secondIds != null and !secondIds.isEmpty()">
-            AND s.second_cate_id IN
-            <foreach collection="secondIds" item="id" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-        </if>
+        JOIN users u ON p.user_id = u.user_id
+        JOIN third_cate t ON p.third_cate_id = t.third_cate_id
+        <!-- LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id -->
+         <where>
+             <!-- 3차가 있으면 무조건 3차 기준 -->
+            <if test="thirdIds != null and !thirdIds.isEmpty()">
+                p.third_cate_id IN
+                <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+
+            <!-- 3차가 없을때만 2차 사용 -->
+<!--            <if test="(thirdIds == null or thirdIds.isEmpty())-->
+<!--        and (secondIds != null and !secondIds.isEmpty())">-->
+<!--                s.second_cate_id IN-->
+<!--                <foreach collection="secondIds" item="id" open="(" separator="," close=")">-->
+<!--                    #{id}-->
+<!--                </foreach>-->
+<!--            </if>-->
+        </where>
         ORDER BY p.exchange_post_created_at DESC
     </select>
 
 
-    <select id="findSecondIdsByThirdIds" resultType="long">
-        SELECT DISTINCT second_cate_id
+    <select id="findThirdIdsBySecondIds" resultType="long">
+        SELECT third_cate_id
         FROM third_cate
-        WHERE third_cate_id IN
-        <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
+        WHERE second_cate_id IN
+        <foreach collection="secondIds" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
     </select>
 
 </mapper>
-
-        <!-- 전체 글 조회 -->
-        <!--    <select id="findAllPosts" resultType="com.goodsple.features.postlist.dto.PostListDto">-->
-        <!--        SELECT p.exchange_post_id         AS exchangePostId,-->
-        <!--               p.user_id                  AS writer,-->
-        <!--               u.nickname                 AS writerNickname,-->
-        <!--               p.exchange_post_created_at AS exchangePostCreatedAt,-->
-        <!--               p.post_trade_status        AS postTradeStatus,-->
-        <!--               p.exchange_post_title      AS exchangePostTitle-->
-        <!--        FROM exchange_post p-->
-        <!--                 JOIN users u ON p.user_id = u.user_id-->
-        <!--        ORDER BY exchange_post_created_at DESC-->
-        <!--    </select>-->
-
-        <!--    &lt;!&ndash; 1차 카테고리별 글 조회 &ndash;&gt;-->
-        <!--    <select id="findPostsByCategory" parameterType="long" resultType="com.goodsple.features.postlist.dto.PostListDto">-->
-        <!--        SELECT p.exchange_post_id         AS exchangePostId,-->
-        <!--               p.user_id                  AS writer,-->
-        <!--               u.nickname                 AS writerNickname,-->
-        <!--               p.exchange_post_created_at AS exchangePostCreatedAt,-->
-        <!--               p.post_trade_status        AS postTradeStatus,-->
-        <!--               p.exchange_post_title      AS exchangePostTitle-->
-        <!--        FROM exchange_post p-->
-        <!--                 JOIN users u ON p.user_id = u.user_id-->
-        <!--                 JOIN third_cate t ON p.third_cate_id = t.third_cate_id-->
-        <!--                 JOIN second_cate s ON t.second_cate_id = s.second_cate_id-->
-        <!--                 JOIN first_cate f ON s.first_cate_id = f.first_cate_id-->
-        <!--        WHERE f.first_cate_id = #{categoryId}-->
-        <!--        ORDER BY p.exchange_post_created_at DESC-->
-        <!--    </select>-->
-
-        <!--    &lt;!&ndash; 3차만 선택 시, 해당 3차에 연결된 2차 ID 조회 &ndash;&gt;-->
-        <!--    <select id="findSecondIdsByThirdIds" resultType="long">-->
-        <!--        SELECT DISTINCT second_cate_id-->
-        <!--        FROM third_cate-->
-        <!--        WHERE third_cate_id IN-->
-        <!--        <foreach collection="thirdIds" item="id" open="(" separator="," close=")">-->
-        <!--            #{id}-->
-        <!--        </foreach>-->
-        <!--    </select>-->
-
-        <!--    &lt;!&ndash; 2차/3차 카테고리 필터링 &ndash;&gt;-->
-        <!--    <select id="findPostsBySecondAndThird" resultType="com.goodsple.features.postlist.dto.PostListDto">-->
-        <!--        SELECT p.exchange_post_id AS exchangePostId,-->
-        <!--        p.user_id AS writer,-->
-        <!--        u.nickname AS writerNickname,-->
-        <!--        p.exchange_post_created_at AS exchangePostCreatedAt,-->
-        <!--        p.post_trade_status AS postTradeStatus,-->
-        <!--        p.exchange_post_title AS exchangePostTitle-->
-        <!--        FROM exchange_post p-->
-        <!--        LEFT JOIN users u ON p.user_id = u.user_id-->
-        <!--        LEFT JOIN third_cate t ON p.third_cate_id = t.third_cate_id-->
-        <!--        LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id-->
-        <!--        <where>-->
-        <!--            <if test="secondIds != null and !secondIds.isEmpty()">-->
-        <!--                s.second_cate_id IN-->
-        <!--                <foreach collection="secondIds" item="id" open="(" separator="," close=")">-->
-        <!--                    #{id}-->
-        <!--                </foreach>-->
-        <!--            </if>-->
-        <!--            <if test="thirdIds != null and !thirdIds.isEmpty()">-->
-        <!--                AND p.third_cate_id IN-->
-        <!--                <foreach collection="thirdIds" item="id" open="(" separator="," close=")">-->
-        <!--                    #{id}-->
-        <!--                </foreach>-->
-        <!--            </if>-->
-        <!--        </where>-->
-        <!--        ORDER BY p.exchange_post_created_at DESC-->
-        <!--    </select>-->
-
-        <!--    &lt;!&ndash; 🔧 전체 2차 선택 시 연결된 모든 3차 가져오기 &ndash;&gt;-->
-        <!--    <select id="findThirdIdsBySecondIds" resultType="java.lang.Long">-->
-        <!--        SELECT third_cate_id-->
-        <!--        FROM third_cate-->
-        <!--        WHERE second_cate_id IN-->
-        <!--        <foreach collection="list" item="id" open="(" separator="," close=")">-->
-        <!--            #{id}-->
-        <!--        </foreach>-->
-        <!--    </select>-->
-
-        <!--    &lt;!&ndash; 3차 선택 시, 이름 기준으로 모든 2차 ID 조회 &ndash;&gt;-->
-        <!--    <select id="findSecondIdsByThirdNames" parameterType="map" resultType="long">-->
-        <!--        SELECT DISTINCT t2.second_cate_id-->
-        <!--        FROM third_cate t1-->
-        <!--        JOIN third_cate t2 ON t1.cate_name = t2.cate_name-->
-        <!--        WHERE t1.third_cate_id IN-->
-        <!--        <foreach collection="thirdIds" item="id" open="(" separator="," close=")">-->
-        <!--            #{id}-->
-        <!--        </foreach>-->
-        <!--    </select>-->
-
-
-        <!-- 그.. 가장 멀쩡한 버전?-->
-        <!--    <select id="findPostsBySecondAndThird" resultType="com.goodsple.features.postlist.dto.PostListDto">-->
-        <!--        SELECT p.exchange_post_id         AS exchangePostId,-->
-        <!--        p.user_id                  AS writer,-->
-        <!--        u.nickname                 AS writerNickname,-->
-        <!--        p.exchange_post_created_at AS exchangePostCreatedAt,-->
-        <!--        p.post_trade_status        AS postTradeStatus,-->
-        <!--        p.exchange_post_title      AS exchangePostTitle-->
-        <!--        FROM exchange_post p-->
-        <!--        LEFT JOIN users u ON p.user_id = u.user_id-->
-        <!--        LEFT JOIN third_cate t ON p.third_cate_id = t.third_cate_id-->
-        <!--        LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id-->
-        <!--        <where>-->
-
-        <!--            &lt;!&ndash; 🔥 thirdIds가 존재하면 third만 필터링 &ndash;&gt;-->
-        <!--            <if test="thirdIds != null and !thirdIds.isEmpty()">-->
-        <!--                p.third_cate_id IN-->
-        <!--                <foreach collection="thirdIds" item="id" open="(" separator="," close=")">-->
-        <!--                    #{id}-->
-        <!--                </foreach>-->
-        <!--            </if>-->
-
-        <!--            &lt;!&ndash; 🔥 thirdIds가 없고 second만 있을 때 second 필터링 &ndash;&gt;-->
-        <!--            <if test="(thirdIds == null or thirdIds.isEmpty())-->
-        <!--                  and (secondIds != null and !secondIds.isEmpty())">-->
-        <!--                AND s.second_cate_id IN-->
-        <!--                <foreach collection="secondIds" item="id" open="(" separator="," close=")">-->
-        <!--                    #{id}-->
-        <!--                </foreach>-->
-        <!--            </if>-->
-        <!--        </where>-->
-        <!--        ORDER BY p.exchange_post_created_at DESC-->
-        <!--    </select>-->
-
-
-        <!--    <select id="findPostsBySecondAndThird" parameterType="map"  resultType="com.goodsple.features.postlist.dto.PostListDto">-->
-        <!--        SELECT-->
-        <!--        p.exchange_post_id,-->
-        <!--        p.user_id AS writer,-->
-        <!--        u.nickname AS writerNickname,-->
-        <!--        p.exchange_post_created_at,-->
-        <!--        p.post_trade_status,-->
-        <!--        p.exchange_post_title-->
-        <!--        FROM exchange_post p-->
-        <!--        LEFT JOIN users u ON p.user_id = u.user_id-->
-        <!--        LEFT JOIN third_cate t ON p.third_cate_id = t.third_cate_id-->
-        <!--        LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id-->
-        <!--        WHERE 1=1-->
-        <!--        &lt;!&ndash; 2차 카테고리 필터 &ndash;&gt;-->
-        <!--        <if test="secondIds != null and !secondIds.isEmpty()">-->
-        <!--            AND s.second_cate_id IN-->
-        <!--            <foreach item="item" collection="secondIds" open="(" separator="," close=")">-->
-        <!--                #{item}-->
-        <!--            </foreach>-->
-        <!--        </if>-->
-        <!--        &lt;!&ndash; 3차 카테고리 필터 &ndash;&gt;-->
-        <!--        <if test="thirdIds != null and !thirdIds.isEmpty()">-->
-        <!--            AND t.third_cate_id IN-->
-        <!--            <foreach item="item" collection="thirdIds" open="(" separator="," close=")">-->
-        <!--                #{item}-->
-        <!--            </foreach>-->
-        <!--        </if>-->
-        <!--        ORDER BY p.exchange_post_created_at DESC-->
-        <!--    </select>-->
-
-
-        <!-- 2차 카테고리 필터링 가능 -->
-        <!--    <select id="findPostsBySecondAndThird" parameterType="com.goodsple.features.postlist.dto.PostFilterDto"-->
-        <!--            resultType="com.goodsple.features.postlist.dto.PostListDto">-->
-        <!--        SELECT p.exchange_post_id,-->
-        <!--        p.user_id AS writer,-->
-        <!--        u.nickname AS writerNickname,-->
-        <!--        p.exchange_post_created_at,-->
-        <!--        p.post_trade_status,-->
-        <!--        p.exchange_post_title-->
-        <!--        FROM exchange_post p-->
-        <!--        LEFT JOIN third_cate t ON p.third_cate_id = t.third_cate_id-->
-        <!--        LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id-->
-        <!--        LEFT JOIN users u ON p.user_id = u.user_id-->
-        <!--        WHERE 1=1-->
-        <!--        <if test="filter.secondIds != null and !filter.secondIds.isEmpty()">-->
-        <!--            AND s.second_cate_id IN-->
-        <!--            <foreach collection="filter.secondIds" item="id" open="(" separator="," close=")">-->
-        <!--                #{id}-->
-        <!--            </foreach>-->
-        <!--        </if>-->
-        <!--        <if test="filter.thirdIds != null and !filter.thirdIds.isEmpty()">-->
-        <!--            AND p.third_cate_id IN-->
-        <!--            <foreach collection="filter.thirdIds" item="id" open="(" separator="," close=")">-->
-        <!--                #{id}-->
-        <!--            </foreach>-->
-        <!--        </if>-->
-        <!--        ORDER BY p.exchange_post_created_at DESC-->
-        <!--    </select>-->
-
-        <!--</mapper>-->

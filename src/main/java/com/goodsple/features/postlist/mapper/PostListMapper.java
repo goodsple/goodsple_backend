@@ -13,10 +13,11 @@ public interface PostListMapper {
 
   List<PostListDto> findPostsByCategory(@Param("categoryId") Long categoryId);
 
-  List<Long> findSecondIdsByThirdIds(@Param("thirdIds") List<Long> thirdIds);
+  List<Long> findThirdIdsBySameName(@Param("thirdIds") List<Long> thirdIds);
 
-  List<PostListDto> findPostsBySecondAndThird(@Param("secondIds") List<Long> secondIds,
-                                              @Param("thirdIds") List<Long> thirdIds);
+  List<Long> findThirdIdsBySecondIds(@Param("secondIds") List<Long> secondIds);
+
+  List<PostListDto>  findPostsBySecondAndThird(PostFilterDto filterDto);
 
 
 }

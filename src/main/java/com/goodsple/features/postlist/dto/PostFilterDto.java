@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class PostFilterDto {
 
+  private Long firstCateId;
   private List<Long> secondIds;
   private List<Long> thirdIds;
 
