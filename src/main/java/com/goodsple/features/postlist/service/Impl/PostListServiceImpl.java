@@ -75,11 +75,5 @@ public class PostListServiceImpl implements PostListService {
     return postListMapper.findAllPosts();
   }
 
-//  @Override
-//  public List<Long> getSecondIdsByThirdIds(List<Long> thirdIds) {
-//    List<Long> secondIds = postListMapper.findSecondIdsByThirdIds(thirdIds);
-//    if (secondIds == null) secondIds = new ArrayList<>();
-//    return secondIds;
-//  }
 
 }
