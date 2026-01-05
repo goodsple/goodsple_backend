@@ -13,6 +13,6 @@ public interface PostListService {
 
   List<PostListDto> getPostsBySecondAndThird(PostFilterDto filterDto);
 
-  List<Long> getSecondIdsByThirdIds(List<Long> thirdIds);
+//  List<Long> getSecondIdsByThirdIds(List<Long> thirdIds);
 
 }

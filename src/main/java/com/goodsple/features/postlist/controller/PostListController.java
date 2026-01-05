@@ -37,10 +37,10 @@ public class PostListController {
   }
 
   // 3차만 선택 시 연결된 2차 ID 조회
-  @PostMapping("/second/by-third-ids")
-  public ResponseEntity<List<Long>> getSecondIdsByThird(@RequestBody ThirdIdsRequest request) {
-    return ResponseEntity.ok(postListService.getSecondIdsByThirdIds(request.getThirdIds()));
-  }
+//  @PostMapping("/second/by-third-ids")
+//  public ResponseEntity<List<Long>> getSecondIdsByThird(@RequestBody ThirdIdsRequest request) {
+//    return ResponseEntity.ok(postListService.getSecondIdsByThirdIds(request.getThirdIds()));
+//  }
 
 }
 

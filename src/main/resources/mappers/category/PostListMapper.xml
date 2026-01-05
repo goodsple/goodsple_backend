@@ -33,6 +33,16 @@
         ORDER BY p.exchange_post_created_at DESC
     </select>
 
+    <!-- 같은 이름의 모든 3차 ID 조회 -->
+    <select id="findThirdIdsBySameName" resultType="long">
+        SELECT t2.third_cate_id
+        FROM third_cate t1
+        JOIN third_cate t2 ON t1.cate_name = t2.cate_name
+        WHERE t1.third_cate_id IN
+        <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 
     <!-- 🔹 3차 선택 시 연결된 모든 2차 ID 조회 -->
     <select id="findSecondIdsByThirdNames" parameterType="map" resultType="long">
@@ -45,41 +55,49 @@
         </foreach>
     </select>
 
+
+
     <!-- 🔹 2차/3차 카테고리 기준 글 조회 -->
     <select id="findPostsBySecondAndThird" parameterType="com.goodsple.features.postlist.dto.PostFilterDto"
             resultType="com.goodsple.features.postlist.dto.PostListDto">
-        SELECT p.exchange_post_id         AS exchangePostId,
+        SELECT DISTINCT
+        p.exchange_post_id         AS exchangePostId,
         p.user_id                  AS writer,
         u.nickname                 AS writerNickname,
         p.exchange_post_created_at AS exchangePostCreatedAt,
         p.post_trade_status        AS postTradeStatus,
         p.exchange_post_title      AS exchangePostTitle
         FROM exchange_post p
-        LEFT JOIN third_cate t ON p.third_cate_id = t.third_cate_id
-        LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id
-        LEFT JOIN users u ON p.user_id = u.user_id
-        WHERE 1=1
-        <if test="thirdIds != null and !thirdIds.isEmpty()">
-            AND p.third_cate_id IN
-            <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-        </if>
-        <if test="secondIds != null and !secondIds.isEmpty()">
-            AND s.second_cate_id IN
-            <foreach collection="secondIds" item="id" open="(" separator="," close=")">
-                #{id}
-            </foreach>
-        </if>
+        JOIN users u ON p.user_id = u.user_id
+        JOIN third_cate t ON p.third_cate_id = t.third_cate_id
+        <!-- LEFT JOIN second_cate s ON t.second_cate_id = s.second_cate_id -->
+         <where>
+             <!-- 3차가 있으면 무조건 3차 기준 -->
+            <if test="thirdIds != null and !thirdIds.isEmpty()">
+                p.third_cate_id IN
+                <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </if>
+
+            <!-- 3차가 없을때만 2차 사용 -->
+<!--            <if test="(thirdIds == null or thirdIds.isEmpty())-->
+<!--        and (secondIds != null and !secondIds.isEmpty())">-->
+<!--                s.second_cate_id IN-->
+<!--                <foreach collection="secondIds" item="id" open="(" separator="," close=")">-->
+<!--                    #{id}-->
+<!--                </foreach>-->
+<!--            </if>-->
+        </where>
         ORDER BY p.exchange_post_created_at DESC
     </select>
 
 
-    <select id="findSecondIdsByThirdIds" resultType="long">
-        SELECT DISTINCT second_cate_id
+    <select id="findThirdIdsBySecondIds" resultType="long">
+        SELECT third_cate_id
         FROM third_cate
-        WHERE third_cate_id IN
-        <foreach collection="thirdIds" item="id" open="(" separator="," close=")">
+        WHERE second_cate_id IN
+        <foreach collection="secondIds" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
     </select>
