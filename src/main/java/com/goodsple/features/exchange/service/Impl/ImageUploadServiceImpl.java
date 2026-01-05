@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -82,12 +83,33 @@ public class ImageUploadServiceImpl implements ImageUploadService {
    */
   private String getFileNameFromUrl(String imageUrl) {
     try {
-      String decodedUrl = URLDecoder.decode(imageUrl, StandardCharsets.UTF_8.toString());
-      String key = decodedUrl.substring(decodedUrl.indexOf(uploadCategory + "/"));
-      return key;
+      if (imageUrl == null || imageUrl.isBlank()) {
+        throw new IllegalArgumentException("imageUrl is null or blank");
+      }
+
+      // 이미 key(post/xxx) 형태인 경우
+      if (!imageUrl.startsWith("http")) {
+        return imageUrl;
+      }
+
+      URI uri = new URI(imageUrl);
+      String path = uri.getPath(); // /post/UUID-file.jpg
+
+      if (path == null || !path.contains(uploadCategory + "/")) {
+        throw new IllegalArgumentException("Invalid S3 image URL: " + imageUrl);
+      }
+
+      // 맨 앞 '/' 제거
+      return path.startsWith("/") ? path.substring(1) : path;
+
     } catch (Exception e) {
-      throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "S3 URL에서 파일명 추출 실패", e);
+      throw new ResponseStatusException(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          "S3 URL에서 파일명 추출 실패: " + imageUrl,
+          e
+      );
     }
   }
+
 
 }
