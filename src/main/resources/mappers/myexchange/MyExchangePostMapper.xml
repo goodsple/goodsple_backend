@@ -2,10 +2,14 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<!-- 내 거래글 페이지 (글 목록, 거래상태 변경 -->
+
+<!--
+내 거래글 페이지
+(거래글 목록, 거래상태 변경, 거래상대 조회 및 확정
+-->
 <mapper namespace="com.goodsple.features.myexchange.mapper.MyExchangePostMapper">
 
-
+    <!-- 내 거래글 목록 조회 -->
     <select id="selectMyExchangePosts" resultType="com.goodsple.features.myexchange.dto.MyExchangePostDto">
         SELECT
         p.exchange_post_id AS exchangePostId,
@@ -28,14 +32,17 @@
 
         FROM exchange_post p
         WHERE p.user_id = #{userId}
+
+        <!-- 거래상태 필터(전체 선택 시 조건 미적용) -->
         <if test="status != null">
             AND p.post_trade_status = #{status}
         </if>
+
         ORDER BY p.exchange_post_updated_at DESC
         LIMIT #{size} OFFSET #{offset}
     </select>
 
-    <!-- 내 거래글 개수 -->
+    <!-- 내 거래글 개수 조회(페이지네이션 용도) -->
     <select id="countMyExchangePosts" resultType="int">
         SELECT COUNT(*)
         FROM exchange_post p
@@ -45,7 +52,7 @@
         </if>
     </select>
 
-    <!-- 거래상태 변경 -->
+    <!-- 거래상태 변경 (판매자 본인만) -->
     <update id="updatePostStatus">
         UPDATE exchange_post
         SET post_trade_status        = #{status},
@@ -54,7 +61,13 @@
           AND user_id = #{userId}
     </update>
 
-    <!-- 거래상대 조회 -->
+    <!--
+    거래상대(채팅 사용자) 목록 조회
+    특정 거래글 기준 (예.1번 글에 채팅건 사용자만 보임)
+    판매자 본인(currentUserId) 제외
+    마지막 채팅 시간 기준 내림차순 정렬
+    최근 대화 기준으로 거래상대 후보 제공
+     -->
     <select id="selectChatUsersByPostId"
             resultType="com.goodsple.features.myexchange.dto.ChatUserResponseDto">
 
@@ -62,7 +75,10 @@
         u.user_id AS userId,
         u.nickname AS nickname,
         u.profile_image AS profileImageUrl,
+        <!-- 추후 배지 기능 연동 시 사용 -->
         <!-- b.badge_image_url   AS badgeIcon, -->
+
+        <!-- 마지막 채팅으로부터 경과 일수 -->
         DATE_PART(
         'day',
         now() - MAX(c.chat_message_created_at)
@@ -78,6 +94,7 @@
         ORDER BY MAX(c.chat_message_created_at) DESC
     </select>
 
+    <!-- 거래글 판매자 여부 확인 (거래상대 지정 권한 검증) -->
     <select id="isPostOwner" resultType="boolean">
         SELECT COUNT(*) > 0
         FROM exchange_post
@@ -86,7 +103,7 @@
     </select>
 
 
-    <!-- 거래상대 확정 -->
+    <!-- 거래상대(구매자) 확정 , 판매자 본인만 가능 -->
     <update id="updateBuyer">
         UPDATE exchange_post
         SET buyer_id                 = #{buyerId},
