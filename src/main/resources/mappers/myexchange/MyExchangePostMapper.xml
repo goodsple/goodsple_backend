@@ -8,14 +8,14 @@
 
     <select id="selectMyExchangePosts" resultType="com.goodsple.features.myexchange.dto.MyExchangePostDto">
         SELECT
-        p.exchange_post_id        AS exchangePostId,
-        p.exchange_post_title     AS exchangePostTitle,
-        p.post_trade_status       AS postTradeStatus,
-        p.post_trade_type         AS postTradeType,
+        p.exchange_post_id AS exchangePostId,
+        p.exchange_post_title AS exchangePostTitle,
+        p.post_trade_status AS postTradeStatus,
+        p.post_trade_type AS postTradeType,
         TO_CHAR(p.exchange_post_updated_at, 'YYYY.MM.DD HH24:MI') AS updatedAt,
-        p.post_location_name      AS postLocationName,
-        p.delivery_price_normal   AS deliveryPriceNormal,
-        p.delivery_price_half     AS deliveryPriceHalf,
+        p.post_location_name AS postLocationName,
+        p.delivery_price_normal AS deliveryPriceNormal,
+        p.delivery_price_half AS deliveryPriceHalf,
 
         <!-- 내 거래글 페이지_대표 사진 불러오기-->
         (
@@ -48,32 +48,51 @@
     <!-- 거래상태 변경 -->
     <update id="updatePostStatus">
         UPDATE exchange_post
-        SET post_trade_status = #{status},
+        SET post_trade_status        = #{status},
             exchange_post_updated_at = NOW()
         WHERE exchange_post_id = #{postId}
           AND user_id = #{userId}
     </update>
 
-<!--    &lt;!&ndash; 거래글 수정 &ndash;&gt;-->
-<!--    <update id="updatePost">-->
-<!--        UPDATE exchange_post-->
-<!--        SET exchange_post_title   = #{dto.exchangePostTitle},-->
-<!--            exchange_post_content = #{dto.exchangePostContent},-->
-<!--            post_trade_type       = #{dto.postTradeType},-->
-<!--            post_location_name    = #{dto.location},-->
-<!--            delivery_price_normal = #{dto.deliveryFee},-->
-<!--            image_url             = #{dto.imageUrl},-->
-<!--            exchange_post_updated_at = NOW()-->
-<!--        WHERE exchange_post_id = #{postId}-->
-<!--          AND user_id = #{userId}-->
-<!--    </update>-->
+    <!-- 거래상대 조회 -->
+    <select id="selectChatUsersByPostId"
+            resultType="com.goodsple.features.myexchange.dto.ChatUserResponseDto">
 
-<!--    &lt;!&ndash; 거래글 삭제 &ndash;&gt;-->
-<!--    <delete id="deletePost">-->
-<!--        DELETE FROM exchange_post-->
-<!--        WHERE exchange_post_id = #{postId}-->
-<!--          AND user_id = #{userId}-->
-<!--    </delete>-->
+        SELECT
+        u.user_id AS userId,
+        u.nickname AS nickname,
+        u.profile_image AS profileImageUrl,
+        <!-- b.badge_image_url   AS badgeIcon, -->
+        DATE_PART(
+        'day',
+        now() - MAX(c.chat_message_created_at)
+        )::int AS lastChatDaysAgo
+        FROM chat_room r
+        JOIN chat_message c ON r.chat_room_id = c.chat_room_id
+        <!--              JOIN badge b -->
+        JOIN users u
+        ON (u.user_id = r.user1_id OR u.user_id = r.user2_id)
+        WHERE r.exchange_post_id = #{postId}
+        AND u.user_id != #{currentUserId}
+        GROUP BY u.user_id, u.nickname, u.profile_image
+        ORDER BY MAX(c.chat_message_created_at) DESC
+    </select>
 
+    <select id="isPostOwner" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM exchange_post
+        WHERE exchange_post_id = #{postId}
+          AND user_id = #{userId}
+    </select>
+
+
+    <!-- 거래상대 확정 -->
+    <update id="updateBuyer">
+        UPDATE exchange_post
+        SET buyer_id                 = #{buyerId},
+            exchange_post_updated_at = NOW()
+        WHERE exchange_post_id = #{postId}
+          AND user_id = #{sellerId}
+    </update>
 
 </mapper>

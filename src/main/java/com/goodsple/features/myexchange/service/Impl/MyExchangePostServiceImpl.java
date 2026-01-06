@@ -1,5 +1,6 @@
 package com.goodsple.features.myexchange.service.Impl;
 
+import com.goodsple.features.myexchange.dto.ChatUserResponseDto;
 import com.goodsple.features.myexchange.dto.MyExchangePostDto;
 import com.goodsple.features.myexchange.dto.MyExchangePostUpdateDto;
 import com.goodsple.features.myexchange.mapper.MyExchangePostMapper;
@@ -35,19 +36,39 @@ public class MyExchangePostServiceImpl implements MyExchangePostService {
     }
   }
 
-//  @Override
-//  public void deletePost(Long postId, Long userId) {
-//    int deleted = myExchangePostMapper.deletePost(postId, userId);
-//    if (deleted != 1) {
-//      throw new RuntimeException("삭제 실패 또는 권한 없음");
-//    }
-//  }
-//
-//  @Override
-//  public void updatePost(Long postId, Long userId, MyExchangePostUpdateDto updateDto) {
-//    int updated = myExchangePostMapper.updatePost(postId, userId, updateDto);
-//    if (updated != 1) {
-//      throw new RuntimeException("거래글 수정 실패 또는 권한 없음");
-//    }
-//  }
+  @Override
+  public List<ChatUserResponseDto> getChatUsers(Long postId, Long sellerId) {
+
+    // 🔒 권한 체크: 이 글의 판매자인지
+    boolean isOwner = myExchangePostMapper.isPostOwner(postId, sellerId);
+    if (!isOwner) {
+      throw new RuntimeException("권한 없음");
+    }
+
+    // sellerId = 현재 로그인한 사용자 = currentUserId
+    return myExchangePostMapper.selectChatUsersByPostId(postId, sellerId);
+  }
+
+
+  @Override
+  public void selectBuyer(Long postId, Long sellerId, Long buyerId) {
+
+    // 1. 검증
+    if (sellerId.equals(buyerId)) {
+      throw new IllegalArgumentException("본인을 거래상대로 선택할 수 없습니다.");
+    }
+
+    // 2. DB 업데이트
+    int updated = myExchangePostMapper.updateBuyer(postId, sellerId, buyerId);
+
+    // 3. 결과 검증
+    if (updated != 1) {
+      throw new RuntimeException("거래상대 지정 실패 또는 권한 없음");
+    }
+
+
+  }
+
+
+
 }
