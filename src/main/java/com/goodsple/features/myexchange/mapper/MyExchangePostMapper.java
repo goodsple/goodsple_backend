@@ -1,6 +1,7 @@
 package com.goodsple.features.myexchange.mapper;
 
 import com.goodsple.features.myexchange.dto.ChatUserResponseDto;
+import com.goodsple.features.myexchange.dto.MyCompletedExchangeDto;
 import com.goodsple.features.myexchange.dto.MyExchangePostDto;
 import com.goodsple.features.myexchange.dto.MyExchangePostUpdateDto;
 import org.apache.ibatis.annotations.Mapper;
@@ -53,5 +54,9 @@ public interface MyExchangePostMapper {
                    @Param("buyerId") Long buyerId
   );
 
+  //
+  List<MyCompletedExchangeDto> selectMyCompletedExchangeHistory(
+      @Param("userId") Long userId
+  );
 
 }

@@ -1,6 +1,7 @@
 package com.goodsple.features.myexchange.service.Impl;
 
 import com.goodsple.features.myexchange.dto.ChatUserResponseDto;
+import com.goodsple.features.myexchange.dto.MyCompletedExchangeDto;
 import com.goodsple.features.myexchange.dto.MyExchangePostDto;
 import com.goodsple.features.myexchange.dto.MyExchangePostUpdateDto;
 import com.goodsple.features.myexchange.mapper.MyExchangePostMapper;
@@ -67,6 +68,12 @@ public class MyExchangePostServiceImpl implements MyExchangePostService {
     }
 
 
+  }
+
+
+  @Override
+  public List<MyCompletedExchangeDto> getMyCompletedExchangeHistory(Long userId) {
+    return myExchangePostMapper.selectMyCompletedExchangeHistory(userId);
   }
 
 

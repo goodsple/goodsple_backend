@@ -112,4 +112,77 @@
           AND user_id = #{sellerId}
     </update>
 
+    <!-- 거래내역 조회 -->
+    <select id="selectMyCompletedExchangeHistory"
+            resultType="com.goodsple.features.myexchange.dto.MyCompletedExchangeDto">
+
+        SELECT
+            p.exchange_post_id AS exchangePostId,
+            p.exchange_post_title AS title,
+            p.post_trade_type AS tradeMethod,
+            TO_CHAR(p.exchange_post_updated_at, 'YYYY.MM.DD') AS tradedAt,
+
+            p.user_id AS sellerId,
+            p.buyer_id AS buyerId,
+
+            CASE
+                WHEN p.user_id = #{userId} THEN true
+                ELSE false
+                END AS isSeller,
+
+            CASE
+                WHEN p.buyer_id = #{userId} THEN true
+                ELSE false
+                END AS isBuyer,
+
+            -- 거래 상대 닉네임
+            CASE
+                WHEN p.user_id = #{userId} THEN buyer.nickname
+                ELSE seller.nickname
+                END AS opponentNickname,
+
+            -- 거래 상대 지정 버튼
+            CASE
+                WHEN p.user_id = #{userId}
+                    AND p.buyer_id IS NULL
+                    THEN true
+                ELSE false
+                END AS canSelectBuyer,
+
+            -- 리뷰 존재 여부
+            CASE
+                WHEN r.review_id IS NOT NULL THEN true
+                ELSE false
+                END AS reviewWritten,
+
+            -- 리뷰 작성 가능 여부
+            CASE
+                WHEN p.buyer_id = #{userId}
+                    AND r.review_id IS NULL
+                    THEN true
+                ELSE false
+                END AS canWriteReview,
+
+            (
+                SELECT img.post_image_url
+                FROM exchange_post_image img
+                WHERE img.exchange_post_id = p.exchange_post_id
+                ORDER BY img.post_sort_order ASC
+                LIMIT 1
+            ) AS imageUrl
+
+        FROM exchange_post p
+                 JOIN users seller ON seller.user_id = p.user_id
+                 LEFT JOIN users buyer ON buyer.user_id = p.buyer_id
+
+                 LEFT JOIN reviews r
+                           ON r.exchange_post_id = p.exchange_post_id
+                               AND r.writer_id = #{userId}
+
+        WHERE p.post_trade_status = 'COMPLETED'
+          AND (p.user_id = #{userId} OR p.buyer_id = #{userId})
+
+        ORDER BY p.exchange_post_updated_at DESC
+    </select>
+
 </mapper>
