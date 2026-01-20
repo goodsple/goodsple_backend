@@ -1,9 +1,6 @@
 package com.goodsple.features.myexchange.controller;
 
-import com.goodsple.features.myexchange.dto.BuyerSelectRequestDto;
-import com.goodsple.features.myexchange.dto.ChatUserResponseDto;
-import com.goodsple.features.myexchange.dto.MyExchangePostDto;
-import com.goodsple.features.myexchange.dto.MyExchangePostUpdateDto;
+import com.goodsple.features.myexchange.dto.*;
 import com.goodsple.features.myexchange.service.MyExchangePostService;
 import com.goodsple.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
@@ -80,5 +77,12 @@ public class MyExchangePostController {
         );
   }
 
+  @Operation(summary = "내 거래완료 내역 조회")
+  @GetMapping("/completed")
+  public List<MyCompletedExchangeDto> getMyCompletedHistory(
+      @AuthenticationPrincipal CustomUserDetails user
+  ) {
+    return myExchangePostService.getMyCompletedExchangeHistory(user.getUserId());
+  }
 
 }
