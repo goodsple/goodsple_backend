@@ -15,10 +15,10 @@ public class MyCompletedExchangeDto {
   private Long sellerId;
   private Long buyerId;
 
-  private String opponentNickname;
+  private String opponentNickname; // 로그인 사용자 기준 거래한 상대방의 닉네임
 
-  private boolean isSeller;        // 내가 판매자인지
-  private boolean isBuyer;         // 내가 구매자인지
+  private boolean isSeller;        // 내가 판매자(작성자)인지
+  private boolean isBuyer;         // 내가 구매자(거래 상대방)인지
 
   private boolean canSelectBuyer;  // 거래상대 지정 버튼
   private boolean canWriteReview;  // 후기 작성 가능

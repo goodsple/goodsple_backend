@@ -54,7 +54,7 @@ public interface MyExchangePostMapper {
                    @Param("buyerId") Long buyerId
   );
 
-  //
+  // 내가 참여한 거래완료 내역 조회 (내가 판매자/구매자인 거래 모두)
   List<MyCompletedExchangeDto> selectMyCompletedExchangeHistory(
       @Param("userId") Long userId
   );
