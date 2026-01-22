@@ -1,6 +1,7 @@
 package com.goodsple.features.chatbot.controller;
 
 
+import com.goodsple.features.chatbot.dto.ChatbotLog;
 import com.goodsple.features.chatbot.dto.request.ChatbotRequest;
 import com.goodsple.features.chatbot.dto.response.ChatbotResponse;
 import com.goodsple.features.chatbot.service.ChatbotService;

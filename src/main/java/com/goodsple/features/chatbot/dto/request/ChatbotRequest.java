@@ -9,4 +9,8 @@ public class ChatbotRequest {
     private String sessionId;
     private String text;
     private String source;
+
+    private Boolean isNewChat;
+    private Long userId;
+    private Long logId;
 }
