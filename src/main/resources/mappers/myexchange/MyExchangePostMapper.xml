@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!--
-내 거래글 페이지
+마이페이지 > 내 거래글 페이지
 (거래글 목록, 거래상태 변경, 거래상대 조회 및 확정
 -->
 <mapper namespace="com.goodsple.features.myexchange.mapper.MyExchangePostMapper">
@@ -111,5 +111,92 @@
         WHERE exchange_post_id = #{postId}
           AND user_id = #{sellerId}
     </update>
+
+
+    <!-- 마이페이지 > 거래내역 조회 -->
+    <!-- 판매자 / 구매자 모두 포함 -->
+    <!-- 후기 상태, 거래상대 지정 여부 계산 -->
+    <select id="selectMyCompletedExchangeHistory"
+            resultType="com.goodsple.features.myexchange.dto.MyCompletedExchangeDto">
+
+        SELECT p.exchange_post_id                                AS exchangePostId,
+               p.exchange_post_title                             AS title,
+               p.post_trade_type                                 AS tradeMethod,
+               TO_CHAR(p.exchange_post_updated_at, 'YYYY.MM.DD') AS tradedAt,
+
+               p.user_id                                         AS sellerId, -- 판매자 ID
+               p.buyer_id                                        AS buyerId,  -- 구매자 ID (미지정 가능)
+
+               -- 현재 로그인 사용자 역할
+               CASE
+                   WHEN p.user_id = #{userId} THEN true
+                   ELSE false
+                   END                                           AS isSeller, -- 내가 판매자인지 여부
+
+               CASE
+                   WHEN p.buyer_id = #{userId} THEN true
+                   ELSE false
+                   END                                           AS isBuyer,  -- 내가 구매자인지 여부
+
+               -- 거래 상대 닉네임
+               CASE
+                   -- 내가 판매자인 경우 → 구매자 닉네임
+                   WHEN p.user_id = #{userId} THEN buyer.nickname
+                   -- 내가 구매자인 경우 → 판매자 닉네임
+                   ELSE seller.nickname
+                   END                                           AS opponentNickname,
+
+               -- 거래 상대 지정 버튼
+               CASE
+                   -- 판매자이고 아직 구매자를 지정하지 않은 경우
+                   WHEN p.user_id = #{userId}
+                       AND p.buyer_id IS NULL
+                       THEN true
+                   ELSE false
+                   END                                           AS canSelectBuyer,
+
+               -- 리뷰 존재 여부
+               CASE
+                   -- 내가 작성한 리뷰가 존재하는 경우
+                   WHEN r.review_id IS NOT NULL THEN true
+                   ELSE false
+                   END                                           AS reviewWritten,
+
+               -- 리뷰 작성 가능 여부
+               CASE
+                   -- 구매자이고 아직 리뷰를 작성하지 않은 경우
+                   WHEN p.buyer_id = #{userId}
+                       AND r.review_id IS NULL
+                       THEN true
+                   ELSE false
+                   END                                           AS canWriteReview,
+
+               -- 대표이미지
+               (SELECT img.post_image_url
+                FROM exchange_post_image img
+                WHERE img.exchange_post_id = p.exchange_post_id
+                ORDER BY img.post_sort_order ASC
+                LIMIT 1)                                         AS imageUrl
+
+        FROM exchange_post p
+                 /* 판매자 정보 */
+                 JOIN users seller ON seller.user_id = p.user_id
+            /* 구매자 정보 (구매자 미지정 가능) */
+                 LEFT JOIN users buyer ON buyer.user_id = p.buyer_id
+
+            /* 리뷰 정보
+        - 내가 작성한 리뷰만 조인
+        - 판매자 / 구매자 구분 없이 내 리뷰 존재 여부 확인용 */
+                 LEFT JOIN reviews r
+                           ON r.exchange_post_id = p.exchange_post_id
+                               AND r.writer_id = #{userId}
+
+        /* 조회 조건 */
+        WHERE p.post_trade_status = 'COMPLETED' -- 거래완료 상태만 조회
+          AND (p.user_id = #{userId}            -- 내가 판매자인 경우
+            OR p.buyer_id = #{userId})          -- 내가 구매자인 경우
+
+        ORDER BY p.exchange_post_updated_at DESC
+    </select>
 
 </mapper>
