@@ -21,12 +21,18 @@
     </select>
 
     <!--  의도(intent)에 맞는 질문(question) 목록  -->
+<!--    <select id="getQuestionsByIntent" parameterType="string" resultType="string">-->
+<!--        SELECT knowledge_question-->
+<!--        FROM knowledge_base-->
+<!--        WHERE knowledge_intent = #{intent}-->
+<!--        ORDER BY knowledge_question ASC-->
+<!--    </select>-->
     <select id="getQuestionsByIntent" parameterType="string" resultType="string">
         SELECT knowledge_question
         FROM knowledge_base
-        WHERE knowledge_intent = #{intent}
-        ORDER BY knowledge_question ASC
+        WHERE knowledge_intent = #{_parameter}
     </select>
+
 
     <!--  질문(question)에 맞는 답변(answer) 출력  -->
     <select id="getAnswerByQuestion" parameterType="string" resultType="string">
@@ -35,6 +41,39 @@
         WHERE knowledge_question = #{question}
             LIMIT 1
     </select>
+
+
+
+
+    <!-- chatbot_logs 저장 -->
+    <insert id="insertChatLog" parameterType="com.goodsple.features.chatbot.dto.ChatbotLog" useGeneratedKeys="true" keyProperty="logId">
+        INSERT INTO chatbot_logs (log_session_id, user_id, log_type, log_initial_question, log_predicted_intent, log_confidence_score)
+        VALUES (#{logSessionId}, #{userId}, #{logType}::chatbot_log_type_enum, #{logInitialQuestion}, #{logPredictedIntent}, #{logConfidenceScore})
+    </insert>
+
+    <!-- chatbot_message_logs 저장 -->
+    <insert id="insertChatMessage" parameterType="com.goodsple.features.chatbot.dto.ChatbotMessage">
+        INSERT INTO chatbot_message_logs (log_id, message_sender, message_text, message_order_index)
+        VALUES (#{logId}, #{messageSender}, #{messageText}, #{messageOrderIndex})
+    </insert>
+
+
+    <select id="findNextMessageOrder" parameterType="long" resultType="int">
+        SELECT COALESCE(MAX(message_order_index), 0) + 1
+        FROM chatbot_message_logs
+        WHERE log_id = #{logId}
+    </select>
+
+
+    <!-- 세션으로 가장 최근 로그 찾기 -->
+    <select id="findLatestLogIdBySession" parameterType="string" resultType="long">
+        SELECT log_id
+        FROM chatbot_logs
+        WHERE log_session_id = #{sessionId}
+        ORDER BY log_created_at DESC
+            LIMIT 1
+    </select>
+
 
 
 </mapper>

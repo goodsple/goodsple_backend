@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.admin.chatbot.mapper.AdminChatbotMapper">
+
+    <!-- 로그 목록 조회 -->
+    <select id="findChatLogs"
+            resultType="com.goodsple.features.admin.chatbot.dto.AdminChatbotLogDTO">
+        SELECT
+            l.log_id               AS logId,
+            l.log_session_id       AS logSessionId,
+            u.login_id             AS loginId,
+            l.log_type             AS logType,
+            l.log_initial_question AS logInitialQuestion,
+            l.log_predicted_intent AS logPredictedIntent,
+            l.log_confidence_score AS logConfidenceScore,
+            l.log_created_at       AS logCreatedAt
+        FROM chatbot_logs l
+                 LEFT JOIN users u ON l.user_id = u.user_id
+        WHERE l.log_type = #{type}::chatbot_log_type_enum
+        ORDER BY l.log_created_at DESC
+            LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+
+
+    <!-- 로그 상세 요약 -->
+    <select id="findChatLogDetail"
+            resultType="com.goodsple.features.admin.chatbot.dto.AdminChatLogDetailResponse">
+        SELECT
+            l.log_id               AS logId,
+            u.login_id             AS loginId,
+            l.log_initial_question AS initialMessage,
+            l.log_predicted_intent AS finalIntent,
+            l.log_confidence_score AS confidence
+        FROM chatbot_logs l
+                 LEFT JOIN users u ON l.user_id = u.user_id
+        WHERE l.log_id = #{logId}
+    </select>
+
+
+    <!-- 대화 메시지 조회 -->
+    <select id="findChatMessages"
+            resultType="com.goodsple.features.admin.chatbot.dto.AdminChatMessageResponse">
+        SELECT
+            message_sender      AS sender,
+            message_text        AS text,
+            message_timestamp   AS timestamp
+        FROM chatbot_message_logs
+        WHERE log_id = #{logId}
+        ORDER BY message_order_index ASC
+    </select>
+
+
+
+</mapper>
