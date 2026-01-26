@@ -91,6 +91,10 @@ public class SecurityConfig {
                         .requestMatchers("/ws-stomp/**", "/ws/**").permitAll()
                                 .requestMatchers("/api/main/**").permitAll()
 
+                        // 금칙어 검사 → 로그인만 하면 가능
+                        .requestMatchers(HttpMethod.POST, "/api/prohibited-words/check")
+                        .authenticated()
+
                         // 그 외 모든 요청은 JWT 인증 필요
                         .anyRequest().permitAll()
                 )
