@@ -41,19 +41,19 @@ public class ProhibitedWordController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/check")
-    public ResponseEntity<?> checkProhibitedWord(@RequestBody String content) {
-        List<String> activeWords = service.getActiveWords();
-        for (String word : activeWords) {
-            if (content.contains(word)) {
-                // 예외 던지지 않고 400 Bad Request 반환 + 메시지 포함
-                return ResponseEntity
-                        .badRequest()
-                        .body(word); // 금칙어 단어를 프론트로 전달
-            }
-        }
-        return ResponseEntity.ok().build();
-    }
+//    @PostMapping("/check")
+//    public ResponseEntity<?> checkProhibitedWord(@RequestBody String content) {
+//        List<String> activeWords = service.getActiveWords();
+//        for (String word : activeWords) {
+//            if (content.contains(word)) {
+//                // 예외 던지지 않고 400 Bad Request 반환 + 메시지 포함
+//                return ResponseEntity
+//                        .badRequest()
+//                        .body(word); // 금칙어 단어를 프론트로 전달
+//            }
+//        }
+//        return ResponseEntity.ok().build();
+//    }
 
 
 
