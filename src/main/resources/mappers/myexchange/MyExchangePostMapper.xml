@@ -157,8 +157,10 @@
 
                -- 리뷰 존재 여부
                CASE
-                   -- 내가 작성한 리뷰가 존재하는 경우
-                   WHEN r.review_id IS NOT NULL THEN true
+                   -- 구매자인 경우: 내가 작성한 리뷰가 있으면 true
+                   WHEN p.buyer_id = #{userId} AND r.review_id IS NOT NULL THEN true
+                   -- 판매자인 경우: 구매자가 작성한 리뷰가 있으면 true
+                   WHEN p.user_id = #{userId} AND rb.review_id IS NOT NULL THEN true
                    ELSE false
                    END                                           AS reviewWritten,
 
@@ -190,6 +192,9 @@
                  LEFT JOIN reviews r
                            ON r.exchange_post_id = p.exchange_post_id
                                AND r.writer_id = #{userId}
+                 LEFT JOIN reviews rb
+                           ON rb.exchange_post_id = p.exchange_post_id
+                               AND rb.writer_id = p.buyer_id
 
         /* 조회 조건 */
         WHERE p.post_trade_status = 'COMPLETED' -- 거래완료 상태만 조회

@@ -36,7 +36,8 @@ import org.springframework.web.client.RestTemplate;
     "com.goodsple.features.chat.mapper",
     "com.goodsple.features.category.user.mapper",
     "com.goodsple.features.popular.mapper",
-    "com.goodsple.features.chatbot.mapper"
+    "com.goodsple.features.chatbot.mapper",
+    "com.goodsple.features.review.mapper"
 })
 
 
@@ -79,4 +80,3 @@ public class BackendApplication {
 
 //http://localhost:8080/swagger-ui.html 스웨거 확인 주소.
 //http://localhost:8080/swagger-ui/index.html
-
