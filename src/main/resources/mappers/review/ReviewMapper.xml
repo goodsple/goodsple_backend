@@ -58,6 +58,8 @@
                TO_CHAR(r.review_created_at, 'YYYY.MM.DD') AS date,
                r.rating AS rating,
                r.content AS content,
+               r.writer_id AS writerId,
+               r.review_target_user_id AS targetUserId,
                (SELECT img.image_url
                 FROM review_images img
                 WHERE img.review_id = r.review_id
@@ -77,6 +79,8 @@
                TO_CHAR(r.review_created_at, 'YYYY.MM.DD') AS date,
                r.rating AS rating,
                r.content AS content,
+               r.writer_id AS writerId,
+               r.review_target_user_id AS targetUserId,
                (SELECT img.image_url
                 FROM review_images img
                 WHERE img.review_id = r.review_id

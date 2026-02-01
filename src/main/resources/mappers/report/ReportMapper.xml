@@ -62,6 +62,14 @@
         WHERE report_id = #{reportId}  <!-- 인터페이스 메서드에 @Param("reportId")가 있어야 함 -->
     </select>
 
+    <select id="existsReport" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM reports
+        WHERE reporter_id = #{reporterId}
+          AND target_type = CAST(#{targetType,javaType=String} AS report_target_enum)
+          AND target_id = #{targetId}
+    </select>
+
 
     <!-- ===== Report Reason (마스터) ===== -->
     <resultMap id="ReportReasonResultMap" type="com.goodsple.features.report.dto.request.ReportReason">

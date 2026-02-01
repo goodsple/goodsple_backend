@@ -44,7 +44,22 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public List<ReportReason> getAllReasons() {
-        return reportMapper.selectAllReasons();
+        List<ReportReason> reasons = reportMapper.selectAllReasons();
+        if (reasons == null || reasons.isEmpty()) {
+            // 기본 사유 시드 (중복은 ON CONFLICT로 무시)
+            for (ReportReasonType type : ReportReasonType.values()) {
+                ReportReason reason = new ReportReason();
+                reason.setReportReasonText(type.getDescription());
+                reportMapper.insertReason(reason);
+            }
+            reasons = reportMapper.selectAllReasons();
+        }
+        return reasons;
+    }
+
+    @Override
+    public boolean hasReported(Long reporterId, String targetType, Long targetId) {
+        return reportMapper.existsReport(reporterId, targetType, targetId);
     }
 
 //    @Override

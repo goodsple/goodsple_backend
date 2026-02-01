@@ -19,6 +19,9 @@ public interface ReportMapper {
     // Report
     int insertReport(Report report);
     Report selectReportById(@Param("reportId") Long reportId);
+    boolean existsReport(@Param("reporterId") Long reporterId,
+                         @Param("targetType") String targetType,
+                         @Param("targetId") Long targetId);
 
     // 추가: report 목록, 상태 업데이트 등 메서드 정의 가능
 
