@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.review.mapper.ReviewMapper">
+
+    <select id="countByWriterAndPost" resultType="int">
+        SELECT COUNT(*)
+        FROM reviews
+        WHERE writer_id = #{writerId}
+          AND exchange_post_id = #{exchangePostId}
+    </select>
+
+    <select id="selectExchangeInfo" resultType="com.goodsple.features.review.dto.ReviewExchangeInfo">
+        SELECT exchange_post_id   AS exchangePostId,
+               user_id            AS sellerId,
+               buyer_id           AS buyerId,
+               post_trade_status  AS status,
+               exchange_post_title AS postTitle
+        FROM exchange_post
+        WHERE exchange_post_id = #{exchangePostId}
+    </select>
+
+    <insert id="insertReview" parameterType="com.goodsple.features.review.dto.ReviewInsertParam"
+            useGeneratedKeys="true" keyProperty="reviewId">
+        INSERT INTO reviews (
+            writer_id,
+            review_target_user_id,
+            exchange_post_id,
+            rating,
+            content
+        ) VALUES (
+            #{writerId},
+            #{reviewTargetUserId},
+            #{exchangePostId},
+            #{rating},
+            #{content}
+        )
+    </insert>
+
+    <insert id="insertReviewImage">
+        INSERT INTO review_images (
+            review_id,
+            image_url,
+            order_index
+        ) VALUES (
+            #{reviewId},
+            #{imageUrl},
+            #{orderIndex}
+        )
+    </insert>
+
+    <select id="selectWrittenReviews" resultType="com.goodsple.features.review.dto.ReviewSummaryDto">
+        SELECT r.review_id AS id,
+               r.exchange_post_id AS exchangePostId,
+               p.exchange_post_title AS postTitle,
+               TO_CHAR(r.review_created_at, 'YYYY.MM.DD') AS date,
+               r.rating AS rating,
+               r.content AS content,
+               (SELECT img.image_url
+                FROM review_images img
+                WHERE img.review_id = r.review_id
+                ORDER BY img.order_index ASC, img.image_created_at ASC
+                LIMIT 1) AS thumbnail
+        FROM reviews r
+                 JOIN exchange_post p ON p.exchange_post_id = r.exchange_post_id
+        WHERE r.writer_id = #{userId}
+          AND r.review_status = 'visible'
+        ORDER BY r.review_created_at DESC
+    </select>
+
+    <select id="selectReceivedReviews" resultType="com.goodsple.features.review.dto.ReviewSummaryDto">
+        SELECT r.review_id AS id,
+               r.exchange_post_id AS exchangePostId,
+               p.exchange_post_title AS postTitle,
+               TO_CHAR(r.review_created_at, 'YYYY.MM.DD') AS date,
+               r.rating AS rating,
+               r.content AS content,
+               (SELECT img.image_url
+                FROM review_images img
+                WHERE img.review_id = r.review_id
+                ORDER BY img.order_index ASC, img.image_created_at ASC
+                LIMIT 1) AS thumbnail
+        FROM reviews r
+                 JOIN exchange_post p ON p.exchange_post_id = r.exchange_post_id
+        WHERE r.review_target_user_id = #{userId}
+          AND r.review_status = 'visible'
+        ORDER BY r.review_created_at DESC
+    </select>
+
+    <select id="selectReviewImages" resultType="java.lang.String">
+        SELECT image_url
+        FROM review_images
+        WHERE review_id = #{reviewId}
+        ORDER BY order_index ASC, image_created_at ASC
+    </select>
+
+    <select id="selectReviewDetail" resultType="com.goodsple.features.review.dto.ReviewDetailDto">
+        SELECT r.review_id AS id,
+               r.exchange_post_id AS exchangePostId,
+               p.exchange_post_title AS postTitle,
+               TO_CHAR(r.review_created_at, 'YYYY.MM.DD') AS date,
+               r.rating AS rating,
+               r.content AS content,
+               r.writer_id AS writerId,
+               r.review_target_user_id AS targetUserId,
+               (SELECT img.image_url
+                FROM review_images img
+                WHERE img.review_id = r.review_id
+                ORDER BY img.order_index ASC, img.image_created_at ASC
+                LIMIT 1) AS thumbnail
+        FROM reviews r
+                 JOIN exchange_post p ON p.exchange_post_id = r.exchange_post_id
+        WHERE r.review_id = #{reviewId}
+          AND r.review_status = 'visible'
+    </select>
+
+    <select id="selectReviewsByPost" resultType="com.goodsple.features.review.dto.ReviewPostItemDto">
+        SELECT r.review_id AS reviewId,
+               r.writer_id AS writerId,
+               u.nickname AS writerNickname,
+               u.profile_image AS writerProfileImage,
+               r.rating AS rating,
+               r.content AS content,
+               TO_CHAR(r.review_created_at, 'YYYY.MM.DD') AS createdAt
+        FROM reviews r
+                 JOIN users u ON u.user_id = r.writer_id
+        WHERE r.exchange_post_id = #{exchangePostId}
+          AND r.review_status = 'visible'
+        ORDER BY r.review_created_at DESC
+    </select>
+
+    <select id="selectReviewAuth" resultType="com.goodsple.features.review.dto.ReviewAuthInfo">
+        SELECT review_id AS reviewId,
+               writer_id AS writerId,
+               review_target_user_id AS targetUserId
+        FROM reviews
+        WHERE review_id = #{reviewId}
+    </select>
+
+    <update id="updateReview">
+        UPDATE reviews
+        SET rating = #{rating},
+            content = #{content},
+            review_updated_at = NOW()
+        WHERE review_id = #{reviewId}
+          AND writer_id = #{writerId}
+    </update>
+
+    <delete id="deleteReview">
+        DELETE FROM reviews
+        WHERE review_id = #{reviewId}
+          AND writer_id = #{writerId}
+    </delete>
+
+    <delete id="deleteReviewImages">
+        DELETE FROM review_images
+        WHERE review_id = #{reviewId}
+    </delete>
+
+</mapper>
