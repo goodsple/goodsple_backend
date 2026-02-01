@@ -13,4 +13,6 @@ public class ReviewSummaryDto {
   private String content;
   private String thumbnail;
   private List<String> images;
+  private Long writerId;
+  private Long targetUserId;
 }

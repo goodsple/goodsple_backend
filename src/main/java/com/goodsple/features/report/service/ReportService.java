@@ -25,6 +25,11 @@ public interface ReportService {
     List<ReportReason> getAllReasons();
 
     /**
+     * 특정 대상에 대한 신고 여부 확인
+     */
+    boolean hasReported(Long reporterId, String targetType, Long targetId);
+
+    /**
      * 신고 사유 등록
      */
 //    void addReason(ReportReason reason);

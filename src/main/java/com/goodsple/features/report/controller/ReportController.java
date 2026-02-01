@@ -67,6 +67,20 @@ public class ReportController {
         return ResponseEntity.ok(reasons);
     }
 
+    @Operation(summary = "신고 여부 확인", description = "현재 로그인 사용자가 대상에 대해 신고했는지 확인합니다.")
+    @GetMapping("/check")
+    public ResponseEntity<?> checkReported(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestParam String targetType,
+            @RequestParam Long targetId
+    ) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        boolean reported = reportService.hasReported(user.getUserId(), targetType, targetId);
+        return ResponseEntity.ok().body(java.util.Map.of("reported", reported));
+    }
+
     /**
      * ID로 신고 조회
      */
