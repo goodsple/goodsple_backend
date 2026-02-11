@@ -16,7 +16,7 @@
                 FROM exchange_post_image img
                 WHERE img.exchange_post_id = p.exchange_post_id
                 ORDER BY img.post_sort_order ASC, img.post_image_created_at ASC
-                LIMIT 1)                  AS imageUrl
+                LIMIT 1)                  AS thumbnailUrl
         FROM exchange_post p
                  JOIN users u ON p.user_id = u.user_id
         ORDER BY p.exchange_post_created_at DESC
@@ -33,7 +33,7 @@
                 FROM exchange_post_image img
                 WHERE img.exchange_post_id = p.exchange_post_id
                 ORDER BY img.post_sort_order ASC, img.post_image_created_at ASC
-                LIMIT 1)                  AS imageUrl
+                LIMIT 1)                  AS thumbnailUrl
         FROM exchange_post p
                  JOIN users u ON p.user_id = u.user_id
                  JOIN third_cate t ON p.third_cate_id = t.third_cate_id
@@ -81,7 +81,7 @@
          FROM exchange_post_image img
          WHERE img.exchange_post_id = p.exchange_post_id
          ORDER BY img.post_sort_order ASC, img.post_image_created_at ASC
-         LIMIT 1)                  AS imageUrl
+         LIMIT 1)                  AS thumbnailUrl
         FROM exchange_post p
         JOIN users u ON p.user_id = u.user_id
         JOIN third_cate t ON p.third_cate_id = t.third_cate_id
