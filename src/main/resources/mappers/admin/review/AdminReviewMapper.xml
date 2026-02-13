@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.admin.review.mapper.AdminReviewMapper">
+
+    <select id="selectReviews" resultType="com.goodsple.features.admin.review.dto.AdminReviewListItem">
+        SELECT
+            r.review_id AS reviewId,
+            writer.nickname AS author,
+            target.nickname AS targetUser,
+            p.exchange_post_title AS title,
+            r.content AS content,
+            r.report_count AS reportCount,
+            r.rating AS rating,
+            CASE r.review_status
+                WHEN 'visible' THEN 'NORMAL'
+                WHEN 'hidden'  THEN 'BLIND'
+                ELSE r.review_status::text
+            END AS status,
+            TO_CHAR(r.review_created_at, 'YYYY.MM.DD HH24:MI') AS createdAt
+        FROM reviews r
+                 JOIN users writer ON writer.user_id = r.writer_id
+                 JOIN users target ON target.user_id = r.review_target_user_id
+                 JOIN exchange_post p ON p.exchange_post_id = r.exchange_post_id
+        <where>
+            <if test="cond.keyword != null and cond.keyword != ''">
+                (
+                    LOWER(writer.nickname) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(target.nickname) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(p.exchange_post_title) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(r.content) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                )
+            </if>
+            <if test="cond.statuses != null and cond.statuses.size() &gt; 0">
+                AND r.review_status IN
+                <foreach collection="cond.statuses" item="st" open="(" separator="," close=")">
+                    CAST(#{st} AS review_status_enum)
+                </foreach>
+            </if>
+            <if test="cond.fromDate != null and cond.fromDate != ''">
+                AND r.review_created_at &gt;= CAST(#{cond.fromDate} AS timestamp)
+            </if>
+            <if test="cond.toDate != null and cond.toDate != ''">
+                AND r.review_created_at &lt;= CAST(#{cond.toDate} AS timestamp)
+            </if>
+        </where>
+        ORDER BY r.review_created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countReviews" resultType="long">
+        SELECT COUNT(*)
+        FROM reviews r
+                 JOIN users writer ON writer.user_id = r.writer_id
+                 JOIN users target ON target.user_id = r.review_target_user_id
+                 JOIN exchange_post p ON p.exchange_post_id = r.exchange_post_id
+        <where>
+            <if test="cond.keyword != null and cond.keyword != ''">
+                (
+                    LOWER(writer.nickname) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(target.nickname) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(p.exchange_post_title) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                    OR LOWER(r.content) LIKE CONCAT('%', LOWER(#{cond.keyword}), '%')
+                )
+            </if>
+            <if test="cond.statuses != null and cond.statuses.size() &gt; 0">
+                AND r.review_status IN
+                <foreach collection="cond.statuses" item="st" open="(" separator="," close=")">
+                    CAST(#{st} AS review_status_enum)
+                </foreach>
+            </if>
+            <if test="cond.fromDate != null and cond.fromDate != ''">
+                AND r.review_created_at &gt;= CAST(#{cond.fromDate} AS timestamp)
+            </if>
+            <if test="cond.toDate != null and cond.toDate != ''">
+                AND r.review_created_at &lt;= CAST(#{cond.toDate} AS timestamp)
+            </if>
+        </where>
+    </select>
+
+    <select id="selectReviewDetail" resultType="com.goodsple.features.admin.review.dto.AdminReviewDetail">
+        SELECT
+            r.review_id AS reviewId,
+            writer.nickname AS author,
+            target.nickname AS targetUser,
+            p.exchange_post_title AS title,
+            r.content AS content,
+            r.report_count AS reportCount,
+            r.rating AS rating,
+            CASE r.review_status
+                WHEN 'visible' THEN 'NORMAL'
+                WHEN 'hidden'  THEN 'BLIND'
+                ELSE r.review_status::text
+            END AS status,
+            TO_CHAR(r.review_created_at, 'YYYY.MM.DD HH24:MI') AS createdAt
+        FROM reviews r
+                 JOIN users writer ON writer.user_id = r.writer_id
+                 JOIN users target ON target.user_id = r.review_target_user_id
+                 JOIN exchange_post p ON p.exchange_post_id = r.exchange_post_id
+        WHERE r.review_id = #{reviewId}
+    </select>
+
+    <select id="selectReviewPhotos" resultType="java.lang.String">
+        SELECT image_url
+        FROM review_images
+        WHERE review_id = #{reviewId}
+        ORDER BY order_index ASC, image_created_at ASC
+    </select>
+
+    <update id="updateReviewStatus">
+        UPDATE reviews
+        SET review_status = CAST(#{status} AS review_status_enum),
+            review_updated_at = NOW()
+        WHERE review_id = #{reviewId}
+    </update>
+
+</mapper>

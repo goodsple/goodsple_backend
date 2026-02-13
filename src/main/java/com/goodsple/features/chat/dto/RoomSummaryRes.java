@@ -29,7 +29,8 @@ public record RoomSummaryRes(
             @Schema(description = "상대 닉네임", example = "굿또") String nickname,
             @Schema(description = "아바타 경로", example = "/u/25.png") String avatar,
             @Schema(description = "인증 여부", example = "true") Boolean verified,
-            @Schema(description = "레벨 텍스트", example = "LV.2") String levelText
+            @Schema(description = "레벨 텍스트", example = "LV.2") String levelText,
+            @Schema(description = "뱃지 이미지 URL", example = "/img/badge1.png") String badgeImageUrl
     ) {}
 
     @Schema(description = "마지막 메시지")
