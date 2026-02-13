@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.admin.dashboard.mapper.AdminDashboardMapper">
+
+    <select id="selectUserSummary" resultType="com.goodsple.features.admin.dashboard.dto.AdminUserStatsSummary">
+        SELECT
+            (SELECT COUNT(*) FROM users) AS totalUsers,
+            (SELECT COUNT(*) FROM users WHERE user_created_at::date = CURRENT_DATE) AS todayJoined,
+            (SELECT COUNT(*) FROM users WHERE suspension_status = 'withdrawn' AND user_updated_at::date = CURRENT_DATE) AS todayWithdrawn,
+            (
+                (SELECT COUNT(*) FROM users WHERE user_created_at::date = CURRENT_DATE)
+                - (SELECT COUNT(*) FROM users WHERE suspension_status = 'withdrawn' AND user_updated_at::date = CURRENT_DATE)
+            ) AS todayNet
+    </select>
+
+    <select id="selectUserMonthlyStats" resultType="com.goodsple.features.admin.dashboard.dto.AdminUserMonthlyStat">
+        WITH months AS (
+            SELECT to_char(date_trunc('month', CURRENT_DATE) - (n || ' months')::interval, 'YY.MM') AS month
+            FROM generate_series(0, #{months} - 1) AS n
+        ),
+        joined AS (
+            SELECT to_char(user_created_at, 'YY.MM') AS month,
+                   COUNT(*) AS joined
+            FROM users
+            WHERE user_created_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        ),
+        withdrawn AS (
+            SELECT to_char(user_updated_at, 'YY.MM') AS month,
+                   COUNT(*) AS withdrawn
+            FROM users
+            WHERE suspension_status = 'withdrawn'
+              AND user_updated_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        )
+        SELECT
+            m.month,
+            COALESCE(j.joined, 0) AS joined,
+            COALESCE(w.withdrawn, 0) AS withdrawn,
+            COALESCE(j.joined, 0) - COALESCE(w.withdrawn, 0) AS net
+        FROM months m
+        LEFT JOIN joined j ON j.month = m.month
+        LEFT JOIN withdrawn w ON w.month = m.month
+        ORDER BY m.month;
+    </select>
+
+    <select id="selectReportSummary" resultType="com.goodsple.features.admin.dashboard.dto.AdminReportStatsSummary">
+        SELECT
+            (SELECT COUNT(*) FROM reports WHERE report_created_at::date = CURRENT_DATE) AS todayReported,
+            (SELECT COUNT(*) FROM reports WHERE report_status IN ('resolved','rejected') AND processed_at::date = CURRENT_DATE) AS todayResolved,
+            (SELECT COUNT(*) FROM reports WHERE report_status IN ('pending','processing')) AS unresolvedTotal
+    </select>
+
+    <select id="selectReportMonthlyStats" resultType="com.goodsple.features.admin.dashboard.dto.AdminReportMonthlyStat">
+        WITH months AS (
+            SELECT to_char(date_trunc('month', CURRENT_DATE) - (n || ' months')::interval, 'YY.MM') AS month
+            FROM generate_series(0, #{months} - 1) AS n
+        ),
+        reported AS (
+            SELECT to_char(report_created_at, 'YY.MM') AS month,
+                   COUNT(*) AS reported
+            FROM reports
+            WHERE report_created_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        ),
+        resolved AS (
+            SELECT to_char(processed_at, 'YY.MM') AS month,
+                   COUNT(*) AS resolved
+            FROM reports
+            WHERE report_status IN ('resolved','rejected')
+              AND processed_at IS NOT NULL
+              AND processed_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        ),
+        unresolved AS (
+            SELECT to_char(report_created_at, 'YY.MM') AS month,
+                   COUNT(*) AS unresolved
+            FROM reports
+            WHERE report_status IN ('pending','processing')
+              AND report_created_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        )
+        SELECT
+            m.month,
+            COALESCE(r.reported, 0) AS reported,
+            COALESCE(rs.resolved, 0) AS resolved,
+            CASE WHEN COALESCE(r.reported,0) = 0 THEN 0
+                 ELSE ROUND(COALESCE(rs.resolved,0) * 100.0 / COALESCE(r.reported,0)) END AS resolveRate,
+            COALESCE(u.unresolved, 0) AS unresolved
+        FROM months m
+        LEFT JOIN reported r ON r.month = m.month
+        LEFT JOIN resolved rs ON rs.month = m.month
+        LEFT JOIN unresolved u ON u.month = m.month
+        ORDER BY m.month;
+    </select>
+
+</mapper>

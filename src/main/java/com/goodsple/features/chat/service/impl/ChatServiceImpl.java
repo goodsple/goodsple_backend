@@ -100,7 +100,7 @@ public class ChatServiceImpl implements ChatService {
         return rows.stream().map(r -> {
             RoomSummaryRes.Peer peer = new RoomSummaryRes.Peer(
                     r.getPeerUserId(), r.getPeerNickname(), r.getPeerAvatar(),
-                    r.getPeerVerified(), r.getPeerLevelText()
+                    r.getPeerVerified(), r.getPeerLevelText(), r.getPeerBadgeImageUrl()
             );
             RoomSummaryRes.LastMessage last = (r.getLastMessageId() == null) ? null
                     : new RoomSummaryRes.LastMessage(
