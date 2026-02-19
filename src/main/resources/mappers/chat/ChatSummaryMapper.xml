@@ -12,6 +12,7 @@
         <result property="peerAvatar"    column="peer_avatar"/>
         <result property="peerVerified"  column="peer_verified"/>
         <result property="peerLevelText" column="peer_level_text"/>
+        <result property="peerBadgeImageUrl" column="peer_badge_image_url"/>
         <result property="lastMessageId" column="last_message_id"/>
         <result property="lastText"      column="last_text"/>
         <result property="lastCreatedAt" column="last_created_at"/>
@@ -61,7 +62,11 @@
             u.nickname           AS peer_nickname,
             u.profile_image      AS peer_avatar,
             false                AS peer_verified,
-            CAST(u.role AS TEXT) AS peer_level_text,
+            CASE
+                WHEN b.badge_level IS NULL THEN NULL
+                ELSE CONCAT('LV. ', b.badge_level, ' ', b.badge_name)
+            END AS peer_level_text,
+            b.badge_image_url    AS peer_badge_image_url,
             lm.last_message_id,
             lm.last_text,
             lm.last_created_at,
@@ -69,6 +74,8 @@
             COALESCE(lm.last_created_at, NOW()) AS updated_at
         FROM my_rooms r
                  LEFT JOIN users u       ON u.user_id = r.peer_user_id
+                 LEFT JOIN user_score us ON us.user_id = u.user_id
+                 LEFT JOIN badge b       ON b.badge_id = us.badge_id
                  LEFT JOIN last_msg_1 lm ON lm.room_id = r.room_id
                  LEFT JOIN unread ud     ON ud.room_id = r.room_id
         ORDER BY updated_at DESC
