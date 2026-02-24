@@ -1,5 +1,6 @@
 package com.goodsple.features.admin.dashboard.controller;
 
+import com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordStatsResponse;
 import com.goodsple.features.admin.dashboard.dto.AdminReportStatsResponse;
 import com.goodsple.features.admin.dashboard.dto.AdminUserStatsResponse;
 import com.goodsple.features.admin.dashboard.service.AdminDashboardService;
@@ -35,4 +36,11 @@ public class AdminDashboardController {
         int safeMonths = Math.max(1, Math.min(12, months));
         return ResponseEntity.ok(service.getReportStats(safeMonths));
     }
+
+    @Operation(summary = "관리자 대시보드 인기검색어 통계")
+    @GetMapping("/popular-keywords")
+    public ResponseEntity<AdminPopularKeywordStatsResponse> popularKeywordStats() {
+        return ResponseEntity.ok(service.getPopularKeywordStats());
+    }
+
 }

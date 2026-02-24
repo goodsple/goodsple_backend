@@ -1,5 +1,6 @@
 package com.goodsple.features.admin.dashboard.service;
 
+import com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordStatsResponse;
 import com.goodsple.features.admin.dashboard.dto.AdminReportStatsResponse;
 import com.goodsple.features.admin.dashboard.dto.AdminUserStatsResponse;
 import com.goodsple.features.admin.dashboard.mapper.AdminDashboardMapper;
@@ -26,6 +27,26 @@ public class AdminDashboardService {
         AdminReportStatsResponse res = new AdminReportStatsResponse();
         res.setSummary(mapper.selectReportSummary());
         res.setMonthlyStats(mapper.selectReportMonthlyStats(months));
+        return res;
+    }
+
+//  실시간 검색어
+    @Transactional(readOnly = true)
+    public AdminPopularKeywordStatsResponse getPopularKeywordStats() {
+
+        AdminPopularKeywordStatsResponse res =
+            new AdminPopularKeywordStatsResponse();
+
+        boolean exists = mapper.existsTodaySnapshot() > 0;
+
+        res.setSummary(mapper.selectPopularKeywordSummary());
+
+        if (exists) {
+            res.setTopKeywords(mapper.selectPopularKeywordTop10());
+        } else {
+            res.setTopKeywords(mapper.selectPopularKeywordTop10Realtime());
+        }
+
         return res;
     }
 }
