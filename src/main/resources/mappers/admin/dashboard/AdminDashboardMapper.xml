@@ -97,4 +97,73 @@
         ORDER BY m.month;
     </select>
 
+
+
+    <!-- 실시간 검색어 부분 -->
+    <select id="selectPopularKeywordSummary"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordSummary">
+
+        SELECT
+            COALESCE(SUM(search_count), 0) AS totalSearchCount,
+
+            (
+                SELECT COUNT(*)
+                FROM popular_search_keyword
+                WHERE keyword_status = 'VISIBLE'
+            ) AS visibleKeywordCount,
+
+            (
+                SELECT COUNT(*)
+                FROM popular_search_keyword
+                WHERE keyword_status = 'BLOCKED'
+            ) AS blockedKeywordCount
+
+        FROM popular_keyword_snapshot
+        WHERE snapshot_date = CURRENT_DATE
+    </select>
+
+    <!-- 오늘 스냅샷 존재 여부 체크 -->
+    <select id="existsTodaySnapshot" resultType="int">
+        SELECT COUNT(*)
+        FROM popular_keyword_snapshot
+        WHERE snapshot_date = CURRENT_DATE
+    </select>
+
+    <!-- 실시간 TOP10  -->
+    <select id="selectPopularKeywordTop10Realtime"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordItem">
+
+        SELECT
+            keyword AS keyword,
+            search_count AS searchCount,
+            ROW_NUMBER() OVER (ORDER BY search_count DESC) AS rank,
+        0 AS rankChange
+        FROM popular_search_keyword
+        WHERE keyword_status = 'VISIBLE'
+        ORDER BY search_count DESC
+            LIMIT 10;
+    </select>
+
+
+    <!-- TOP10 쿼리 -->
+    <select id="selectPopularKeywordTop10"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordItem">
+
+        SELECT
+            t.keyword AS keyword,
+            t.search_count AS searchCount,
+            t.rank,
+            COALESCE(y.rank - t.rank, 0) AS rankChange
+        FROM popular_keyword_snapshot t
+                 LEFT JOIN popular_keyword_snapshot y
+                           ON t.keyword = y.keyword
+                               AND y.snapshot_date = CURRENT_DATE - INTERVAL '1 day'
+        WHERE t.snapshot_date = CURRENT_DATE
+        ORDER BY t.rank
+        LIMIT 10;
+
+    </select>
+
+
+
 </mapper>

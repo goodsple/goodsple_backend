@@ -1,9 +1,7 @@
 package com.goodsple.features.admin.dashboard.mapper;
 
-import com.goodsple.features.admin.dashboard.dto.AdminReportMonthlyStat;
-import com.goodsple.features.admin.dashboard.dto.AdminReportStatsSummary;
-import com.goodsple.features.admin.dashboard.dto.AdminUserMonthlyStat;
-import com.goodsple.features.admin.dashboard.dto.AdminUserStatsSummary;
+import com.goodsple.features.admin.dashboard.dto.*;
+
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -15,4 +13,12 @@ public interface AdminDashboardMapper {
 
     AdminReportStatsSummary selectReportSummary();
     List<AdminReportMonthlyStat> selectReportMonthlyStats(@Param("months") int months);
+
+//  실시간 검색어
+    AdminPopularKeywordSummary selectPopularKeywordSummary();
+    List<AdminPopularKeywordItem> selectPopularKeywordTop10();
+
+    List<AdminPopularKeywordItem> selectPopularKeywordTop10Realtime();
+    int existsTodaySnapshot();
+
 }
