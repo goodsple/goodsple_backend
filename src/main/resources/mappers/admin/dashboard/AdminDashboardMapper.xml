@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.goodsple.features.admin.dashboard.mapper.AdminDashboardMapper">
+
+    <select id="selectUserSummary" resultType="com.goodsple.features.admin.dashboard.dto.AdminUserStatsSummary">
+        SELECT
+            (SELECT COUNT(*) FROM users) AS totalUsers,
+            (SELECT COUNT(*) FROM users WHERE user_created_at::date = CURRENT_DATE) AS todayJoined,
+            (SELECT COUNT(*) FROM users WHERE suspension_status = 'withdrawn' AND user_updated_at::date = CURRENT_DATE) AS todayWithdrawn,
+            (
+                (SELECT COUNT(*) FROM users WHERE user_created_at::date = CURRENT_DATE)
+                - (SELECT COUNT(*) FROM users WHERE suspension_status = 'withdrawn' AND user_updated_at::date = CURRENT_DATE)
+            ) AS todayNet
+    </select>
+
+    <select id="selectUserMonthlyStats" resultType="com.goodsple.features.admin.dashboard.dto.AdminUserMonthlyStat">
+        WITH months AS (
+            SELECT to_char(date_trunc('month', CURRENT_DATE) - (n || ' months')::interval, 'YY.MM') AS month
+            FROM generate_series(0, #{months} - 1) AS n
+        ),
+        joined AS (
+            SELECT to_char(user_created_at, 'YY.MM') AS month,
+                   COUNT(*) AS joined
+            FROM users
+            WHERE user_created_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        ),
+        withdrawn AS (
+            SELECT to_char(user_updated_at, 'YY.MM') AS month,
+                   COUNT(*) AS withdrawn
+            FROM users
+            WHERE suspension_status = 'withdrawn'
+              AND user_updated_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        )
+        SELECT
+            m.month,
+            COALESCE(j.joined, 0) AS joined,
+            COALESCE(w.withdrawn, 0) AS withdrawn,
+            COALESCE(j.joined, 0) - COALESCE(w.withdrawn, 0) AS net
+        FROM months m
+        LEFT JOIN joined j ON j.month = m.month
+        LEFT JOIN withdrawn w ON w.month = m.month
+        ORDER BY m.month;
+    </select>
+
+    <select id="selectReportSummary" resultType="com.goodsple.features.admin.dashboard.dto.AdminReportStatsSummary">
+        SELECT
+            (SELECT COUNT(*) FROM reports WHERE report_created_at::date = CURRENT_DATE) AS todayReported,
+            (SELECT COUNT(*) FROM reports WHERE report_status IN ('resolved','rejected') AND processed_at::date = CURRENT_DATE) AS todayResolved,
+            (SELECT COUNT(*) FROM reports WHERE report_status IN ('pending','processing')) AS unresolvedTotal
+    </select>
+
+    <select id="selectReportMonthlyStats" resultType="com.goodsple.features.admin.dashboard.dto.AdminReportMonthlyStat">
+        WITH months AS (
+            SELECT to_char(date_trunc('month', CURRENT_DATE) - (n || ' months')::interval, 'YY.MM') AS month
+            FROM generate_series(0, #{months} - 1) AS n
+        ),
+        reported AS (
+            SELECT to_char(report_created_at, 'YY.MM') AS month,
+                   COUNT(*) AS reported
+            FROM reports
+            WHERE report_created_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        ),
+        resolved AS (
+            SELECT to_char(processed_at, 'YY.MM') AS month,
+                   COUNT(*) AS resolved
+            FROM reports
+            WHERE report_status IN ('resolved','rejected')
+              AND processed_at IS NOT NULL
+              AND processed_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        ),
+        unresolved AS (
+            SELECT to_char(report_created_at, 'YY.MM') AS month,
+                   COUNT(*) AS unresolved
+            FROM reports
+            WHERE report_status IN ('pending','processing')
+              AND report_created_at >= date_trunc('month', CURRENT_DATE) - (#{months} - 1 || ' months')::interval
+            GROUP BY 1
+        )
+        SELECT
+            m.month,
+            COALESCE(r.reported, 0) AS reported,
+            COALESCE(rs.resolved, 0) AS resolved,
+            CASE WHEN COALESCE(r.reported,0) = 0 THEN 0
+                 ELSE ROUND(COALESCE(rs.resolved,0) * 100.0 / COALESCE(r.reported,0)) END AS resolveRate,
+            COALESCE(u.unresolved, 0) AS unresolved
+        FROM months m
+        LEFT JOIN reported r ON r.month = m.month
+        LEFT JOIN resolved rs ON rs.month = m.month
+        LEFT JOIN unresolved u ON u.month = m.month
+        ORDER BY m.month;
+    </select>
+
+
+
+    <!-- 실시간 검색어 부분 -->
+    <select id="selectPopularKeywordSummary"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordSummary">
+
+        SELECT
+            COALESCE(SUM(search_count), 0) AS totalSearchCount,
+
+            (
+                SELECT COUNT(*)
+                FROM popular_search_keyword
+                WHERE keyword_status = 'VISIBLE'
+            ) AS visibleKeywordCount,
+
+            (
+                SELECT COUNT(*)
+                FROM popular_search_keyword
+                WHERE keyword_status = 'BLOCKED'
+            ) AS blockedKeywordCount
+
+        FROM popular_keyword_snapshot
+        WHERE snapshot_date = CURRENT_DATE
+    </select>
+
+    <!-- 오늘 스냅샷 존재 여부 체크 -->
+    <select id="existsTodaySnapshot" resultType="int">
+        SELECT COUNT(*)
+        FROM popular_keyword_snapshot
+        WHERE snapshot_date = CURRENT_DATE
+    </select>
+
+    <!-- 실시간 TOP10  -->
+    <select id="selectPopularKeywordTop10Realtime"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordItem">
+
+        SELECT
+            keyword AS keyword,
+            search_count AS searchCount,
+            ROW_NUMBER() OVER (ORDER BY search_count DESC) AS rank,
+        0 AS rankChange
+        FROM popular_search_keyword
+        WHERE keyword_status = 'VISIBLE'
+        ORDER BY search_count DESC
+            LIMIT 10;
+    </select>
+
+
+    <!-- TOP10 쿼리 -->
+    <select id="selectPopularKeywordTop10"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordItem">
+
+        SELECT
+            t.keyword AS keyword,
+            t.search_count AS searchCount,
+            t.rank,
+            COALESCE(y.rank - t.rank, 0) AS rankChange
+        FROM popular_keyword_snapshot t
+                 LEFT JOIN popular_keyword_snapshot y
+                           ON t.keyword = y.keyword
+                               AND y.snapshot_date = CURRENT_DATE - INTERVAL '1 day'
+        WHERE t.snapshot_date = CURRENT_DATE
+        ORDER BY t.rank
+        LIMIT 10;
+
+    </select>
+
+
+
+</mapper>

@@ -1,0 +1,28 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.goodsple.features.admin.popularKeyword.mapper.AdminPopularKeywordMapper">
+
+    <!-- 전체 조회 -->
+    <select id="selectAllKeywords"
+            resultType="com.goodsple.features.admin.popularKeyword.dto.PopularKeywordDTO">
+        SELECT keyword_id AS keywordId,
+               keyword,
+               search_count AS searchCount,
+               keyword_status AS keywordStatus,
+               last_rank_in_time AS lastRankInTime,
+               last_aggregated_time AS lastAggregatedTime,
+            CASE WHEN pw.word_id IS NOT NULL THEN TRUE ELSE FALSE END AS isProhibited
+        FROM popular_search_keyword pk
+            LEFT JOIN prohibited_word pw
+        ON pk.keyword = pw.word
+        ORDER BY search_count DESC
+    </select>
+
+    <!-- 상태 변경 -->
+    <update id="updateKeywordStatus">
+        UPDATE popular_search_keyword
+        SET keyword_status = #{status}
+        WHERE keyword_id = #{keywordId}
+    </update>
+
+</mapper>

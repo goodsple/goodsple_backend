@@ -13,6 +13,7 @@ public class RoomSummaryRow {
     private String  peerAvatar;
     private Boolean peerVerified;
     private String  peerLevelText;
+    private String  peerBadgeImageUrl;
 
     private Long          lastMessageId;
     private String        lastText;

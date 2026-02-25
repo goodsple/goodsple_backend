@@ -17,5 +17,5 @@ public class PostListDto {
   private OffsetDateTime exchangePostCreatedAt;
   private String postTradeStatus; // 거래상태
   private String exchangePostTitle;
-  private String imageUrl;
+  private String thumbnailUrl;
 }
