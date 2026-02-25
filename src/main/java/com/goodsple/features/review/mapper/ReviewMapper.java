@@ -1,10 +1,7 @@
 package com.goodsple.features.review.mapper;
 
-import com.goodsple.features.review.dto.ReviewAuthInfo;
-import com.goodsple.features.review.dto.ReviewDetailDto;
-import com.goodsple.features.review.dto.ReviewExchangeInfo;
-import com.goodsple.features.review.dto.ReviewInsertParam;
-import com.goodsple.features.review.dto.ReviewSummaryDto;
+import com.goodsple.features.review.dto.*;
+
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -44,4 +41,8 @@ public interface ReviewMapper {
                    @Param("writerId") Long writerId);
 
   void deleteReviewImages(@Param("reviewId") Long reviewId);
+
+  // 등급 점수 계산을 위한 로직
+  ReviewScoreInfo selectReviewScoreInfo(Long reviewId);
+
 }

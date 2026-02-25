@@ -34,4 +34,8 @@ public interface ReportService {
      */
 //    void addReason(ReportReason reason);
 
+
+    void processReport(Long reportId, String action);
+
+
 }

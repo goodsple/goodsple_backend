@@ -20,6 +20,10 @@
             <result property="id" column="user_id"/>
             <result property="nickname" column="nickname"/>
             <result property="profileImageUrl" column="profile_image"/>
+
+            <result property="badgeImageUrl" column="badge_image_url"/>
+            <result property="badgeName" column="badge_name"/>
+            <result property="badgeLevel" column="badge_level"/>
         </association>
 
         <association property="delivery" javaType="com.goodsple.features.exchangedetail.dto.DeliveryInfo">
@@ -52,9 +56,19 @@
                p.user_id,
                u.nickname,
                u.profile_image,
+
+               b.badge_image_url,
+               b.badge_name,
+               b.badge_level,
+
                p.view_count
         FROM exchange_post p
                  JOIN users u ON u.user_id = p.user_id
+                 LEFT JOIN user_score us ON us.user_id = u.user_id -- 추가
+                 LEFT JOIN badge b ON b.min_score <![CDATA[ <= ]]> COALESCE(
+                     us.trust_score + us.review_score + us.trade_score - us.penalty_score,
+                     0
+                 )  -- 추가
                  LEFT JOIN third_cate tc ON tc.third_cate_id = p.third_cate_id
                  LEFT JOIN second_cate sc ON sc.second_cate_id = tc.second_cate_id
                  LEFT JOIN first_cate fc ON fc.first_cate_id = sc.first_cate_id

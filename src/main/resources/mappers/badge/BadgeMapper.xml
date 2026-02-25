@@ -1,0 +1,39 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.goodsple.features.badge.mapper.BadgeMapper">
+
+    <!-- 유저 점수 -->
+    <select id="findUserScore" resultType="com.goodsple.features.badge.domain.UserScore">
+        SELECT user_id,
+               trust_score,
+               review_score,
+               trade_score,
+               penalty_score
+        FROM user_score
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 현재 등급 -->
+    <select id="findBadgeByScore" resultType="com.goodsple.features.badge.domain.Badge">
+        SELECT
+            badge_id AS badgeId,
+            badge_name AS badgeName,
+            badge_image_url AS badgeImageUrl,
+            min_score AS minScore,
+            badge_level AS badgeLevel
+        FROM badge
+        WHERE min_score <![CDATA[ <= ]]> #{totalScore}
+        ORDER BY min_score DESC
+            LIMIT 1
+    </select>
+
+    <!-- 다음 등급 기준 -->
+    <select id="findNextMinScore" resultType="Integer">
+        SELECT MIN(min_score)
+        FROM badge
+        WHERE min_score <![CDATA[ > ]]> #{totalScore}
+    </select>
+
+
+
+</mapper>

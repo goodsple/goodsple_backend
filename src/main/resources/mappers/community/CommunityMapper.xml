@@ -12,14 +12,14 @@
 
     <select id="selectRecent" resultType="com.goodsple.features.community.dto.Community">
         SELECT
-        c.community_id       AS communityId,
-        c.user_id            AS userId,
-        c.comm_room_id       AS commRoomId,
-        c.type               AS type,
-        c.content            AS content,
-        c.comm_created_at    AS commCreatedAt,
-        u.nickname           AS nickname,
-        u.profile_image      AS userProfile
+            c.community_id       AS communityId,
+            c.user_id            AS userId,
+            c.comm_room_id       AS commRoomId,
+            c.type               AS type,
+            c.content            AS content,
+            c.comm_created_at    AS commCreatedAt,
+            u.nickname           AS nickname,
+            u.profile_image      AS userProfile
         FROM community c
         JOIN users u ON u.user_id = c.user_id
         WHERE c.comm_room_id = #{roomId}
@@ -33,11 +33,25 @@
     <!-- 3) 특정 사용자 조회 -->
     <select id="findUser" resultType="com.goodsple.features.community.dto.Community">
         SELECT
-            user_id       AS userId,
-            nickname      AS nickname,
-            profile_image AS userProfile
-        FROM users
-        WHERE user_id = #{userId}
+            u.user_id,
+            u.nickname,
+            u.profile_image AS userProfile,
+            b.badge_image_url AS badgeImageUrl,
+            b.badge_name AS badgeName,
+            b.badge_level AS badgeLevel
+        FROM users u
+        LEFT JOIN user_score us
+        ON us.user_id = u.user_id
+        LEFT JOIN badge b
+            ON b.min_score <![CDATA[ <= ]]> COALESCE(
+                us.trust_score
+                + us.review_score
+                + us.trade_score
+                - us.penalty_score,
+                0
+        )
+        WHERE u.user_id = #{userId}
+        LIMIT 1
     </select>
 
     <!-- 이번 달 MEGAPHONE 사용 횟수 조회 -->
@@ -60,7 +74,7 @@
             c.content            AS content,
             c.comm_created_at    AS commCreatedAt,
             u.nickname           AS nickname,
-            u.profile_image      AS userProfile
+            u.profile_image     AS userProfile
         FROM community c
                  JOIN users u ON u.user_id = c.user_id
         WHERE c.type = 'MEGAPHONE'

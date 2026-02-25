@@ -18,4 +18,8 @@ public class Community {
 
     private String nickname;
     private String userProfile;
+
+    private String badgeImageUrl;
+    private String badgeName;
+    private String badgeLevel;
 }

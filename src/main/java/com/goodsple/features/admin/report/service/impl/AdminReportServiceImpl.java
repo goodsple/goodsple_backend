@@ -3,6 +3,7 @@ package com.goodsple.features.admin.report.service.impl;
 import com.goodsple.features.admin.report.dto.*;
 import com.goodsple.features.admin.report.mapper.AdminReportMapper;
 import com.goodsple.features.admin.report.service.AdminReportService;
+import com.goodsple.features.report.service.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.*; // ★ Objects, Set 등
 public class AdminReportServiceImpl implements AdminReportService {
 
     private final AdminReportMapper mapper;
+    private final ReportService reportService;
 
     @Override
     public AdminReportList getReportList(AdminReportSearchCond cond) {
@@ -146,5 +148,10 @@ public class AdminReportServiceImpl implements AdminReportService {
         if (updated == 0) {
             throw new NoSuchElementException("Report not found: " + reportId);
         }
+
+        if ("resolved".equals(status)) {
+            reportService.processReport(reportId, actionTaken);
+        }
+
     }
 }

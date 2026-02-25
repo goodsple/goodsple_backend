@@ -83,6 +83,9 @@ public class CommunityStompController {
         out.setType(payload.getType());
         out.setNickname(brief != null ? brief.getNickname() : "익명");
         out.setUserProfile(brief != null ? brief.getUserProfile() : null);
+        out.setBadgeImageUrl(brief.getBadgeImageUrl());
+        out.setBadgeName(brief.getBadgeName());
+        out.setBadgeLevel(brief.getBadgeLevel());
         out.setCommCreatedAt(Instant.now().toString());
 
         // 클라이언트 전송
