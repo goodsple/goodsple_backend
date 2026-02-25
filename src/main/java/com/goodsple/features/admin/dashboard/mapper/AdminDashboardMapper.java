@@ -17,8 +17,9 @@ public interface AdminDashboardMapper {
 //  실시간 검색어
     AdminPopularKeywordSummary selectPopularKeywordSummary();
     List<AdminPopularKeywordItem> selectPopularKeywordTop10();
-
     List<AdminPopularKeywordItem> selectPopularKeywordTop10Realtime();
+    List<AdminPopularKeywordItem> selectPopularKeywordTop10RealtimeWithYesterday();
+
     int existsTodaySnapshot();
 
 }

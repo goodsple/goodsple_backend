@@ -129,6 +129,37 @@
         WHERE snapshot_date = CURRENT_DATE
     </select>
 
+    <select id="selectPopularKeywordTop10RealtimeWithYesterday"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordItem">
+
+        SELECT
+            r.keyword AS keyword,
+            r.search_count AS searchCount,
+            r.rank,
+            y.rank - r.rank AS rankChange,
+            CASE
+                WHEN y.rank IS NULL THEN true
+                ELSE false
+                END AS isNew
+        FROM (
+                 SELECT
+                     keyword,
+                     search_count,
+                     ROW_NUMBER() OVER (ORDER BY search_count DESC) AS rank
+                 FROM popular_search_keyword
+                 WHERE keyword_status = 'VISIBLE'
+                 ORDER BY search_count DESC
+                 LIMIT 10
+             ) r
+                 LEFT JOIN popular_keyword_snapshot y
+                           ON r.keyword = y.keyword
+                               AND y.snapshot_date = CURRENT_DATE - INTERVAL '1 day'
+        ORDER BY r.rank;
+
+    </select>
+
+
+
     <!-- 실시간 TOP10  -->
     <select id="selectPopularKeywordTop10Realtime"
             resultType="com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordItem">
@@ -137,11 +168,12 @@
             keyword AS keyword,
             search_count AS searchCount,
             ROW_NUMBER() OVER (ORDER BY search_count DESC) AS rank,
-        0 AS rankChange
+        NULL AS rankChange,
+        false AS isNew
         FROM popular_search_keyword
         WHERE keyword_status = 'VISIBLE'
         ORDER BY search_count DESC
-            LIMIT 10;
+        LIMIT 10;
     </select>
 
 
@@ -153,7 +185,11 @@
             t.keyword AS keyword,
             t.search_count AS searchCount,
             t.rank,
-            COALESCE(y.rank - t.rank, 0) AS rankChange
+            y.rank - t.rank AS rankChange,
+            CASE
+                WHEN y.rank IS NULL THEN true
+                ELSE false
+                END AS isNew
         FROM popular_keyword_snapshot t
                  LEFT JOIN popular_keyword_snapshot y
                            ON t.keyword = y.keyword

@@ -8,6 +8,7 @@ public class AdminPopularKeywordItem {
   private String keyword;
   private int searchCount;
   private int rank;
-  private int rankChange;
+  private Integer rankChange;
+  private Boolean isNew;
 
 }

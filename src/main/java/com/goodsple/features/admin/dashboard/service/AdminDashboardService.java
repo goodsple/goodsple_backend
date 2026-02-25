@@ -41,10 +41,11 @@ public class AdminDashboardService {
 
         res.setSummary(mapper.selectPopularKeywordSummary());
 
+
         if (exists) {
             res.setTopKeywords(mapper.selectPopularKeywordTop10());
         } else {
-            res.setTopKeywords(mapper.selectPopularKeywordTop10Realtime());
+            res.setTopKeywords(mapper.selectPopularKeywordTop10RealtimeWithYesterday());
         }
 
         return res;
