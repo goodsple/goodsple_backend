@@ -1,12 +1,8 @@
 package com.goodsple.features.review.service;
 
-import com.goodsple.features.review.dto.ReviewAuthInfo;
-import com.goodsple.features.review.dto.ReviewCreateRequest;
-import com.goodsple.features.review.dto.ReviewDetailDto;
-import com.goodsple.features.review.dto.ReviewExchangeInfo;
-import com.goodsple.features.review.dto.ReviewInsertParam;
-import com.goodsple.features.review.dto.ReviewSummaryDto;
-import com.goodsple.features.review.dto.ReviewUpdateRequest;
+import com.goodsple.features.badge.service.UserScoreService;
+import com.goodsple.features.badge.service.calculator.ScoreCalculator;
+import com.goodsple.features.review.dto.*;
 import com.goodsple.features.review.mapper.ReviewMapper;
 import java.util.Collections;
 import java.util.List;
@@ -21,6 +17,10 @@ import org.springframework.web.server.ResponseStatusException;
 public class ReviewService {
 
   private final ReviewMapper reviewMapper;
+
+  private final ScoreCalculator scoreCalculator;
+  private final UserScoreService userScoreService;
+
 
   @Transactional
   public Long createReview(Long userId, ReviewCreateRequest request) {
@@ -61,6 +61,16 @@ public class ReviewService {
         reviewMapper.insertReviewImage(param.getReviewId(), imageUrls.get(i), i + 1);
       }
     }
+
+    int reviewScore = scoreCalculator.calculateReviewScore(
+            request.getContent(),
+            imageUrls == null ? 0 : imageUrls.size()
+    );
+
+    int trustScore = scoreCalculator.trustFromRating(request.getRating());
+
+    userScoreService.addReviewScore(exchangeInfo.getSellerId(), reviewScore);
+    userScoreService.addTrustScore(exchangeInfo.getSellerId(), trustScore);
 
     return param.getReviewId();
   }
@@ -123,13 +133,83 @@ public class ReviewService {
 
     reviewMapper.updateReview(reviewId, userId, request.getRating(), request.getContent());
 
+    // 등급 계산을 위한 로직 코드 추가 -----------------------------
+    // 기존 점수 정보 먼저 조회
+    ReviewScoreInfo oldInfo = reviewMapper.selectReviewScoreInfo(reviewId);
+
+    // 기존 점수 차감
+    int oldReviewScore = scoreCalculator.calculateReviewScore(
+                    oldInfo.getContent(),
+                    oldInfo.getImageCount()
+            );
+
+    int oldTrustScore = scoreCalculator.trustFromRating(
+                    oldInfo.getRating()
+            );
+
+
+    userScoreService.addReviewScore(
+            oldInfo.getTargetUserId(),
+            -oldReviewScore
+    );
+
+    userScoreService.addTrustScore(
+            oldInfo.getTargetUserId(),
+            -oldTrustScore
+    );
+
+
+    // 리뷰 수정
+    reviewMapper.updateReview(
+            reviewId,
+            userId,
+            request.getRating(),
+            request.getContent()
+    );
+
+
+    // 이미지 수정
     reviewMapper.deleteReviewImages(reviewId);
+
     List<String> imageUrls = request.getImageUrls();
-    if (imageUrls != null && !imageUrls.isEmpty()) {
-      for (int i = 0; i < imageUrls.size(); i++) {
-        reviewMapper.insertReviewImage(reviewId, imageUrls.get(i), i + 1);
+
+    if(imageUrls != null){
+      for(int i=0;i<imageUrls.size();i++){
+        reviewMapper.insertReviewImage(
+                reviewId,
+                imageUrls.get(i),
+                i+1
+        );
       }
     }
+
+    // 새 점수 계산
+    int newImageCount = imageUrls == null ? 0 : imageUrls.size();
+
+
+    int newReviewScore = scoreCalculator.calculateReviewScore(
+                    request.getContent(),
+                    newImageCount
+            );
+
+
+    int newTrustScore = scoreCalculator.trustFromRating(
+                    request.getRating()
+            );
+
+
+    // 새 점수 추가
+    userScoreService.addReviewScore(
+            oldInfo.getTargetUserId(),
+            newReviewScore
+    );
+
+
+    userScoreService.addTrustScore(
+            oldInfo.getTargetUserId(),
+            newTrustScore
+    );
+
   }
 
   @Transactional
@@ -142,8 +222,37 @@ public class ReviewService {
       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "리뷰를 삭제할 권한이 없습니다.");
     }
 
+    // 등급 계산을 위한 로직 코드 추가 -----------------------------
+    // 삭제 전에 점수 조회
+    ReviewScoreInfo info = reviewMapper.selectReviewScoreInfo(reviewId);
+
+    int reviewScore = scoreCalculator.calculateReviewScore(
+                    info.getContent(),
+                    info.getImageCount()
+            );
+
+    int trustScore = scoreCalculator.trustFromRating(
+                    info.getRating()
+            );
+
+    // 점수 차감
+    userScoreService.addReviewScore(
+            info.getTargetUserId(),
+            -reviewScore
+    );
+
+
+    userScoreService.addTrustScore(
+            info.getTargetUserId(),
+            -trustScore
+    );
+
+    // -------------------------------------------------------
+
     reviewMapper.deleteReviewImages(reviewId);
     reviewMapper.deleteReview(reviewId, userId);
+
+
   }
 
   private void attachImages(List<ReviewSummaryDto> reviews) {

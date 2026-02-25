@@ -1,0 +1,79 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.goodsple.features.badge.mapper.UserScoreMapper">
+
+    <!-- 리뷰 점수 추가 -->
+    <update id="addReviewScore">
+        INSERT INTO user_score(user_id, review_score)
+        VALUES (#{userId}, #{score})
+            ON CONFLICT (user_id)
+        DO UPDATE SET review_score = user_score.review_score + #{score}
+    </update>
+
+    <!-- 신뢰도 점수 -->
+    <update id="addTrustScore">
+        UPDATE user_score
+        SET trust_score = trust_score + #{score}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 패널티 -->
+    <update id="addPenaltyScore">
+        UPDATE user_score
+        SET penalty_score = penalty_score + #{score}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 점수 +5 증가 -->
+    <update id="addTradeScore">
+        UPDATE user_score
+        SET trade_score = trade_score + #{score}
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 한달 거래 횟수 조회 -->
+    <select id="countMonthlyTrades" resultType="int">
+        <![CDATA[
+        SELECT COUNT(*)
+        FROM trade
+        WHERE user_id = #{userId}
+          AND status = 'COMPLETED'
+          AND completed_at >= NOW() - INTERVAL '1 month'
+        ]]>
+    </select>
+
+    <select id="isFastTrade" resultType="boolean">
+        <![CDATA[
+        SELECT CASE
+                WHEN completed_at <= created_at + INTERVAL '3 days'
+                THEN TRUE
+                ELSE FALSE
+        END
+        FROM trade
+    WHERE trade_id = #{tradeId}
+        ]]>
+    </select>
+
+    <update id="addTradeScoreWithHistory">
+        INSERT INTO user_score(user_id, trade_score)
+        VALUES (#{userId}, #{score})
+            ON CONFLICT (user_id)
+            DO UPDATE SET trade_score = user_score.trade_score + #{score};
+
+        INSERT INTO user_score_history(
+            user_id,
+            score_type,
+            score_delta,
+            post_id
+        )
+        VALUES(
+                  #{userId},
+                  'trade',
+                  #{score},
+                  #{postId}
+              );
+    </update>
+
+
+
+</mapper>

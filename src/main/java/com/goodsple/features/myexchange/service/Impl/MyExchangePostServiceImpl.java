@@ -1,5 +1,6 @@
 package com.goodsple.features.myexchange.service.Impl;
 
+import com.goodsple.features.badge.service.BadgeService;
 import com.goodsple.features.myexchange.dto.ChatUserResponseDto;
 import com.goodsple.features.myexchange.dto.MyCompletedExchangeDto;
 import com.goodsple.features.myexchange.dto.MyExchangePostDto;
@@ -8,14 +9,19 @@ import com.goodsple.features.myexchange.mapper.MyExchangePostMapper;
 import com.goodsple.features.myexchange.service.MyExchangePostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class MyExchangePostServiceImpl implements MyExchangePostService {
 
   private final MyExchangePostMapper myExchangePostMapper;
+  private final BadgeService badgeService;
 
   // 내가 작성한 교환 게시글 목록 조회 (거래상태 필터링, 페이징처리)
   @Override
@@ -77,8 +83,29 @@ public class MyExchangePostServiceImpl implements MyExchangePostService {
       throw new RuntimeException("거래상대 지정 실패 또는 권한 없음");
     }
 
+    boolean fast = checkFastResponse(postId, sellerId);
+
+    badgeService.rewardTradeComplete(sellerId, postId, fast);
+    badgeService.rewardTradeComplete(buyerId, postId, fast);
 
   }
+
+  private boolean checkFastResponse(Long postId, Long userId){
+
+    LocalDateTime created = myExchangePostMapper.findFirstChatTime(postId, userId);
+
+    LocalDateTime completed = myExchangePostMapper.findCompletedTime(postId);
+
+    if(created == null || completed == null){
+        return false;
+    }
+
+    long days = Duration.between(created, completed).toDays();
+
+    return days <= 3;
+
+  }
+
 
   // 내가 참여한 거래완료 내역 조회 (내가 판매자/구매자인 거래 모두)
   // 판매자/구매자 여부, 후기 작성 가능 여부, 후기 작성 여부
@@ -86,6 +113,9 @@ public class MyExchangePostServiceImpl implements MyExchangePostService {
   public List<MyCompletedExchangeDto> getMyCompletedExchangeHistory(Long userId) {
     return myExchangePostMapper.selectMyCompletedExchangeHistory(userId);
   }
+
+
+
 
 
 }

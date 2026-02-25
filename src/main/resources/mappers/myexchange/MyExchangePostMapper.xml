@@ -204,4 +204,21 @@
         ORDER BY p.exchange_post_updated_at DESC
     </select>
 
+
+
+    <!-- ===================================================  -->
+    <select id="findFirstChatTime" resultType="java.time.LocalDateTime">
+        SELECT MIN(chat_message_created_at)
+        FROM chat_message
+        WHERE exchange_post_id = #{postId}
+          AND sender_id = #{userId}
+    </select>
+
+    <select id="findCompletedTime" resultType="java.time.LocalDateTime">
+        SELECT exchange_post_updated_at
+        FROM exchange_post
+        WHERE exchange_post_id = #{postId}
+    </select>
+
+
 </mapper>

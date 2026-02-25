@@ -1,5 +1,6 @@
 package com.goodsple.features.report.service.impl;
 
+import com.goodsple.features.badge.service.UserScoreService;
 import com.goodsple.features.report.dto.request.Report;
 import com.goodsple.features.report.dto.request.ReportReason;
 import com.goodsple.features.report.dto.request.ReportReasonMapping;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ReportServiceImpl implements ReportService {
     private final ReportMapper reportMapper;
+    private final UserScoreService userScoreService;
 
 
     @Override
@@ -66,4 +68,31 @@ public class ReportServiceImpl implements ReportService {
 //    public void addReason(ReportReason reason) {
 //        reportMapper.insertReason(reason);
 //    }
+
+
+    @Transactional
+    public void processReport(Long reportId, String actionTaken) {
+
+        Report report = reportMapper.selectReportById(reportId);
+        Long targetUserId = report.getReportTargetUserId();
+
+        if ("warning".equalsIgnoreCase(actionTaken)) {
+            userScoreService.penaltyReview(targetUserId);
+        }
+
+        if ("permanent_ban".equalsIgnoreCase(actionTaken)) {
+            userScoreService.penaltyFakePost(targetUserId);
+        }
+
+    }
+
+
 }
+
+
+
+
+
+
+
+

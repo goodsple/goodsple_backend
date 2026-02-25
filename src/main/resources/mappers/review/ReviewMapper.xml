@@ -163,4 +163,20 @@
         WHERE review_id = #{reviewId}
     </delete>
 
+
+    <!--  등급 점수 계산을 위한 로직  -->
+    <select id="selectReviewScoreInfo" resultType="com.goodsple.features.review.dto.ReviewScoreInfo">
+        SELECT
+            r.review_id AS reviewId,
+            r.review_target_user_id AS targetUserId,
+            r.rating,
+            r.content,
+            (
+                SELECT COUNT(*)
+                FROM review_images
+                WHERE review_id = r.review_id
+            ) AS imageCount
+        FROM reviews r
+        WHERE r.review_id = #{reviewId}
+    </select>
 </mapper>

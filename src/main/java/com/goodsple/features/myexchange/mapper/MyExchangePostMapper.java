@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -58,5 +59,20 @@ public interface MyExchangePostMapper {
   List<MyCompletedExchangeDto> selectMyCompletedExchangeHistory(
       @Param("userId") Long userId
   );
+
+
+
+  // -----------------------------------
+  // 첫 채팅 시간 조회 (빠른 응답 뱃지용)
+  LocalDateTime findFirstChatTime(
+          @Param("postId") Long postId,
+          @Param("userId") Long userId
+  );
+
+  // 거래 완료 시간 조회
+  LocalDateTime findCompletedTime(
+          @Param("postId") Long postId
+  );
+
 
 }

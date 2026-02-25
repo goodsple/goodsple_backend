@@ -30,4 +30,8 @@ public class PostDetailDto {
   private Boolean isWriter;
   private Integer viewCount;
 
+  private String badgeImageUrl;
+  private String badgeName;
+  private Integer badgeLevel;
+
 }
