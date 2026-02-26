@@ -59,10 +59,15 @@ public class BadgeServiceImpl implements BadgeService {
     public void rewardTradeComplete(Long userId, Long postId, boolean fastResponse) {
 
         int score = scoreCalculator.tradeCompleteScore(); // +5
-
         int monthlyCount = userScoreMapper.countMonthlyTrades(userId);
 
-        score += scoreCalculator.monthlyBonus(monthlyCount); // +5
+        if (monthlyCount >= 3) {
+            int exists = userScoreMapper.existsMonthlyBonus(userId);
+            if (exists == 0) {
+                score += scoreCalculator.monthlyBonus(monthlyCount); // +5
+                userScoreMapper.addMonthlyBonusHistory(userId);
+            }
+        }
 
         if (fastResponse) {
             score += scoreCalculator.fastResponseScore(true); // +3
@@ -71,6 +76,5 @@ public class BadgeServiceImpl implements BadgeService {
         userScoreMapper.addTradeScoreWithHistory(userId, score, postId);
 
     }
-
 
 }

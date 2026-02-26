@@ -74,6 +74,27 @@
               );
     </update>
 
+    <select id="existsMonthlyBonus" resultType="int">
+        SELECT COUNT(*)
+        FROM user_score_history
+        WHERE user_id = #{userId}
+          AND score_type = 'monthly_bonus'
+          AND created_at >= NOW() - INTERVAL '1 month'
+    </select>
+
+    <insert id="addMonthlyBonusHistory">
+        INSERT INTO user_score_history(
+            user_id,
+            score_type,
+            score_delta
+        )
+        VALUES(
+                  #{userId},
+                  'monthly_bonus',
+                  5
+              )
+    </insert>
+
 
 
 </mapper>

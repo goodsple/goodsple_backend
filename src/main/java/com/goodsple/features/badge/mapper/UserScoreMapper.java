@@ -29,4 +29,8 @@ public interface UserScoreMapper {
             @Param("postId") Long postId
     );
 
+    int existsMonthlyBonus(Long userId);
+
+    void addMonthlyBonusHistory(Long userId);
+
 }

@@ -45,7 +45,7 @@ public class ScoreCalculator {
         return -15;
     }
 
-    /* ⭐ 리뷰 총점 계산 (ReviewService에서 사용하는 메서드) */
+    /* 리뷰 총점 계산 (ReviewService에서 사용하는 메서드) */
     public int calculateReviewScore(String content, int imageCount) {
         return reviewTextScore(content) + reviewImageScore(imageCount);
     }
