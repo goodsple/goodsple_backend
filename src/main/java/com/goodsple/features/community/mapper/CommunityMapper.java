@@ -33,5 +33,8 @@ public interface CommunityMapper {
     // 최신 확성기 메시지 1개 조회
     List<Community> selectLatestMegaphone(@Param("limit") int limit);
 
+    void insertJoinLog(@Param("userId") Long userId,
+                       @Param("roomId") String roomId,
+                       @Param("createdAt") Instant createdAt);
 }
 

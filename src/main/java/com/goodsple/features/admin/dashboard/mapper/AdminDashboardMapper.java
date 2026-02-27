@@ -21,4 +21,7 @@ public interface AdminDashboardMapper {
     List<AdminPopularKeywordItem> selectPopularKeywordTop10Realtime();
     int existsTodaySnapshot();
 
+    // 커뮤니티
+    List<AdminCommunityMonthlyStat> selectCommunityMonthlyStats(@Param("months") int months);
+
 }

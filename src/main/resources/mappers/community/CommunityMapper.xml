@@ -82,4 +82,16 @@
             LIMIT #{limit}
     </select>
 
+    <!--  커뮤니티 통계 이용 로직  => POST(글 작성) / JOIN(방 입장) -->
+<!--    <insert id="insertJoinLog">-->
+<!--        INSERT INTO community(user_id, comm_room_id, content, action_type, comm_created_at)-->
+<!--        VALUES (#{userId}, #{roomId}, 'JOIN_EVENT', 'JOIN', #{createdAt})-->
+<!--    </insert>-->
+
+    <insert id="insertJoinLog">
+        INSERT INTO community(user_id, comm_room_id, content, action_type, comm_created_at)
+        VALUES (#{userId}, #{roomId}, NULL, 'JOIN', #{createdAt})
+    </insert>
+
+
 </mapper>
