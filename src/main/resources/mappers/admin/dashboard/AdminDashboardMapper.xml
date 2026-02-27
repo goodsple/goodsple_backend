@@ -164,6 +164,24 @@
 
     </select>
 
+    <!-- 커뮤니티 월별 활성 유저 통계 (JOIN 기준) -->
+    <select id="selectCommunityMonthlyStats"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminCommunityMonthlyStat">
+        SELECT
+            to_char(c.comm_created_at, 'YY.MM') AS month,
+        c.comm_room_id AS roomId,
+        COUNT(DISTINCT c.user_id) AS activeUsers
+        FROM community c
+        WHERE c.action_type = 'JOIN'
+          AND c.comm_created_at >= date_trunc('month', CURRENT_DATE)
+            - (#{months} - 1 || ' months')::interval
+        GROUP BY
+            to_char(c.comm_created_at, 'YY.MM'),
+            c.comm_room_id
+        ORDER BY
+            month,
+            roomId;
+    </select>
 
 
 </mapper>

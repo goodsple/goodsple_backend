@@ -111,5 +111,9 @@ public class CommunityService {
         return list.isEmpty() ? null : list.get(0);
     }
 
+    public void saveJoinLog(String roomId, Long userId) {
+        mapper.insertJoinLog(userId, roomId, Instant.now());
+    }
+
 
 }

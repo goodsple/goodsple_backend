@@ -1,5 +1,6 @@
 package com.goodsple.features.admin.dashboard.service;
 
+import com.goodsple.features.admin.dashboard.dto.AdminCommunityStatsResponse;
 import com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordStatsResponse;
 import com.goodsple.features.admin.dashboard.dto.AdminReportStatsResponse;
 import com.goodsple.features.admin.dashboard.dto.AdminUserStatsResponse;
@@ -49,4 +50,13 @@ public class AdminDashboardService {
 
         return res;
     }
+
+    // 커뮤니티
+    @Transactional(readOnly = true)
+    public AdminCommunityStatsResponse getCommunityStats(int months) {
+        AdminCommunityStatsResponse res = new AdminCommunityStatsResponse();
+        res.setMonthlyStats(mapper.selectCommunityMonthlyStats(months));
+        return res;
+    }
+
 }

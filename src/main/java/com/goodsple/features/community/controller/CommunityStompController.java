@@ -28,10 +28,21 @@ public class CommunityStompController {
 
     // 방 참여
     @MessageMapping("/join/{roomId}")
-    public void join(@DestinationVariable String roomId, StompHeaderAccessor accessor) {
+    public void join(@DestinationVariable String roomId,
+                     StompHeaderAccessor accessor,
+                     Authentication auth) {
         roomValidator.ensureValid(roomId);
         String sessionId = accessor.getSessionId();
         communityService.joinRoom(roomId, sessionId);
+
+
+        if (auth == null || auth.getPrincipal() == null) {
+            throw new IllegalStateException("인증 정보가 없습니다.");
+        }
+
+        CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
+        Long userId = userDetails.getUserId();
+        communityService.saveJoinLog(roomId, userId);
     }
 
     // 세션 종료(퇴장) 이벤트
