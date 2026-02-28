@@ -24,4 +24,7 @@ public interface AdminDashboardMapper {
     // 커뮤니티
     List<AdminCommunityMonthlyStat> selectCommunityMonthlyStats(@Param("months") int months);
 
+    // 경매
+    List<AdminAuctionStat> selectRecentAuctionStats();
+
 }

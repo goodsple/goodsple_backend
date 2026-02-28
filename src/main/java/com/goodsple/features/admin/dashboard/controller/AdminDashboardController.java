@@ -1,9 +1,6 @@
 package com.goodsple.features.admin.dashboard.controller;
 
-import com.goodsple.features.admin.dashboard.dto.AdminCommunityStatsResponse;
-import com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordStatsResponse;
-import com.goodsple.features.admin.dashboard.dto.AdminReportStatsResponse;
-import com.goodsple.features.admin.dashboard.dto.AdminUserStatsResponse;
+import com.goodsple.features.admin.dashboard.dto.*;
 import com.goodsple.features.admin.dashboard.service.AdminDashboardService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -50,6 +47,12 @@ public class AdminDashboardController {
     ) {
         int safeMonths = Math.max(1, Math.min(12, months));
         return ResponseEntity.ok(service.getCommunityStats(safeMonths));
+    }
+
+    @Operation(summary = "관리자 대시보드 경매 통계")
+    @GetMapping("/auctions")
+    public ResponseEntity<AdminAuctionStatsResponse> auctionStats() {
+        return ResponseEntity.ok(service.getAuctionStats());
     }
 
 }

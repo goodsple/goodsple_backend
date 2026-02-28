@@ -1,9 +1,6 @@
 package com.goodsple.features.admin.dashboard.service;
 
-import com.goodsple.features.admin.dashboard.dto.AdminCommunityStatsResponse;
-import com.goodsple.features.admin.dashboard.dto.AdminPopularKeywordStatsResponse;
-import com.goodsple.features.admin.dashboard.dto.AdminReportStatsResponse;
-import com.goodsple.features.admin.dashboard.dto.AdminUserStatsResponse;
+import com.goodsple.features.admin.dashboard.dto.*;
 import com.goodsple.features.admin.dashboard.mapper.AdminDashboardMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -56,6 +53,14 @@ public class AdminDashboardService {
     public AdminCommunityStatsResponse getCommunityStats(int months) {
         AdminCommunityStatsResponse res = new AdminCommunityStatsResponse();
         res.setMonthlyStats(mapper.selectCommunityMonthlyStats(months));
+        return res;
+    }
+
+    // 경매
+    @Transactional(readOnly = true)
+    public AdminAuctionStatsResponse getAuctionStats() {
+        AdminAuctionStatsResponse res = new AdminAuctionStatsResponse();
+        res.setAuctionStats(mapper.selectRecentAuctionStats());
         return res;
     }
 
