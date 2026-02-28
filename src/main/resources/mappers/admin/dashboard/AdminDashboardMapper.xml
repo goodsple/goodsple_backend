@@ -184,4 +184,27 @@
     </select>
 
 
+    <!--    최근 20회 최신순-->
+    <select id="selectRecentAuctionStats"
+            resultType="com.goodsple.features.admin.dashboard.dto.AdminAuctionStat">
+
+        SELECT
+            TO_CHAR(a.auction_start_time, 'MM/DD') AS date,
+        COUNT(DISTINCT b.user_id) AS bidder_count
+        FROM (
+            -- 최근 20회 경매 먼저 추출 (최신순)
+            SELECT *
+            FROM auctions
+            WHERE auction_status IN ('active', 'ended')
+            ORDER BY auction_start_time DESC
+            LIMIT 20
+            ) a
+            LEFT JOIN bids b
+        ON b.auction_id = a.auction_id
+        GROUP BY a.auction_start_time
+        ORDER BY a.auction_start_time ASC
+
+    </select>
+
+
 </mapper>
