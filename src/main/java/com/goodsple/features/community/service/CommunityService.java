@@ -1,5 +1,6 @@
 package com.goodsple.features.community.service;
 
+import com.goodsple.features.admin.prohibitedWord.service.ProhibitedWordService;
 import com.goodsple.features.community.dto.Community;
 import com.goodsple.features.community.mapper.CommunityMapper;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ public class CommunityService {
     private final CommunityMapper mapper;
     private final RoomValidator roomValidator;
     private final SimpMessagingTemplate template;
+    private final ProhibitedWordService prohibitedWordService;
 
     // 방별 접속 세션 관리
     private final Map<String, Set<String>> roomUsers = new ConcurrentHashMap<>();
@@ -29,6 +31,9 @@ public class CommunityService {
 
     // 채팅 저장
     public void savePost(String roomId, Long userId, String content, String type) {
+
+        prohibitedWordService.validateContent(content);
+
         roomValidator.ensureValid(roomId);
 
         if (content == null || content.isBlank()) {

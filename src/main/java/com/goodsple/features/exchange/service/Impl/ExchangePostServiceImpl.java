@@ -1,5 +1,6 @@
 package com.goodsple.features.exchange.service.Impl;
 
+import com.goodsple.features.admin.prohibitedWord.service.ProhibitedWordService;
 import com.goodsple.features.exchange.dto.ExchangePostDto;
 import com.goodsple.features.exchange.mapper.ExchangePostMapper;
 import com.goodsple.features.exchange.service.ExchangePostService;
@@ -22,11 +23,14 @@ public class ExchangePostServiceImpl implements ExchangePostService {
 
   private final ExchangePostMapper exchangePostMapper;
   private final ImageUploadService imageUploadService; // S3 삭제를 위해 추가
+  private final ProhibitedWordService prohibitedWordService;
 
   @Override
   @Transactional
   public Long createPost(ExchangePostDto post, Long userId) {
 
+    prohibitedWordService.validateContent(post.getExchangePostTitle());
+    prohibitedWordService.validateContent(post.getPostDescription());
 
     // 카테고리 유효성 검증
     if (post.getThirdCateId() == null) {
@@ -88,6 +92,9 @@ public class ExchangePostServiceImpl implements ExchangePostService {
   @Override
   @Transactional
   public void updatePost(Long postId, ExchangePostDto post, Long userId) {
+
+    prohibitedWordService.validateContent(post.getExchangePostTitle());
+    prohibitedWordService.validateContent(post.getPostDescription());
 
     Long postUserId = exchangePostMapper.findUserIdByPostId(postId);
     if (postUserId == null) {

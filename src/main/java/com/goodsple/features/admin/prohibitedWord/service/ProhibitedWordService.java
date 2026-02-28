@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProhibitedWordService {
@@ -51,4 +52,18 @@ public class ProhibitedWordService {
     public List<String> getActiveWords() {
         return mapper.selectActiveWords();
     }
+
+
+    public void validateContent(String content) {
+        if (content == null || content.isBlank()) { // ⭐⭐ null 체크 추가
+            throw new IllegalArgumentException("메시지 내용이 없습니다.");
+        }
+        for (String word : getActiveWords()) {
+            if (content.contains(word)) {
+                throw new IllegalArgumentException("금칙어 포함: " + word);
+            }
+        }
+    }
+
+
 }

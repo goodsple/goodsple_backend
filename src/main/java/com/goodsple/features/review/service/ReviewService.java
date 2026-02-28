@@ -1,5 +1,6 @@
 package com.goodsple.features.review.service;
 
+import com.goodsple.features.admin.prohibitedWord.service.ProhibitedWordService;
 import com.goodsple.features.badge.service.UserScoreService;
 import com.goodsple.features.badge.service.calculator.ScoreCalculator;
 import com.goodsple.features.review.dto.*;
@@ -20,10 +21,13 @@ public class ReviewService {
 
   private final ScoreCalculator scoreCalculator;
   private final UserScoreService userScoreService;
-
+  private final ProhibitedWordService prohibitedWordService;
 
   @Transactional
   public Long createReview(Long userId, ReviewCreateRequest request) {
+
+    prohibitedWordService.validateContent(request.getContent());
+
     ReviewExchangeInfo exchangeInfo = reviewMapper.selectExchangeInfo(request.getExchangePostId());
     if (exchangeInfo == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "거래글을 찾을 수 없습니다.");
@@ -123,6 +127,9 @@ public class ReviewService {
 
   @Transactional
   public void updateReview(Long reviewId, Long userId, ReviewUpdateRequest request) {
+
+    prohibitedWordService.validateContent(request.getContent());
+
     ReviewAuthInfo auth = reviewMapper.selectReviewAuth(reviewId);
     if (auth == null) {
       throw new ResponseStatusException(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다.");
