@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -138,7 +139,7 @@ public class ChatController {
                     content = @Content(schema = @Schema(implementation = ErrorRes.class)))
     })
     @PostMapping("/messages")
-    public MessageRes sendMessage(
+    public ResponseEntity<?> sendMessage(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     description = "전송할 방/텍스트",
@@ -147,9 +148,21 @@ public class ChatController {
             @Valid @RequestBody SendMessageReq req
     ) {
         Long me = auth.userId();
-        // 서비스는 ChatMessage 엔티티를 반환한다고 가정 (없으면 messageId만 반환해도 무방)
-        com.goodsple.features.chat.entity.ChatMessage saved = chatService.sendMessage(me, req.roomId(), req.text());
-        return toRes(saved);
+//        // 서비스는 ChatMessage 엔티티를 반환한다고 가정 (없으면 messageId만 반환해도 무방)
+//        com.goodsple.features.chat.entity.ChatMessage saved = chatService.sendMessage(me, req.roomId(), req.text());
+//        return toRes(saved);
+        try {
+            com.goodsple.features.chat.entity.ChatMessage saved = chatService.sendMessage(me, req.roomId(), req.text());
+            return ResponseEntity.ok(toRes(saved));
+        } catch (IllegalArgumentException e) {
+            // 금칙어 발견 시 400과 함께 사용자에게 알림
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of(
+                            "error", "금칙어 포함",
+                            "message", e.getMessage()
+                    ));
+        }
     }
 
 

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/searchPosts")
@@ -22,15 +23,38 @@ public class SearchController {
     private final PopularSearchService popularSearchService;
 
 
+//    @GetMapping("/search")
+//    public ResponseEntity<?> searchExchangePosts(
+//            @RequestParam("keyword") String keyword) {
+//
+//        searchService.validateKeyword(keyword);
+//
+//
+//        // 1. 키워드 검색 시 인기검색어 기록(db저장)
+//        popularSearchService.recordSearch(keyword);
+//
+//        List<SearchPostResponse> results = searchService.searchPosts(keyword);
+//        return ResponseEntity.ok(results);
+//    }
+
     @GetMapping("/search")
-    public ResponseEntity<List<SearchPostResponse>> searchExchangePosts(
+    public ResponseEntity<?> searchExchangePosts(
             @RequestParam("keyword") String keyword) {
 
-        // 1. 키워드 검색 시 인기검색어 기록(db저장)
-        popularSearchService.recordSearch(keyword);
+        try {
+            searchService.validateKeyword(keyword);
 
-        List<SearchPostResponse> results = searchService.searchPosts(keyword);
-        return ResponseEntity.ok(results);
+            popularSearchService.recordSearch(keyword);
+            List<SearchPostResponse> results =
+                    searchService.searchPosts(keyword);
+
+            return ResponseEntity.ok(results);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "금칙어가 포함되어 있습니다."));
+        }
     }
 
     @GetMapping("/popular")

@@ -1,5 +1,6 @@
 package com.goodsple.features.chat.controller;
 
+import com.goodsple.features.admin.prohibitedWord.service.ProhibitedWordService;
 import com.goodsple.features.chat.dto.ReadReq;
 import com.goodsple.features.chat.dto.SendReq;
 import com.goodsple.features.chat.entity.ChatMessage;
@@ -26,6 +27,7 @@ public class ChatWsController {
     private final ChatService chatService;
     private final SimpMessagingTemplate tmpl;
     private final CurrentUser auth;
+    private final ProhibitedWordService prohibitedWordService;
 
     @Operation(summary = "[WS] 메시지 전송", description = "publish: /app/chat/send, subscribe: /topic/chat.{roomId}")
     @MessageMapping("/chat/send")
@@ -56,7 +58,23 @@ public class ChatWsController {
 
         // 1) 메시지 저장
         // 서비스 시그니처에 맞게 호출 (content -> text)
-        ChatMessage saved = chatService.sendMessage(me, req.roomId(), req.content());
+//        ChatMessage saved = chatService.sendMessage(me, req.roomId(), req.content());
+
+        ChatMessage saved;
+        try {
+            saved = chatService.sendMessage(me, req.roomId(), req.content());
+        } catch (IllegalArgumentException e) {
+            // 🚨 서버 500 발생 방지, 프론트에 에러 메시지만 전달
+            tmpl.convertAndSendToUser(
+                    principal.getName(),
+                    "/queue/errors",
+                    Map.of(
+                            "type", "error",
+                            "message", e.getMessage() // "금칙어 포함: 바보멍청이"
+                    )
+            );
+            return; // 처리 종료
+        }
 
         // 2) 상대방 userId 찾기 (writer/buyer 중 나(me)가 아닌 사람을 peer로 계산)
         Long peerId = chatService.findPeerId(req.roomId(), me);
@@ -67,24 +85,26 @@ public class ChatWsController {
                 "data", Map.of(
                         "roomId", req.roomId(),
                         "message", Map.of(
-                                "id",        saved.getMessageId(),
-                                "senderId",  saved.getSenderId(),
+                                "id", saved.getMessageId(),
+                                "senderId", saved.getSenderId(),
                                 // 프론트는 message|content|text 중 아무거나 읽음 → 일관 보강
-                                "message",   saved.getMessage(),
-                                "content",   saved.getMessage(),
-                                "text",      saved.getMessage(),
+                                "message", saved.getMessage(),
+                                "content", saved.getMessage(),
+                                "text", saved.getMessage(),
                                 "createdAt", saved.getChatMessageCreatedAt()
                         )
                 )
         );
 
-        // 4) 방 토픽 (현재 열려있는 채팅창의 말풍선 표시용)
-        tmpl.convertAndSend("/topic/chat." + req.roomId(), evt);
+            // 4) 방 토픽 (현재 열려있는 채팅창의 말풍선 표시용)
+            tmpl.convertAndSend("/topic/chat." + req.roomId(), evt);
 
-        // 5) 상대 유저 토픽 (좌측 리스트/배지/안읽음 갱신용)
-        if (peerId != null) {
-            tmpl.convertAndSend("/topic/chat.user." + peerId, evt);
-        }
+            // 5) 상대 유저 토픽 (좌측 리스트/배지/안읽음 갱신용)
+            if (peerId != null) {
+                tmpl.convertAndSend("/topic/chat.user." + peerId, evt);
+            }
+
+
     }
 
     @Operation(summary = "[WS] 읽음 처리", description = "publish: /app/chat/read, subscribe: /topic/chat.{roomId}")

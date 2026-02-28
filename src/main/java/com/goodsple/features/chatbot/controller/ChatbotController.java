@@ -21,8 +21,16 @@ public class ChatbotController {
     private final ChatbotService chatService;
 
     @PostMapping("/chatbot/messages")
-    public ChatbotResponse chat(@RequestBody ChatbotRequest req) {
-        return chatService.handle(req);
+    public ResponseEntity<?> chat(@RequestBody ChatbotRequest req) {
+        try {
+            ChatbotResponse response = chatService.handle(req);
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "금칙어가 포함되어 있습니다."));
+        }
     }
 
     // FAQ Intent 목록 조회

@@ -1,6 +1,7 @@
 package com.goodsple.features.chatbot.service;
 
 
+import com.goodsple.features.admin.prohibitedWord.service.ProhibitedWordService;
 import com.goodsple.features.chatbot.dto.ChatbotLog;
 import com.goodsple.features.chatbot.dto.ChatbotMessage;
 import com.goodsple.features.chatbot.dto.request.ChatbotRequest;
@@ -21,12 +22,15 @@ public class ChatbotService {
 
     private final RestTemplate restTemplate;
     private final ChatbotMapper chatbotMapper;
+    private final ProhibitedWordService prohibitedWordService;
 
     @Value("${chatbot-api.url}")
     private String pythonBase;
 
     @Transactional
     public ChatbotResponse handle(ChatbotRequest req) {
+
+        prohibitedWordService.validateContent(req.getText());
 
         ChatbotResponse res;
 

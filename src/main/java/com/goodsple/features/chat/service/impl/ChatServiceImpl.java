@@ -1,5 +1,6 @@
 package com.goodsple.features.chat.service.impl;
 
+import com.goodsple.features.admin.prohibitedWord.service.ProhibitedWordService;
 import com.goodsple.features.chat.dto.RoomSummaryRes;
 import com.goodsple.features.chat.entity.ChatMessage;
 import com.goodsple.features.chat.entity.ChatParticipant;
@@ -28,6 +29,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatMessageMapper messageMapper;
     private final ChatParticipantMapper participantMapper;
     private final ChatSummaryMapper summaryMapper;
+    private final ProhibitedWordService prohibitedWordService;
 
     @Override
     public Long createOrGetRoom(Long me, Long peer, Long postId) {
@@ -56,10 +58,13 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public ChatMessage sendMessage(Long me, Long roomId, String text) {
+
         if (roomId == null) throw new IllegalArgumentException("roomId required");
         if (text == null || text.trim().isEmpty()) throw new IllegalArgumentException("text required");
         String normalized = text.trim();
         if (normalized.length() > 1000) throw new IllegalArgumentException("text too long");
+
+        prohibitedWordService.validateContent(normalized);
 
         boolean isParticipant = participantMapper.findOne(roomId, me).isPresent();
         if (!isParticipant) {
